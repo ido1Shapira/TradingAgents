@@ -107,7 +107,10 @@ export function WatchlistRail() {
     }
 
     ordered.splice(srcIdx, 1);
-    ordered.splice(ordered.indexOf(targetTicker), 0, sourceTicker);
+    const insertIdx = srcIdx < tgtIdx
+      ? ordered.indexOf(targetTicker) + 1
+      : ordered.indexOf(targetTicker);
+    ordered.splice(insertIdx, 0, sourceTicker);
 
     setDragTicker(null);
 
