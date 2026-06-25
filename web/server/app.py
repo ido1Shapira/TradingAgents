@@ -735,6 +735,12 @@ def create_app() -> FastAPI:
     def get_config_defaults():
         return {"defaults": _CONFIG_DEFAULTS}
 
+    @app.get("/api/version")
+    def get_version():
+        version_file = Path(__file__).resolve().parents[2] / "VERSION"
+        version = version_file.read_text().strip() if version_file.exists() else "unknown"
+        return {"version": version}
+
     # static mount (only if build dir exists)
     settings = settings_mod.get_settings()
     if os.path.isdir(settings.frontend_dist):

@@ -28,6 +28,7 @@ import { SettingsPanel } from "./components/SettingsPanel";
 import { PipelineFlow } from "./components/PipelineFlow";
 import { LlmTracePanel } from "./components/LlmTracePanel";
 import { AgentObservatory } from "./components/AgentObservatory";
+import { VERSION } from "./version";
 
 export default function App() {
   const focused = useUi((s) => s.focusedTicker);
@@ -219,8 +220,11 @@ export default function App() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
               </svg>
             </button>
-            <h1 className="text-base md:text-lg font-display font-semibold text-slate-100 tracking-tight shrink-0">
+            <h1 className="text-base md:text-lg font-display font-semibold text-slate-100 tracking-tight shrink-0 flex items-center gap-2">
               TradingAgents
+              <span className="px-1.5 py-0.5 text-[10px] font-mono font-medium text-slate-400 bg-slate-800/60 border border-slate-700/50 rounded">
+                v{VERSION}
+              </span>
             </h1>
             <span className="hidden sm:inline-flex px-2 py-0.5 text-[10px] font-mono font-semibold uppercase tracking-widest bg-sky-500/10 text-sky-400 border border-sky-500/20 rounded-md">
               Loaded models:
