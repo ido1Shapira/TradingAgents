@@ -595,6 +595,7 @@ def _record_run(ticker: str, date_iso: str, decision: dict | None, duration_s: f
         if report:
             summary_by_stage[s] = report[:200]
     _events.emit(run_id, _events.EventType.RUN_FINISHED, {
+        "ticker": ticker,
         "duration_s": duration_s,
         "summary_by_stage": summary_by_stage,
     })

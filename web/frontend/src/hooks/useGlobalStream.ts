@@ -45,6 +45,12 @@ export function useGlobalStream() {
             ...(old || {}),
             [ticker]: priceData,
           }));
+        } else if (evt.type === EventType.RUN_FINISHED || evt.type === EventType.RUN_FAILED) {
+          const { ticker } = evt.data as Record<string, unknown>;
+          if (typeof ticker === "string" && ticker) {
+            qc.invalidateQueries({ queryKey: ["ticker-runs", ticker] });
+            qc.invalidateQueries({ queryKey: ["runs", "list"] });
+          }
         }
       },
     });

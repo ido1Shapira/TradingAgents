@@ -170,7 +170,7 @@ export default function App() {
         configModels.quick_think_model ? `Quick: ${configModels.quick_think_model}` : null,
       ]
         .filter(Boolean)
-        .join(" · ")
+        .join(" | ")
     : null;
 
   const appContent = !serverReady ? (
@@ -222,18 +222,15 @@ export default function App() {
             </button>
             <h1 className="text-base md:text-lg font-display font-semibold text-slate-100 tracking-tight shrink-0 flex items-center gap-2">
               TradingAgents
-              <span className="px-1.5 py-0.5 text-[10px] font-mono font-medium text-slate-400 bg-slate-800/60 border border-slate-700/50 rounded">
+              {currentModelSummary && (
+                <span className="hidden sm:inline-flex px-2 py-0.5 text-[9px] font-mono font-semibold uppercase tracking-widest bg-sky-500/10 text-sky-400 border border-sky-500/20 rounded-md">
+                  Used models: {currentModelSummary}
+                </span>
+              )}
+              <span className="hidden sm:inline-flex px-2 py-0.5 text-[8px] font-mono font-semibold rounded-md bg-gradient-to-r from-sky-500/15 via-slate-900/80 to-emerald-500/15 text-slate-100 border border-slate-700/70 shadow-[0_0_20px_rgba(56,189,248,0.12)] truncate max-w-[200px] md:max-w-none">
                 v{VERSION}
               </span>
             </h1>
-            <span className="hidden sm:inline-flex px-2 py-0.5 text-[10px] font-mono font-semibold uppercase tracking-widest bg-sky-500/10 text-sky-400 border border-sky-500/20 rounded-md">
-              Loaded models:
-            </span>
-            {currentModelSummary && (
-              <span className="hidden sm:inline-flex px-2 py-0.5 text-[10px] font-mono font-semibold rounded-md bg-gradient-to-r from-sky-500/15 via-slate-900/80 to-emerald-500/15 text-slate-100 border border-slate-700/70 shadow-[0_0_20px_rgba(56,189,248,0.12)] truncate max-w-[200px] md:max-w-none">
-                {currentModelSummary}
-              </span>
-            )}
           </div>
           <div className="flex items-center gap-1.5 md:gap-2">
             <button
