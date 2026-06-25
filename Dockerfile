@@ -11,9 +11,11 @@ COPY web/ web/
 
 RUN pip install uv && uv sync --no-dev
 
-RUN apt-get update -qq && apt-get install -y -qq nodejs npm \
+RUN apt-get update -qq && apt-get install -y -qq curl \
+    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y -qq nodejs \
     && cd web/frontend && npm ci && npm run build \
-    && apt-get remove -y -qq nodejs npm && apt-get autoremove -y -qq \
+    && apt-get remove -y -qq curl && apt-get autoremove -y -qq \
     && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir -p /home/appuser/app && cp -r /build/. /home/appuser/app
