@@ -7,7 +7,7 @@ function versionPlugin() {
   return {
     name: "version-inject",
     buildStart() {
-      const versionFile = path.resolve(__dirname, "../VERSION");
+      const versionFile = path.resolve(__dirname, "../../VERSION");
       const version = fs.readFileSync(versionFile, "utf-8").trim();
       const outPath = path.resolve(__dirname, "src/version.ts");
       fs.writeFileSync(outPath, `export const VERSION = ${JSON.stringify(version)};\n`);
