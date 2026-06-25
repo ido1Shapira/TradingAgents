@@ -4,7 +4,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 
 WORKDIR /build
-COPY pyproject.toml README.md uv.lock ./
+COPY pyproject.toml README.md uv.lock VERSION ./
 COPY tradingagents/ tradingagents/
 COPY cli/ cli/
 COPY web/ web/
