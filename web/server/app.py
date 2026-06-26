@@ -7,6 +7,8 @@ import io
 import json
 import logging
 import os
+import threading
+import time
 import uuid
 import zipfile
 from contextlib import asynccontextmanager
@@ -29,7 +31,6 @@ from . import (
     events,
     indicators,
     log_publisher as lp_module,
-    notifier,
     queries,
     runner,
     settings as settings_mod,
@@ -68,6 +69,7 @@ class _TelegramNotifierProxy:
 
     async def send_results(self, results) -> None:
         from telegram.error import Forbidden, InvalidToken
+
         from web.server.notifier import build_results_message
 
         try:
@@ -129,9 +131,6 @@ class IndicatorIn(BaseModel):
 
 
 # --------- Background indicator scheduler ---------
-
-import threading
-import time
 
 _indicator_scheduler_running = False
 _indicator_scheduler_stop = threading.Event()
@@ -436,10 +435,7 @@ def create_app() -> FastAPI:
         # Send Telegram notification if notifier is enabled and something triggered
         try:
             cfg = storage.read_notifier_config()
-            if cfg.get("enabled"):
-                import os as _os
-
-                if cfg.get("bot_token") and cfg.get("chat_id"):
+            if cfg.get("enabled") and cfg.get("bot_token") and cfg.get("chat_id"):
                     _notifier = _get_notifier()
                     if _notifier is not None:
                         _cfg_triggered = any(
@@ -467,7 +463,7 @@ def create_app() -> FastAPI:
         try:
             interval_ms = int(body.get("interval_ms", 0))
         except (ValueError, TypeError):
-            raise HTTPException(status_code=400, detail="interval_ms must be a number")
+            raise HTTPException(status_code=400, detail="interval_ms must be a number") from None
         storage.write_indicator_schedule({"interval_ms": interval_ms})
         _restart_indicator_scheduler()
         return {"interval_ms": interval_ms}

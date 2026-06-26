@@ -19,12 +19,10 @@ from telegram.constants import ParseMode
 from telegram.ext import Application, CommandHandler, ContextTypes
 
 from web.server.notifier import (
-    IndicatorResult,
-    build_heartbeat_message,
+    _require_telegram,
     build_results_message,
 )
 
-from web.server.notifier import _require_telegram
 _require_telegram()
 
 logger = logging.getLogger(__name__)
