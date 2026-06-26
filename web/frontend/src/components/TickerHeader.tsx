@@ -93,6 +93,7 @@ export function TickerHeader({ ticker, price, changePct, stale }: Props) {
   const clearActiveRunForTicker = useUi((s) => s.clearActiveRunForTicker);
   const clearHistoricalRunForTicker = useUi((s) => s.clearHistoricalRunForTicker);
   const clearBuffer = useUi((s) => s.clearBuffer);
+  const setHistoryOpen = useUi((s) => s.setHistoryOpen);
 
   const hasHistory = lastRunId != null;
   const tickerRuns = useQuery({
@@ -208,6 +209,9 @@ export function TickerHeader({ ticker, price, changePct, stale }: Props) {
             ? "Re-run analysis"
             : "Run analysis"}
         </button>
+        {hasAnyRuns && (
+          <button onClick={() => setHistoryOpen(ticker, true)} className="btn-secondary text-xs">History</button>
+        )}
         {hasAnyRuns && (
           <RunHistoryMenu
             ticker={ticker}

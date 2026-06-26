@@ -82,7 +82,7 @@ export default function App() {
   });
   const { data: prices = {} } = useQuery({ queryKey: ["prices"], queryFn: fetchPrices, enabled: serverReady });
   const { data: configModels } = useQuery<ConfigModels>({ queryKey: ["config-models"], queryFn: fetchConfigModels, staleTime: Infinity, enabled: serverReady });
-  const [historyOpen, setHistoryOpen] = useState(false);
+  const historyOpenByTicker = useUi((s) => s.historyOpenByTicker);
   const [dismissedStaleBanner, setDismissedStaleBanner] = useState<string | null>(null);
   const [traceView, setTraceView] = useState<"events" | "llm" | "observatory">("events");
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -258,9 +258,6 @@ export default function App() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
               </svg>
             </button>
-            {focused && (
-              <button onClick={() => setHistoryOpen(true)} className="btn-secondary text-xs">History</button>
-            )}
             <span className="flex-1" />
             <button
               onClick={() => useAuthStore.getState().logout()}
@@ -404,8 +401,12 @@ export default function App() {
           </div>
         )}
       </main>
-      {focused && historyOpen && (
-        <HistoricalAnalysisDrawer ticker={focused} onClose={() => setHistoryOpen(false)} />
+      {focused && (
+        <HistoricalAnalysisDrawer
+          ticker={focused}
+          open={!!historyOpenByTicker[focused]}
+          onClose={() => useUi.getState().setHistoryOpen(focused, false)}
+        />
       )}
       <TickerAgentDrawer
         open={tickerAgentDrawerOpen}
