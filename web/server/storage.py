@@ -597,7 +597,10 @@ def read_indicator_schedule() -> dict:
     env = _read_env()
     val = os.environ.get(_IND_SCHEDULE_ENV) or env.get(_IND_SCHEDULE_ENV)
     if val:
-        return {"interval_ms": int(val), "last_check_at": None}
+        path = data_dir() / "indicator_schedule.json"
+        payload = read_json(path)
+        lca = payload.get("last_check_at") if payload else None
+        return {"interval_ms": int(val), "last_check_at": lca}
     path = data_dir() / "indicator_schedule.json"
     payload = read_json(path)
     if payload:

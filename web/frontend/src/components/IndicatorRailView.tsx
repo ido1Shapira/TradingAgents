@@ -187,8 +187,10 @@ export function IndicatorRailView() {
       setReply("Threshold updated.");
     },
     onError: (err: Error) => {
-      const apiErr = err as { detail?: string };
-      setReply(apiErr.detail || err.message);
+      const apiErr = err as { message: string; body?: unknown };
+      const detail = apiErr.body as { detail?: string } | undefined;
+      const msg = detail?.detail || apiErr.message;
+      setReply(msg);
     },
   });
 

@@ -215,7 +215,9 @@ def update_indicator(indicator_id: str, body: dict[str, Any]) -> IndicatorDefini
                     raise ValueError("threshold must be a number") from None
             new_enabled = body.get("enabled")
             if new_enabled is not None:
-                new_enabled = bool(new_enabled)
+                if not isinstance(new_enabled, bool):
+                    raise ValueError("enabled must be a boolean")
+                new_enabled = new_enabled
             rows[i] = IndicatorDefinition(
                 id=row.id,
                 kind=row.kind,
