@@ -129,12 +129,18 @@ export function IndicatorRailView() {
   // Countdown timer for next auto-check
   useEffect(() => {
     const intervalMs = scheduleQuery.data?.interval_ms;
+    const lastCheckAt = scheduleQuery.data?.last_check_at;
     if (!intervalMs || intervalMs === 0) {
       setCountdown("");
       return;
     }
     const tick = () => {
-      const diff = intervalMs - (Date.now() % intervalMs);
+      if (!lastCheckAt) {
+        setCountdown("waiting...");
+        return;
+      }
+      const nextCheck = new Date(lastCheckAt).getTime() + intervalMs;
+      const diff = nextCheck - Date.now();
       if (diff <= 0) {
         setCountdown("now");
         return;
@@ -274,6 +280,11 @@ export function IndicatorRailView() {
           >
             {checksMutation.isPending ? "Checking…" : "Run Now"}
           </button>
+          {countdown && (
+            <span className="ml-2 text-[10px] text-slate-500">
+              Next check in: <span className={`font-mono ${countdown === "now" ? "text-emerald-400" : "text-sky-400"}`}>{countdown}</span>
+            </span>
+          )}
         </div>
 
         {showNotifierSettings && (
