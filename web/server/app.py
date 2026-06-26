@@ -410,6 +410,16 @@ def create_app() -> FastAPI:
             raise HTTPException(status_code=404, detail="indicator not found")
         return Response(status_code=204)
 
+    @app.patch("/api/indicators/{indicator_id}")
+    def patch_indicator(indicator_id: str, body: dict) -> dict:
+        try:
+            updated = indicators.update_indicator(indicator_id, body)
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+        if updated is None:
+            raise HTTPException(status_code=404, detail="indicator not found")
+        return indicators._definition_to_dict(updated)
+
     @app.post("/api/indicators/reset")
     def reset_indicators() -> dict:
         return {
