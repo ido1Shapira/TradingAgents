@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchWatchlist, fetchPrices, removeFromWatchlist, fetchRunDetail, fetchConfigModels, type ConfigModels, type RunDetail } from "./lib/api";
 import { useUi } from "./store/ui";
@@ -16,6 +16,7 @@ import { AuthGate } from "./components/AuthGate";
 import { useAuthStore } from "./stores/authStore";
 import { WatchlistRail } from "./components/WatchlistRail";
 import { TickerHeader } from "./components/TickerHeader";
+import { TickerChatBar } from "./components/TickerChatBar";
 
 import { LiveEventStream } from "./components/LiveEventStream";
 import { ReportPanel } from "./components/ReportPanel";
@@ -28,6 +29,7 @@ import { SettingsPanel } from "./components/SettingsPanel";
 import { PipelineFlow } from "./components/PipelineFlow";
 import { LlmTracePanel } from "./components/LlmTracePanel";
 import { AgentObservatory } from "./components/AgentObservatory";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 import { VERSION } from "./version";
 
 export default function App() {
@@ -58,12 +60,12 @@ export default function App() {
         .then((r) => {
           if (cancelled) return;
           if (r.ok) { setServerReady(true); return; }
-          const delay = Math.min(1000 * 2 ** (healthAttempt.current++), 8000);
+          const delay = Math.min(1000 * 2 ** Math.min(healthAttempt.current++, 16), 8000);
           setTimeout(poll, delay);
         })
         .catch(() => {
           if (cancelled) return;
-          const delay = Math.min(1000 * 2 ** (healthAttempt.current++), 8000);
+          const delay = Math.min(1000 * 2 ** Math.min(healthAttempt.current++, 16), 8000);
           setTimeout(poll, delay);
         });
     };
@@ -161,7 +163,7 @@ export default function App() {
     !!focused && priceStale && dismissedStaleBanner !== focused;
 
   // ── Conditional rendering ──────────────────────────────────────
-  const decisionEvent = [...events].reverse().find((e) => e.type === "decision");
+  const decisionEvent = useMemo(() => [...events].reverse().find((e) => e.type === "decision"), [events]);
   const decision = decisionEvent?.data as { action: string; target: number; rationale: string; confidence: number } | undefined;
 
   const currentModelSummary = configModels
@@ -250,6 +252,7 @@ export default function App() {
               onClick={() => setBatchDialogOpen(true)}
               className="btn-secondary text-xs"
               title="Download ticker data"
+              aria-label="Download ticker data"
             >
               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -263,6 +266,7 @@ export default function App() {
               onClick={() => useAuthStore.getState().logout()}
               className="btn-secondary text-xs text-red-400 hover:text-red-300"
               title="Sign out"
+              aria-label="Sign out"
             >
               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
@@ -272,6 +276,7 @@ export default function App() {
               onClick={() => setSettingsOpen(true)}
               className="btn-secondary text-xs"
               title="Settings"
+              aria-label="Settings"
             >
               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.075-.124l-1.217.456a1.125 1.125 0 0 1-1.37-.49l-1.296-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.296-2.247a1.125 1.125 0 0 1 1.37-.491l1.217.456c.355.133.75.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z" />
@@ -310,9 +315,12 @@ export default function App() {
               </div>
             )}
             <TickerHeader ticker={focused} price={price.price} changePct={price.change_pct} stale={priceStale} />
+            <TickerChatBar ticker={focused} price={price} run={focusedRunDetail} />
             {/* Pipeline flow: merged timeline dots + team cards visualization */}
             <div className="mb-4">
-              <PipelineFlow events={events} />
+              <ErrorBoundary>
+                <PipelineFlow events={events} />
+              </ErrorBoundary>
             </div>
             <div className="flex items-center gap-0 mb-4">
               <button
@@ -357,9 +365,13 @@ export default function App() {
               </button>
             </div>
             {traceView === "events" ? (
-              <LiveEventStream />
+              <ErrorBoundary>
+                <LiveEventStream />
+              </ErrorBoundary>
             ) : traceView === "observatory" ? (
-              <AgentObservatory events={events} />
+              <ErrorBoundary>
+                <AgentObservatory events={events} />
+              </ErrorBoundary>
             ) : (
               <div className="glass-panel">
                 <div className="max-h-[400px] overflow-y-auto p-3">
@@ -369,13 +381,15 @@ export default function App() {
             )}
             <ReportPanel />
             {decision && (
-              <DecisionPanel
-                action={decision.action}
-                target={decision.target ?? null}
-                confidence={decision.confidence ?? 0}
-                rationale={decision.rationale ?? ""}
-                run={focusedRunDetail}
-              />
+              <ErrorBoundary>
+                <DecisionPanel
+                  action={decision.action}
+                  target={decision.target ?? null}
+                  confidence={decision.confidence ?? 0}
+                  rationale={decision.rationale ?? ""}
+                  run={focusedRunDetail}
+                />
+              </ErrorBoundary>
             )}
           </>
         ) : (
@@ -420,5 +434,4 @@ export default function App() {
     </AuthGate>
   );
 }
-
 

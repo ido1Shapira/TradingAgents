@@ -20,6 +20,7 @@ export function useGlobalStream() {
   const clientRef = useRef<ResilientWs | null>(null);
 
   useEffect(() => {
+    if (clientRef.current) return;
     const client = new ResilientWs({
       url: buildGlobalUrl,
       onMessage: (evt: WsEvent) => {
