@@ -668,8 +668,12 @@ def read_notifier_config() -> dict:
     raw_enabled = os.environ.get(_NOTIFIER_ENV_ENABLED) or env.get(_NOTIFIER_ENV_ENABLED)
 
     if token or chat_id:
+        if raw_enabled:
+            enabled = raw_enabled.lower() in ("1", "true", "yes")
+        else:
+            enabled = bool(token and chat_id)
         return {
-            "enabled": raw_enabled.lower() in ("1", "true", "yes") if raw_enabled else False,
+            "enabled": enabled,
             "bot_token": token,
             "chat_id": chat_id,
         }
