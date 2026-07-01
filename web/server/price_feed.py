@@ -64,6 +64,11 @@ class PriceSnapshot:
     stale: bool = False
     fetched_at: str | None = None
 
+    def __post_init__(self):
+        # Limit sparkline data size for 512MB memory constraint
+        if len(self.sparkline) > 30:
+            self.sparkline = self.sparkline[-30:]  # Keep only last 30 points
+
 
 @dataclass
 class PriceState:

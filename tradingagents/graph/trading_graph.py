@@ -160,7 +160,7 @@ class TradingAgentsGraph:
         self.ticker = None
         self.log_states_dict: dict[str, dict] = {}
         self._state_log_counter = 0
-        self._max_states_in_memory = 10
+        self._max_states_in_memory = self.config.get("max_states_in_memory", 5)  # Reduced from 10 for 512MB limit
 
         # Set up the graph: keep the workflow for recompilation with a checkpointer.
         self.workflow = self.graph_setup.setup_graph(selected_analysts)

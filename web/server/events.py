@@ -48,6 +48,10 @@ def make_event(run_id: str, type_: EventType, data: dict[str, Any]) -> dict[str,
 _subscribers: dict[str, set[WebSocket]] = {}
 _subscribers_lock = threading.Lock()
 
+# Memory limit for subscriber sets (512MB constraint)
+_MAX_SUBSCRIBERS_PER_RUN = 100
+_MAX_GLOBAL_SUBSCRIBERS = 50
+
 # Reference to the main event loop, captured by the app lifespan.
 # ``events.emit()`` is called from worker threads (graph nodes run
 # inside ``loop.run_in_executor``); the broadcast coroutine must run on
@@ -174,8 +178,17 @@ def emit(run_id: str, type_: EventType, data: dict[str, Any]) -> None:
 
 
 def subscribe(run_id: str, ws: WebSocket) -> None:
+    """Subscribe to events for a specific run. Enforces memory limits."""
     with _subscribers_lock:
-        _subscribers.setdefault(run_id, set()).add(ws)
+        subs = _subscribers.setdefault(run_id, set())
+        # Enforce memory limit per run (512MB constraint)
+        if len(subs) >= _MAX_SUBSCRIBERS_PER_RUN:
+            # Remove oldest subscriber (first in set) to make room
+            try:
+                subs.pop()
+            except KeyError:
+                pass
+        subs.add(ws)
 
 
 def unsubscribe(run_id: str, ws: WebSocket) -> None:
@@ -187,8 +200,17 @@ def unsubscribe(run_id: str, ws: WebSocket) -> None:
 
 
 def subscribe_global(ws: WebSocket) -> None:
+    """Subscribe to global events. Enforces memory limits."""
     with _subscribers_lock:
-        _subscribers.setdefault("*", set()).add(ws)
+        subs = _subscribers.setdefault("*", set())
+        # Enforce memory limit for global subscribers (512MB constraint)
+        if len(subs) >= _MAX_GLOBAL_SUBSCRIBERS:
+            # Remove oldest subscriber to make room
+            try:
+                subs.pop()
+            except KeyError:
+                pass
+        subs.add(ws)
 
 
 def unsubscribe_global(ws: WebSocket) -> None:
