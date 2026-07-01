@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Activity, Bell, BellOff, Send, Settings, Trash2, X } from "lucide-react";
+import { Activity, Bell, BellOff, Loader2, Send, Trash2, X } from "lucide-react";
 import {
   addIndicator,
   checkIndicators,
@@ -17,6 +17,8 @@ import {
   type IndicatorKind,
   type NotifierConfig,
 } from "../lib/api";
+import { useChatStore } from "../stores/useChatStore";
+import { fetchTools, executeTool, setCurrentUserMessage, clearCurrentUserMessage, prepopulateToolContext, setConversationHistory } from "../lib/agentTools";
 
 const KIND_ALIASES: Array<[RegExp, IndicatorKind]> = [
   [/\b(vix|volatility)\b/i, "vix"],
@@ -48,8 +50,9 @@ function parseThreshold(text: string): number | undefined {
 
 export function IndicatorRailView() {
   const qc = useQueryClient();
-  const [chat, setChat] = useState("");
-  const [reply, setReply] = useState("Ask me to add or remove an indicator.");
+  const [input, setInput] = useState("");
+  const [isAsking, setIsAsking] = useState(false);
+  const { messages, addMessage, updateMessage } = useChatStore();
   const [showNotifierSettings, setShowNotifierSettings] = useState(false);
   const [notifierForm, setNotifierForm] = useState({ bot_token: "", chat_id: "" });
   const [notifierTestMsg, setNotifierTestMsg] = useState("");
@@ -57,6 +60,7 @@ export function IndicatorRailView() {
   const [countdown, setCountdown] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState<string>("");
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const notifierQuery = useQuery({
     queryKey: ["notifier-config"],
@@ -170,14 +174,14 @@ export function IndicatorRailView() {
     mutationFn: addIndicator,
     onSuccess: (indicator) => {
       qc.invalidateQueries({ queryKey: ["indicators"] });
-      setReply(`Added ${indicator.name} at ${formatThreshold(indicator)}.`);
+      addMessage({ role: "assistant", content: `Added ${indicator.name} at ${formatThreshold(indicator)}.` });
     },
   });
   const removeMutation = useMutation({
     mutationFn: removeIndicator,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["indicators"] });
-      setReply("Removed indicator.");
+      addMessage({ role: "assistant", content: "Removed indicator." });
     },
   });
 
@@ -186,13 +190,13 @@ export function IndicatorRailView() {
       updateIndicator(id, body),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["indicators"] });
-      setReply("Threshold updated.");
+      addMessage({ role: "assistant", content: "Threshold updated." });
     },
     onError: (err: Error) => {
       const apiErr = err as { message: string; body?: unknown };
       const detail = apiErr.body as { detail?: string } | undefined;
       const msg = detail?.detail || apiErr.message;
-      setReply(msg);
+      addMessage({ role: "assistant", content: msg });
     },
   });
 
@@ -205,40 +209,216 @@ export function IndicatorRailView() {
     return map;
   }, [checksMutation.data]);
 
-  const handleChatSubmit = (e: React.FormEvent) => {
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  const ask = async (e: React.FormEvent) => {
     e.preventDefault();
-    const text = chat.trim();
-    if (!text) return;
-    setChat("");
+    const trimmed = input.trim();
+    if (!trimmed || isAsking) return;
 
-    if (/\b(remove|delete)\b/i.test(text)) {
-      const lower = text.toLowerCase();
-      const target =
-        indicators.find((item) => lower.includes(item.id.toLowerCase())) ??
-        indicators.find((item) => lower.includes(item.name.toLowerCase())) ??
-        (parseKind(text)
-          ? indicators.find((item) => item.kind === parseKind(text))
-          : undefined);
-      if (!target) {
-        setReply("I could not tell which indicator to remove.");
-        return;
+    addMessage({ role: "user", content: trimmed });
+    setInput("");
+    setIsAsking(true);
+
+    try {
+      const tools = await fetchTools();
+
+      // Pre-populate tool context from the most recent ticker mentioned (scan in reverse)
+      for (let i = messages.length - 1; i >= 0; i--) {
+        const msg = messages[i];
+        if (msg.role !== "user") continue;
+        const tickerMatch = msg.content.match(/\$?([A-Z]{2,5})\b/g);
+        if (tickerMatch) {
+          const ticker = tickerMatch[0].startsWith("$") ? tickerMatch[0].slice(1) : tickerMatch[0];
+          if (ticker.length >= 2) {
+            prepopulateToolContext({ ticker });
+            break;
+          }
+        }
       }
-      removeMutation.mutate(target.id);
-      return;
-    }
 
-    if (/\b(add|create|new)\b/i.test(text)) {
-      const kind = parseKind(text);
-      if (!kind) {
-        setReply("Name the indicator type: VIX, fear greed, red days, S5FI, green streak, or moving averages.");
-        return;
+      // Set full conversation history for context extraction
+      setConversationHistory(messages.map(m => ({ role: m.role, content: m.content })));
+
+      const backendTools = tools.map((tool) => ({
+        type: "function" as const,
+        function: {
+          name: tool.name,
+          description: tool.description,
+          parameters: tool.parameters,
+        },
+      }));
+
+      const systemPrompt = [
+        "You are a trading indicators assistant.",
+        "Help the user manage, add, remove, update, and check indicator conditions.",
+        "Use the available tools to perform actions, then explain the results clearly.",
+        "Be concise.",
+      ].join("\n");
+
+      const toApiMessage = (m: typeof messages[0]) => {
+        const base: Record<string, unknown> = { role: m.role, content: m.content };
+        if (m.role === "assistant" && m.toolCalls) {
+          base.tool_calls = m.toolCalls.map(tc => ({
+            id: tc.id, type: "function",
+            function: { name: tc.name, arguments: JSON.stringify(tc.arguments) },
+          }));
+        }
+        if (m.role === "tool") {
+          base.tool_call_id = m.toolCallId || "";
+        }
+        return base;
+      };
+
+      let conversationHistory: Record<string, unknown>[] = [
+        { role: "system", content: systemPrompt },
+        ...messages.filter(m => (m.content && m.content.trim()) || (m.role === "assistant" && m.toolCalls?.length > 0) || m.role === "tool").map(toApiMessage),
+        { role: "user", content: trimmed },
+      ];
+
+      let currentMsgId = addMessage({ role: "assistant", content: "", isStreaming: true });
+
+      for (let round = 0; round < 50; round++) {
+        const apiResponse = await fetch("/api/chat/completions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            messages: conversationHistory,
+            tools: backendTools,
+            stream: true,
+          }),
+        });
+
+        if (!apiResponse.ok) {
+          const error = await apiResponse.json();
+          throw new Error(error.error || "Chat completion failed");
+        }
+
+        const reader = apiResponse.body!.getReader();
+        const decoder = new TextDecoder();
+        let fullResponse = "";
+        let toolCallsFromResponse: Array<{ id: string; type: string; function: { name: string; arguments: string } }> = [];
+
+        let streamDone = false;
+        while (!streamDone) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value, { stream: true });
+          const lines = chunk.split("\n");
+
+          for (const line of lines) {
+            if (!line.startsWith("data: ")) continue;
+            const data = line.slice(6);
+            if (data === "[DONE]") { streamDone = true; break; }
+
+            try {
+              const parsed = JSON.parse(data);
+              if (parsed.type === "text" && parsed.text) {
+                fullResponse += parsed.text;
+                updateMessage(currentMsgId, { content: fullResponse });
+              }
+              if (parsed.type === "tool_calls" && parsed.tool_calls) {
+                toolCallsFromResponse = parsed.tool_calls;
+                try {
+                  updateMessage(currentMsgId, {
+                    content: fullResponse,
+                    toolCalls: toolCallsFromResponse.map(tc => ({
+                      id: tc.id, name: tc.function.name,
+                      arguments: (() => { try { return JSON.parse(tc.function.arguments || "{}"); } catch { return {}; } })(),
+                    })),
+                  });
+                } catch {}
+              }
+              if (parsed.type === "error") {
+                throw new Error(parsed.error || "Stream error");
+              }
+              if (parsed.type === "done") {
+                if (parsed.tool_calls?.length > 0) {
+                  toolCallsFromResponse = parsed.tool_calls;
+                }
+                if (parsed.content !== undefined && !fullResponse) {
+                  fullResponse = parsed.content;
+                  updateMessage(currentMsgId, { content: fullResponse });
+                }
+              }
+            } catch (parseErr) {
+              console.warn("IndicatorRailView: failed to parse SSE event:", data, parseErr);
+            }
+          }
+        }
+
+        updateMessage(currentMsgId, { content: fullResponse });
+
+        if (toolCallsFromResponse.length === 0) {
+          if (!fullResponse) {
+            updateMessage(currentMsgId, { content: "No response", isStreaming: false });
+          } else {
+            updateMessage(currentMsgId, { isStreaming: false });
+          }
+          break;
+        }
+
+        const toolResults: Array<{ role: string; tool_call_id: string; content: string }> = [];
+
+        setCurrentUserMessage(trimmed);
+
+        for (const call of toolCallsFromResponse) {
+          let args: Record<string, unknown> = {};
+          try {
+            const raw = call.function.arguments;
+            args = typeof raw === "string" ? (raw ? JSON.parse(raw) : {}) : (raw || {});
+          } catch {
+            args = {};
+          }
+          let result: unknown;
+          try {
+            result = await executeTool(call.function.name, args);
+          } catch (toolErr) {
+            result = { error: toolErr instanceof Error ? toolErr.message : String(toolErr) };
+          }
+          const resultStr = JSON.stringify(result);
+          addMessage({
+            role: "tool",
+            content: `Called ${call.function.name}: ${resultStr.slice(0, 500)}`,
+            toolCallId: call.id,
+          });
+          toolResults.push({
+            role: "tool",
+            tool_call_id: call.id,
+            content: resultStr.slice(0, 2000),
+          });
+        }
+
+        const assistantToolMsg = {
+          role: "assistant" as const,
+          content: fullResponse || "",
+          tool_calls: toolCallsFromResponse.map(tc => ({
+            id: tc.id,
+            type: "function" as const,
+            function: { name: tc.function.name, arguments: tc.function.arguments },
+          })),
+        };
+
+        conversationHistory = [...conversationHistory, assistantToolMsg, ...toolResults];
+        currentMsgId = addMessage({ role: "assistant", content: "", isStreaming: true });
       }
-      const threshold = parseThreshold(text);
-      addMutation.mutate({ kind, threshold });
-      return;
+    } catch (err) {
+      addMessage({
+        role: "assistant",
+        isStreaming: false,
+        content: `Error: ${err instanceof Error ? err.message : "Unknown error"}`,
+      });
+    } finally {
+      setIsAsking(false);
+      clearCurrentUserMessage();
     }
-
-    setReply("Try: add VIX threshold 25, add fear greed 15, or remove VIX.");
   };
 
   return (
@@ -268,6 +448,9 @@ export function IndicatorRailView() {
             onChange={(e) => scheduleMutation.mutate(Number(e.target.value))}
           >
             <option value={0}>Off (manual only)</option>
+            <option value={300000}>Every 5m</option>
+            <option value={900000}>Every 15m</option>
+            <option value={1800000}>Every 30m</option>
             <option value={3600000}>Every 1h</option>
             <option value={7200000}>Every 2h</option>
             <option value={14400000}>Every 4h</option>
@@ -439,19 +622,54 @@ export function IndicatorRailView() {
         })}
       </div>
 
-      <form onSubmit={handleChatSubmit} className="shrink-0 border-t border-slate-800 p-2">
-        <p className="mb-2 rounded-lg bg-slate-800/50 px-2 py-1.5 text-[11px] leading-snug text-slate-400">{reply}</p>
+      {messages.length > 0 && (
+        <div className="shrink-0 max-h-48 overflow-y-auto border-t border-slate-800 px-2 py-2 space-y-1.5">
+          {messages.map((msg) => (
+            <div key={msg.id} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+              <div className={`max-w-[85%] rounded-lg px-2 py-1.5 text-[11px] leading-snug ${
+                msg.role === "user"
+                  ? "bg-sky-600/30 text-slate-200"
+                  : msg.role === "tool"
+                  ? "bg-slate-800 text-slate-400 font-mono"
+                  : "bg-slate-800/60 text-slate-400"
+              }`}>
+                {msg.toolCalls && msg.toolCalls.length > 0 && (
+                  <div className="text-[10px] text-sky-400 mb-1">
+                    Tools: {msg.toolCalls.map(tc => tc.name).join(", ")}
+                  </div>
+                )}
+                {msg.content}
+                {msg.isStreaming && !msg.content && (
+                  <span className="inline-flex gap-1 ml-1">
+                    <span className="w-1 h-1 bg-sky-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                    <span className="w-1 h-1 bg-sky-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                    <span className="w-1 h-1 bg-sky-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                  </span>
+                )}
+              </div>
+            </div>
+          ))}
+          <div ref={messagesEndRef} />
+        </div>
+      )}
+
+      <form onSubmit={ask} className="shrink-0 border-t border-slate-800 p-2">
+        {messages.length === 0 && (
+          <p className="mb-2 rounded-lg bg-slate-800/50 px-2 py-1.5 text-[11px] leading-snug text-slate-400">
+            Ask me to add or remove an indicator.
+          </p>
+        )}
         <div className="flex items-center gap-1.5 rounded-lg border border-slate-700/50 bg-slate-950/40 px-2 py-1.5">
           <input
-            value={chat}
-            onChange={(e) => setChat(e.target.value)}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
             placeholder="add VIX 25..."
             className="min-w-0 flex-1 bg-transparent text-xs text-slate-200 outline-none placeholder:text-slate-600"
             aria-label="Indicator chat command"
           />
           <button
             type="submit"
-            disabled={!chat.trim() || addMutation.isPending || removeMutation.isPending}
+            disabled={!input.trim() || isAsking}
             className="rounded-md p-1 text-sky-400 transition-colors hover:bg-sky-500/10 disabled:text-slate-600"
             aria-label="Send indicator command"
           >

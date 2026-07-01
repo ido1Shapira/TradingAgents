@@ -24,8 +24,7 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 
 from tradingagents.default_config import _ENV_OVERRIDES, DEFAULT_CONFIG
-from web.server.ticker_agent import orchestrator
-from web.server.ticker_agent.router import router as ticker_agent_router
+from web.server.chat_router import router as chat_router
 
 from . import (
     events,
@@ -154,6 +153,9 @@ class IndicatorIn(BaseModel):
     threshold: float | None = None
     description: str | None = None
     enabled: bool = True
+    ticker: str | None = None
+    comparator: str | None = None
+    triggered: bool | None = None
 
 
 # --------- Background indicator scheduler ---------
@@ -295,7 +297,6 @@ async def lifespan(app: FastAPI):
     lp_module.setup_log_publisher(
         asyncio.get_running_loop(), min_level=getattr(logging, s.log_level, logging.INFO)
     )
-    orchestrator.set_event_loop(asyncio.get_running_loop())
     # Silence yfinance's own ERROR-level noise for delisted/foreign symbols
     # (e.g. "TA125: possibly delisted"). Without this, the dashboard log
     # fills with yfinance-internal tracebacks every poll for every bad
@@ -345,9 +346,6 @@ async def lifespan(app: FastAPI):
 
     background_runs._load_existing_jobs()
 
-    # Start the ticker accuracy agent background loop.
-    from web.server.ticker_agent import orchestrator as _agent
-
     # Start the indicator background scheduler.
     _start_indicator_scheduler()
 
@@ -361,7 +359,6 @@ async def lifespan(app: FastAPI):
         await feed.stop()
     await runner.stop()
     lp_module.teardown_log_publisher()
-    _agent.stop_background_loop()
 
 
 def create_app() -> FastAPI:
@@ -393,6 +390,7 @@ def create_app() -> FastAPI:
         return await call_next(request)
 
     app.include_router(auth_router)
+    app.include_router(chat_router)
 
     @app.get("/api/config/models")
     def config_models():
@@ -429,6 +427,7 @@ def create_app() -> FastAPI:
 
     @app.get("/api/indicators")
     def list_indicators() -> dict:
+        """List all configured indicators and price alerts."""
         return {
             "indicators": [
                 indicators._definition_to_dict(row) for row in indicators.read_indicators()
@@ -437,6 +436,7 @@ def create_app() -> FastAPI:
 
     @app.post("/api/indicators")
     def post_indicator(body: IndicatorIn) -> dict:
+        """Add a new indicator or price alert. For ticker_price alerts, provide ticker, threshold, and comparator."""
         try:
             row = indicators.add_indicator(body.model_dump(exclude_none=True))
         except ValueError as exc:
@@ -445,12 +445,14 @@ def create_app() -> FastAPI:
 
     @app.delete("/api/indicators/{indicator_id}", status_code=204)
     def delete_indicator(indicator_id: str) -> Response:
+        """Remove an indicator or price alert by ID."""
         if not indicators.remove_indicator(indicator_id):
             raise HTTPException(status_code=404, detail="indicator not found")
         return Response(status_code=204)
 
     @app.patch("/api/indicators/{indicator_id}")
     def patch_indicator(indicator_id: str, body: dict) -> dict:
+        """Update an indicator's threshold, comparator, enabled state, or trigger status."""
         try:
             updated = indicators.update_indicator(indicator_id, body)
         except ValueError as exc:
@@ -466,6 +468,17 @@ def create_app() -> FastAPI:
                 indicators._definition_to_dict(row) for row in indicators.reset_indicators()
             ]
         }
+
+    @app.post("/api/indicators/{indicator_id}/reset")
+    def reset_single_indicator(indicator_id: str) -> dict:
+        """Reset a single indicator's triggered state (re-arm one-shot alert)."""
+        try:
+            result = indicators.reset_indicator(indicator_id)
+        except Exception as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+        if result is None:
+            raise HTTPException(status_code=404, detail="indicator not found")
+        return indicators._definition_to_dict(result)
 
     @app.post("/api/indicators/check")
     @limiter.limit(_BG_RATE_LIMIT)
@@ -868,9 +881,6 @@ def create_app() -> FastAPI:
         except KeyError:
             raise HTTPException(status_code=404, detail=f"job_not_found: {job_id}") from None
         return {"status": "ok"}
-
-    # --- Ticker Accuracy Agent ---
-    app.include_router(ticker_agent_router)
 
     # --- Config (read/write .env) ---
     _ENV_PATH = Path(__file__).resolve().parent.parent.parent / ".env"

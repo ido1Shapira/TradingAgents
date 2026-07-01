@@ -24,6 +24,7 @@ IndicatorKind = Literal[
     "s5fi",
     "green_streak",
     "price_vs_moving_averages",
+    "ticker_price",
 ]
 
 CNN_FEAR_GREED_URL = "https://production.dataviz.cnn.io/index/fearandgreed/graphdata"
@@ -57,6 +58,8 @@ class IndicatorDefinition:
     unit: str
     enabled: bool = True
     source: Literal["builtin", "custom"] = "builtin"
+    ticker: str | None = None  # only for ticker_price kind
+    triggered: bool = False    # one-shot state
 
 
 DEFAULT_INDICATORS: list[IndicatorDefinition] = [
@@ -122,7 +125,7 @@ def _config_path():
 
 
 def _definition_to_dict(defn: IndicatorDefinition) -> dict[str, Any]:
-    return {
+    result = {
         "id": defn.id,
         "kind": defn.kind,
         "name": defn.name,
@@ -133,6 +136,10 @@ def _definition_to_dict(defn: IndicatorDefinition) -> dict[str, Any]:
         "enabled": defn.enabled,
         "source": defn.source,
     }
+    if defn.ticker is not None:
+        result["ticker"] = defn.ticker
+    result["triggered"] = defn.triggered
+    return result
 
 
 def _definition_from_dict(data: dict[str, Any]) -> IndicatorDefinition:
@@ -146,6 +153,8 @@ def _definition_from_dict(data: dict[str, Any]) -> IndicatorDefinition:
         unit=str(data.get("unit", "")),
         enabled=bool(data.get("enabled", True)),
         source=str(data.get("source", "custom")),  # type: ignore[arg-type]
+        ticker=data.get("ticker"),
+        triggered=bool(data.get("triggered", False)),
     )
 
 
@@ -166,12 +175,45 @@ def write_indicators(indicators: list[IndicatorDefinition]) -> None:
 
 def add_indicator(body: dict[str, Any]) -> IndicatorDefinition:
     kind = str(body.get("kind", "vix"))
-    if kind not in {d.kind for d in DEFAULT_INDICATORS}:
+
+    # Validate kind is supported
+    supported_kinds = {d.kind for d in DEFAULT_INDICATORS} | {"ticker_price"}
+    if kind not in supported_kinds:
         raise ValueError(f"unsupported indicator kind: {kind}")
-    base = next(d for d in DEFAULT_INDICATORS if d.kind == kind)
+
+    # For ticker_price, validate ticker is provided
+    ticker = body.get("ticker")
+    if kind == "ticker_price":
+        if not ticker:
+            raise ValueError("ticker is required for ticker_price alerts")
+        ticker = str(ticker).upper()
+        # Validate ticker exists
+        try:
+            yf.Ticker(ticker).fast_info["lastPrice"]
+        except Exception:
+            raise ValueError(f"Ticker '{ticker}' not found. Please check the symbol.") from None
+
+    # Get base definition for defaults
+    if kind == "ticker_price":
+        # Create a base definition for ticker_price
+        base = IndicatorDefinition(
+            id="",
+            kind="ticker_price",
+            name=f"{ticker} Alert",
+            description=f"Alert when {ticker} reaches the target price.",
+            threshold=0,
+            comparator="above",
+            unit="price",
+            ticker=ticker,
+        )
+    else:
+        base = next(d for d in DEFAULT_INDICATORS if d.kind == kind)
+
     name = str(body.get("name") or base.name).strip()
     threshold = float(body.get("threshold", base.threshold))
+    comparator = str(body.get("comparator", base.comparator))
     indicator_id = _slugify(str(body.get("id") or name or kind))
+
     rows = read_indicators()
     existing_ids = {row.id for row in rows}
     if indicator_id in existing_ids:
@@ -179,16 +221,30 @@ def add_indicator(body: dict[str, Any]) -> IndicatorDefinition:
         while f"{indicator_id}-{suffix}" in existing_ids:
             suffix += 1
         indicator_id = f"{indicator_id}-{suffix}"
+
+    # Check for duplicate ticker_price alerts
+    if kind == "ticker_price":
+        for row in rows:
+            if (
+                row.kind == "ticker_price"
+                and row.ticker == ticker
+                and row.comparator == comparator
+                and row.threshold == threshold
+            ):
+                raise ValueError(f"Alert already exists for {ticker} {comparator} ${threshold}")
+
     row = IndicatorDefinition(
         id=indicator_id,
         kind=base.kind,
         name=name,
         description=str(body.get("description") or base.description),
         threshold=threshold,
-        comparator=base.comparator,
+        comparator=comparator,
         unit=base.unit,
         source="custom",
         enabled=bool(body.get("enabled", True)),
+        ticker=ticker,
+        triggered=False,
     )
     write_indicators([*rows, row])
     return row
@@ -214,20 +270,53 @@ def update_indicator(indicator_id: str, body: dict[str, Any]) -> IndicatorDefini
                 except (TypeError, ValueError):
                     raise ValueError("threshold must be a number") from None
             new_enabled = body.get("enabled")
-            if new_enabled is not None:
-                if not isinstance(new_enabled, bool):
-                    raise ValueError("enabled must be a boolean")
-                new_enabled = new_enabled
+            if new_enabled is not None and not isinstance(new_enabled, bool):
+                raise ValueError("enabled must be a boolean")
+            new_comparator = body.get("comparator")
+            if new_comparator is not None and new_comparator not in ("above", "below", "at_least", "within"):
+                raise ValueError("comparator must be one of: above, below, at_least, within")
+            new_ticker = body.get("ticker")
+            new_triggered = body.get("triggered")
+            if new_triggered is not None and not isinstance(new_triggered, bool):
+                raise ValueError("triggered must be a boolean")
+
             rows[i] = IndicatorDefinition(
                 id=row.id,
                 kind=row.kind,
                 name=row.name,
                 description=row.description,
                 threshold=new_threshold if new_threshold is not None else row.threshold,
-                comparator=row.comparator,
+                comparator=new_comparator if new_comparator is not None else row.comparator,
                 unit=row.unit,
                 enabled=new_enabled if new_enabled is not None else row.enabled,
                 source=row.source,
+                ticker=new_ticker if new_ticker is not None else row.ticker,
+                triggered=new_triggered if new_triggered is not None else row.triggered,
+            )
+            write_indicators(rows)
+            return rows[i]
+    return None
+
+
+def reset_indicator(indicator_id: str) -> IndicatorDefinition | None:
+    """Reset a single indicator's triggered state to False (re-arm one-shot alert)."""
+    rows = read_indicators()
+    for i, row in enumerate(rows):
+        if row.id == indicator_id:
+            if not row.triggered:
+                return row  # Already active, no change needed
+            rows[i] = IndicatorDefinition(
+                id=row.id,
+                kind=row.kind,
+                name=row.name,
+                description=row.description,
+                threshold=row.threshold,
+                comparator=row.comparator,
+                unit=row.unit,
+                enabled=row.enabled,
+                source=row.source,
+                ticker=row.ticker,
+                triggered=False,
             )
             write_indicators(rows)
             return rows[i]
@@ -241,6 +330,8 @@ def reset_indicators() -> list[IndicatorDefinition]:
 
 def run_checks() -> list[dict[str, Any]]:
     results: list[dict[str, Any]] = []
+    indicators_to_update: list[IndicatorDefinition] = []
+
     for defn in read_indicators():
         if not defn.enabled:
             results.append({"indicator": _definition_to_dict(defn), "result": None})
@@ -248,6 +339,11 @@ def run_checks() -> list[dict[str, Any]]:
         try:
             value = _fetch_value(defn)
             triggered, message = _evaluate(defn, value)
+
+            # For ticker_price, update triggered state if it fires
+            if defn.kind == "ticker_price" and triggered and not defn.triggered:
+                indicators_to_update.append(defn)
+
             results.append(
                 {
                     "indicator": _definition_to_dict(defn),
@@ -274,6 +370,31 @@ def run_checks() -> list[dict[str, Any]]:
                     },
                 }
             )
+
+    # Persist triggered state for one-shot alerts
+    if indicators_to_update:
+        all_indicators = read_indicators()
+        update_map = {d.id: d for d in indicators_to_update}
+        updated = []
+        for ind in all_indicators:
+            if ind.id in update_map:
+                updated.append(IndicatorDefinition(
+                    id=ind.id,
+                    kind=ind.kind,
+                    name=ind.name,
+                    description=ind.description,
+                    threshold=ind.threshold,
+                    comparator=ind.comparator,
+                    unit=ind.unit,
+                    enabled=ind.enabled,
+                    source=ind.source,
+                    ticker=ind.ticker,
+                    triggered=True,
+                ))
+            else:
+                updated.append(ind)
+        write_indicators(updated)
+
     return results
 
 
@@ -296,6 +417,10 @@ def _fetch_value(defn: IndicatorDefinition) -> Any:
         return _fetch_s5fi()
     if defn.kind == "price_vs_moving_averages":
         return _fetch_price_vs_moving_averages()
+    if defn.kind == "ticker_price":
+        if not defn.ticker:
+            raise ValueError("ticker_price indicator missing ticker field")
+        return _fetch_ticker_price(defn.ticker)
     raise ValueError(f"unsupported indicator kind: {defn.kind}")
 
 
@@ -334,6 +459,43 @@ def _evaluate(defn: IndicatorDefinition, value: Any) -> tuple[bool, str]:
             f"Closest: {nearest['label']} is {nearest['distance_ratio'] * 100:.2f}% "
             f"from its {nearest['window']}-day MA; trigger is {defn.threshold * 100:.2f}%."
         )
+    if defn.kind == "ticker_price":
+        # One-shot: already fired, skip
+        if defn.triggered:
+            return False, f"Alert already triggered for {defn.ticker}."
+
+        price_data = value
+        price = price_data["price"]
+        threshold = defn.threshold
+        comparator = defn.comparator
+
+        if comparator == "above":
+            triggered = price > threshold
+            msg = f"{defn.ticker} is ${price:.2f} (above ${threshold:.2f})"
+        elif comparator == "below":
+            triggered = price < threshold
+            msg = f"{defn.ticker} is ${price:.2f} (below ${threshold:.2f})"
+        elif comparator == "at_least":
+            triggered = price >= threshold
+            msg = f"{defn.ticker} is ${price:.2f} (at least ${threshold:.2f})"
+        elif comparator == "within":
+            # Within X% of threshold
+            pct = defn.threshold / 100 if defn.threshold > 1 else defn.threshold
+            diff_pct = abs(price - threshold) / threshold
+            triggered = diff_pct <= pct
+            msg = f"{defn.ticker} is ${price:.2f} ({diff_pct*100:.2f}% from ${threshold:.2f})"
+        else:
+            triggered = False
+            msg = f"Unknown comparator: {comparator}"
+
+        if triggered:
+            change = price_data.get("change_pct", 0)
+            high = price_data.get("day_high", price)
+            low = price_data.get("day_low", price)
+            msg += f"\nChange: {change:+.2f}% today"
+            msg += f"\nDay Range: ${low:.2f} - ${high:.2f}"
+
+        return triggered, msg
     return False, "Unsupported indicator."
 
 
@@ -342,6 +504,38 @@ def _fetch_latest_close(symbol: str, period: str) -> float:
     if hist.empty:
         raise ValueError(f"No data returned from yfinance for {symbol}.")
     return float(hist["Close"].iloc[-1])
+
+
+def _fetch_ticker_price(ticker: str) -> dict[str, Any]:
+    """Fetch current price and metadata for a ticker."""
+    import yfinance as yf
+    t = yf.Ticker(ticker)
+    fast_info = t.fast_info
+    price = float(fast_info["lastPrice"])
+
+    # Get additional context for detailed notification
+    try:
+        hist = t.history(period="5d")
+        if not hist.empty and len(hist) >= 2:
+            prev_close = float(hist["Close"].iloc[-2])
+            change_pct = ((price - prev_close) / prev_close) * 100
+            day_high = float(hist["High"].iloc[-1])
+            day_low = float(hist["Low"].iloc[-1])
+        else:
+            change_pct = 0
+            day_high = price
+            day_low = price
+    except Exception:
+        change_pct = 0
+        day_high = price
+        day_low = price
+
+    return {
+        "price": price,
+        "change_pct": change_pct,
+        "day_high": day_high,
+        "day_low": day_low,
+    }
 
 
 def _count_streak(red: bool, count: int) -> int:

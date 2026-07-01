@@ -16,7 +16,7 @@ import "./lib/console-capture";
 import { AuthGate } from "./components/AuthGate";
 import { WatchlistRail } from "./components/WatchlistRail";
 import { TickerHeader } from "./components/TickerHeader";
-import { TickerChatBar } from "./components/TickerChatBar";
+
 import { TopBar } from "./components/TopBar";
 import { LoadingScreen } from "./components/LoadingScreen";
 import { EmptyWatchlist } from "./components/EmptyWatchlist";
@@ -28,13 +28,13 @@ import { ReportPanel } from "./components/ReportPanel";
 import { DecisionPanel } from "./components/DecisionPanel";
 import { HistoricalAnalysisDrawer } from "./components/HistoricalAnalysisDrawer";
 import { BackgroundRunsDrawer } from "./components/BackgroundRunsDrawer";
-import { TickerAgentDrawer } from "./components/TickerAgentDrawer";
 import BatchDownloadDialog from "./components/BatchDownloadDialog";
 import { SettingsPanel } from "./components/SettingsPanel";
 import { PipelineFlow } from "./components/PipelineFlow";
 import { LlmTracePanel } from "./components/LlmTracePanel";
 import { AgentObservatory } from "./components/AgentObservatory";
 import { ErrorBoundary } from "./components/ErrorBoundary";
+import { AgentChatBubble } from "./components/AgentChatBubble";
 
 export default function App() {
   const focused = useUi((s) => s.focusedTicker);
@@ -100,8 +100,6 @@ export default function App() {
   const { theme, toggleTheme } = useTheme();
   const mobileSidebarOpen = useUi((s) => s.mobileSidebarOpen);
   const setMobileSidebarOpen = useUi((s) => s.setMobileSidebarOpen);
-  const tickerAgentDrawerOpen = useUi((s) => s.tickerAgentDrawerOpen);
-  const setTickerAgentDrawerOpen = useUi((s) => s.setTickerAgentDrawerOpen);
 
   // The run detail for the currently focused run (historical pick or
   // latest). Used to power the DecisionPanel's "incomplete" hint. The
@@ -226,7 +224,7 @@ export default function App() {
                 />
               )}
               <TickerHeader ticker={focused} price={price.price} changePct={price.change_pct} stale={priceStale} />
-              <TickerChatBar ticker={focused} price={price} run={focusedRunDetail} />
+              
               <div className="mb-4">
                 <ErrorBoundary>
                   <PipelineFlow events={events} />
@@ -275,10 +273,6 @@ export default function App() {
           onClose={() => useUi.getState().setHistoryOpen(focused, false)}
         />
       )}
-      <TickerAgentDrawer
-        open={tickerAgentDrawerOpen}
-        onClose={() => setTickerAgentDrawerOpen(false)}
-      />
       <BackgroundRunsDrawer focusedTicker={focused ?? "AAPL"} />
       <SettingsPanel
         open={settingsOpen}
@@ -292,6 +286,7 @@ export default function App() {
           onClose={() => setBatchDialogOpen(false)}
         />
       )}
+      <AgentChatBubble />
     </div>
   );
 
