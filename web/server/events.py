@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import logging
 import threading
 from datetime import datetime, timezone
@@ -184,10 +185,8 @@ def subscribe(run_id: str, ws: WebSocket) -> None:
         # Enforce memory limit per run (512MB constraint)
         if len(subs) >= _MAX_SUBSCRIBERS_PER_RUN:
             # Remove oldest subscriber (first in set) to make room
-            try:
+            with contextlib.suppress(KeyError):
                 subs.pop()
-            except KeyError:
-                pass
         subs.add(ws)
 
 
@@ -206,10 +205,8 @@ def subscribe_global(ws: WebSocket) -> None:
         # Enforce memory limit for global subscribers (512MB constraint)
         if len(subs) >= _MAX_GLOBAL_SUBSCRIBERS:
             # Remove oldest subscriber to make room
-            try:
+            with contextlib.suppress(KeyError):
                 subs.pop()
-            except KeyError:
-                pass
         subs.add(ws)
 
 

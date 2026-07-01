@@ -275,16 +275,16 @@ def _price_broadcast(event: dict) -> None:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     s = settings_mod.get_settings()
-    
+
     # Memory monitoring for 512MB constraint
     try:
-        from tradingagents.memory_monitor import log_memory_usage, check_memory_limit
+        from tradingagents.memory_monitor import check_memory_limit, log_memory_usage
         log_memory_usage("startup")
         if not check_memory_limit():
             log.warning("Memory limit check failed at startup")
     except Exception as e:
         log.warning("Memory monitoring not available: %s", e)
-    
+
     # Hardcoded legacy path: pre-Task-3 default was ~/.tradingagents/dashboard.db.
     # Remove if present so file-based storage starts truly fresh.
     legacy_db = Path.home() / ".tradingagents" / "dashboard.db"

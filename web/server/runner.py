@@ -415,10 +415,14 @@ async def _run_one(run_id: str, ticker: str, date_str: str, run_dir: Path, sem: 
     global _active
     t_start = time.monotonic()
     log.info("runner: run started rid=%s ticker=%s date=%s", run_id, ticker, date_str)
-    
+
     # Memory monitoring for 512MB constraint
     try:
-        from tradingagents.memory_monitor import log_memory_usage, check_memory_limit, enforce_cache_limits
+        from tradingagents.memory_monitor import (
+            check_memory_limit,
+            enforce_cache_limits,
+            log_memory_usage,
+        )
         log_memory_usage(f"run_start:{ticker}")
         if not check_memory_limit():
             log.warning("Memory limit exceeded before run %s, enforcing cache cleanup", run_id)
@@ -702,10 +706,10 @@ async def _run_one(run_id: str, ticker: str, date_str: str, run_dir: Path, sem: 
             "runner: run finished rid=%s ticker=%s duration_s=%.2f action=%s target=%s",
             run_id, ticker, duration_s, action, target,
         )
-        
+
         # Memory monitoring after run completes (512MB constraint)
         try:
-            from tradingagents.memory_monitor import log_memory_usage, enforce_cache_limits
+            from tradingagents.memory_monitor import enforce_cache_limits, log_memory_usage
             log_memory_usage(f"run_end:{ticker}")
             enforce_cache_limits()  # Clean up caches if memory is high
         except Exception as e:
