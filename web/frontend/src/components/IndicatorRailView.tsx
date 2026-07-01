@@ -19,6 +19,7 @@ import {
 } from "../lib/api";
 import { useChatStore } from "../stores/useChatStore";
 import { fetchTools, executeTool, setCurrentUserMessage, clearCurrentUserMessage, prepopulateToolContext, setConversationHistory } from "../lib/agentTools";
+import { ErrorMessage } from "./ErrorMessage";
 
 const KIND_ALIASES: Array<[RegExp, IndicatorKind]> = [
   [/\b(vix|volatility)\b/i, "vix"],
@@ -358,7 +359,7 @@ export function IndicatorRailView() {
 
         if (toolCallsFromResponse.length === 0) {
           if (!fullResponse) {
-            updateMessage(currentMsgId, { content: "No response", isStreaming: false });
+            updateMessage(currentMsgId, { content: "__ERROR__llm_no_response|No response received from the AI model.|Check your API key and connection, then try again.", isStreaming: false });
           } else {
             updateMessage(currentMsgId, { isStreaming: false });
           }
@@ -410,10 +411,18 @@ export function IndicatorRailView() {
         currentMsgId = addMessage({ role: "assistant", content: "", isStreaming: true });
       }
     } catch (err) {
+      const rawMsg = err instanceof Error ? err.message : "Unknown error";
+      const lower = rawMsg.toLowerCase();
+      let type: "network" | "llm" | "tool" | "stream" | "unknown" = "unknown";
+      if (lower.includes("network") || lower.includes("fetch")) type = "network";
+      else if (lower.includes("llm") || lower.includes("model")) type = "llm";
+      else if (lower.includes("tool")) type = "tool";
+      else if (lower.includes("stream")) type = "stream";
+      
       addMessage({
         role: "assistant",
         isStreaming: false,
-        content: `Error: ${err instanceof Error ? err.message : "Unknown error"}`,
+        content: `__ERROR__${type}|${rawMsg}|Try again.`,
       });
     } finally {
       setIsAsking(false);
@@ -638,7 +647,18 @@ export function IndicatorRailView() {
                     Tools: {msg.toolCalls.map(tc => tc.name).join(", ")}
                   </div>
                 )}
-                {msg.content}
+                {msg.content.startsWith("__ERROR__") ? (() => {
+                  const parts = msg.content.split("|");
+                  const type = (parts[0].replace("__ERROR__", "") || "unknown") as "network" | "llm" | "tool" | "stream" | "unknown";
+                  return (
+                    <ErrorMessage
+                      type={type}
+                      message={parts[1] || "An error occurred"}
+                      suggestion={parts[2]}
+                      details={parts[3]}
+                    />
+                  );
+                })() : msg.content}
                 {msg.isStreaming && !msg.content && (
                   <span className="inline-flex gap-1 ml-1">
                     <span className="w-1 h-1 bg-sky-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
