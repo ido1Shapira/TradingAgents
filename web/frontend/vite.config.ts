@@ -17,6 +17,7 @@ function versionPlugin() {
 
 export default defineConfig({
   plugins: [react(), versionPlugin()],
+  base: "/app/",
   server: {
     port: 5173,
     proxy: {

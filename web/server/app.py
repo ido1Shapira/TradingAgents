@@ -1067,10 +1067,21 @@ def create_app() -> FastAPI:
             raise HTTPException(status_code=400, detail=f"Invalid bot token: {exc}") from exc
         return {"status": "sent", "chat_id": chat_id}
 
-    # static mount (only if build dir exists)
+    # static files & SPA catch-all (only if build dir exists)
     settings = settings_mod.get_settings()
     if os.path.isdir(settings.frontend_dist):
-        app.mount("/", StaticFiles(directory=settings.frontend_dist, html=True), name="frontend")
+        app.mount("/app", StaticFiles(directory=settings.frontend_dist, html=True), name="frontend")
+
+        @app.get("/{path:path}")
+        async def serve_spa(path: str):
+            if path.startswith(("api/", "ws/", "app/")):
+                raise HTTPException(status_code=404)
+            index_path = Path(settings.frontend_dist) / "index.html"
+            return StreamingResponse(
+                open(index_path, "rb"),
+                media_type="text/html",
+                status_code=200,
+            )
 
     return app
 
