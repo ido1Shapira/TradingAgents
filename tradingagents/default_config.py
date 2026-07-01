@@ -88,6 +88,11 @@ DEFAULT_CONFIG = _apply_env_overrides({
     # the oldest resolved entries are pruned once this limit is exceeded.
     # Pending entries are never pruned. None disables rotation entirely.
     "memory_log_max_entries": None,
+    # Memory limits for 512MB constraint
+    "max_history_bar_cache_size": 200,  # Reduced from 500
+    "max_run_dir_cache_size": 500,  # Reduced from 2000
+    "max_states_in_memory": 5,  # Reduced from 10
+    "max_background_job_durations": 100,  # Limit duration history per job
     # LLM settings
     "llm_provider": "openai",
     "deep_think_llm": "gpt-5.5",
@@ -106,8 +111,9 @@ DEFAULT_CONFIG = _apply_env_overrides({
     # ON — turning it off is the right move only when you need a guaranteed
     # live response (e.g. live trading). TTL None = never expire; entries
     # are evicted only when the user clears the cache directory.
+    # NOTE: For 512MB memory limit, set a reasonable TTL to prevent unbounded growth.
     "llm_cache_enabled": True,
-    "llm_cache_ttl_seconds": None,
+    "llm_cache_ttl_seconds": 3600,  # 1 hour TTL to prevent unbounded cache growth
     # Retry-with-backoff policy (see ``tradingagents.llm_clients.retry``).
     # Five retries with exponential backoff and Retry-After honoring is
     # the difference between "one 429 fails the whole run" and "the

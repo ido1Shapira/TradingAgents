@@ -34,7 +34,7 @@ _settings = {"data_dir": "", "cache_dir": ""}
 # Cache mapping run_id → run directory path, avoiding O(n) directory walks.
 # Populated lazily by ``_find_run_dir``.
 _run_dir_cache: dict[str, Path] = {}
-_RUN_DIR_CACHE_MAX = 2000
+_RUN_DIR_CACHE_MAX = 1000
 
 
 def clear_run_dir_cache() -> None:

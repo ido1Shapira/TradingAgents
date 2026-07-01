@@ -89,7 +89,18 @@ def _interval_for_span(span: timedelta) -> str:
 #: Key ``(ticker_upper, interval, start.date(), end.date())``.
 #: Value ``(fetched_at_monotonic, bars)``.
 _bar_cache: dict[tuple[str, str, object, object], tuple[float, list[dict]]] = {}
-_bar_cache_max_size = 500
+
+# Configurable cache size limit (default 200 for 512MB memory constraint)
+def _get_bar_cache_max_size() -> int:
+    """Get max cache size from config, defaulting to 200 for memory efficiency."""
+    try:
+        from tradingagents.dataflows.config import get_config
+        config = get_config()
+        return config.get("max_history_bar_cache_size", 200)
+    except Exception:
+        return 200
+
+_bar_cache_max_size = 200  # Reduced from 500 for 512MB memory limit
 
 #: TTL by interval. 1m polls are short; 1d polls are long.
 _CACHE_TTL_S: dict[str, int] = {
@@ -100,9 +111,11 @@ _CACHE_TTL_S: dict[str, int] = {
 
 
 def _trim_bar_cache() -> None:
-    if len(_bar_cache) > _bar_cache_max_size:
+    """Trim cache to configured max size, removing oldest entries first."""
+    max_size = _get_bar_cache_max_size()
+    if len(_bar_cache) > max_size:
         sorted_keys = sorted(_bar_cache.keys(), key=lambda k: _bar_cache[k][0])
-        for k in sorted_keys[:len(_bar_cache) - _bar_cache_max_size]:
+        for k in sorted_keys[:len(_bar_cache) - max_size]:
             del _bar_cache[k]
 
 

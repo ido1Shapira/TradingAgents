@@ -275,6 +275,16 @@ def _price_broadcast(event: dict) -> None:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     s = settings_mod.get_settings()
+    
+    # Memory monitoring for 512MB constraint
+    try:
+        from tradingagents.memory_monitor import log_memory_usage, check_memory_limit
+        log_memory_usage("startup")
+        if not check_memory_limit():
+            log.warning("Memory limit check failed at startup")
+    except Exception as e:
+        log.warning("Memory monitoring not available: %s", e)
+    
     # Hardcoded legacy path: pre-Task-3 default was ~/.tradingagents/dashboard.db.
     # Remove if present so file-based storage starts truly fresh.
     legacy_db = Path.home() / ".tradingagents" / "dashboard.db"
@@ -292,7 +302,7 @@ async def lifespan(app: FastAPI):
     # threads inside loop.run_in_executor) can schedule broadcasts on it
     # via asyncio.run_coroutine_threadsafe. Without this, live WS
     # updates from inside a run silently never fire — the UI only
-    # updated on reconnect (replay from events.jsonl).
+    # updates on reconnect (replay from events.jsonl).
     events.set_event_loop(asyncio.get_running_loop())
     lp_module.setup_log_publisher(
         asyncio.get_running_loop(), min_level=getattr(logging, s.log_level, logging.INFO)

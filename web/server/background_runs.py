@@ -166,6 +166,11 @@ class BackgroundRunState:
 
     def record_duration(self, duration_s: float) -> None:
         with self._persist_lock:
+            # Limit duration history to prevent unbounded memory growth (512MB constraint)
+            max_durations = 100  # Keep last 100 durations for ETA calculation
+            if len(self.durations_s) >= max_durations:
+                # Keep only the most recent durations
+                self.durations_s = self.durations_s[-max_durations//2:]
             self.durations_s.append(duration_s)
             self.avg_duration_s = sum(self.durations_s) / len(self.durations_s)
             self._recompute_eta()
