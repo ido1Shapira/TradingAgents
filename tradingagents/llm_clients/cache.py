@@ -284,6 +284,9 @@ class LLMResponseCache:
         Set to ``False`` to short-circuit ``get``/``put`` into no-ops
         (useful for tests and for the ``LLM_CACHE_ENABLED=false``
         escape hatch in the env overlay).
+    max_entries:
+        Optional cap on total cache files. Oldest (by mtime) are evicted
+        when this limit is exceeded. None means no cap.
     """
 
     def __init__(
@@ -292,10 +295,12 @@ class LLMResponseCache:
         *,
         ttl_seconds: Optional[int] = None,
         enabled: bool = True,
+        max_entries: Optional[int] = None,
     ) -> None:
         self.cache_dir = Path(cache_dir)
         self.ttl_seconds = ttl_seconds
         self.enabled = enabled
+        self.max_entries = max_entries
         self.stats = CacheStats()
         # File-system writes are serialized per-cache to avoid half-written
         # files when two agents invoke the same prompt concurrently.
@@ -399,6 +404,48 @@ class LLMResponseCache:
 
         self.stats.writes += 1
 
+        # Enforce disk limit after write (best-effort, non-blocking)
+        if self.max_entries is not None:
+            try:
+                self._enforce_max_entries()
+            except Exception:
+                pass  # Never fail a write due to cleanup issues
+
+    def _enforce_max_entries(self) -> None:
+        """Evict oldest cache entries when max_entries is exceeded.
+
+        Walks the cache directory, sorts by mtime, and deletes the oldest
+        entries until we're at or below the limit. Only called under
+        ``self._lock`` or from ``put`` after the lock is released.
+        """
+        if self.max_entries is None or not self.cache_dir.exists():
+            return
+
+        all_files = list(self.cache_dir.rglob("*.json"))
+        if len(all_files) <= self.max_entries:
+            return
+
+        # Sort oldest first by mtime
+        all_files.sort(key=lambda p: p.stat().st_mtime)
+
+        # Delete excess files (keep 90% of limit to avoid thrashing)
+        target = int(self.max_entries * 0.9)
+        to_delete = all_files[:len(all_files) - target]
+
+        for path in to_delete:
+            try:
+                path.unlink()
+                # Clean up empty parent dirs
+                try:
+                    path.parent.rmdir()
+                except OSError:
+                    pass
+            except OSError:
+                pass
+
+        if to_delete:
+            logger.info("llm_cache: evicted %d old entries (max=%d)", len(to_delete), self.max_entries)
+
     def clear(self) -> int:
         """Delete all cache entries. Returns the count removed.
 
@@ -445,6 +492,7 @@ def get_default_cache(
     data_cache_dir: Optional[str | os.PathLike[str]] = None,
     ttl_seconds: Optional[int] = None,
     enabled: bool = True,
+    max_entries: Optional[int] = None,
     override: bool = False,
 ) -> Optional[LLMResponseCache]:
     """Return a process-wide cache, building it lazily from config.
@@ -470,6 +518,7 @@ def get_default_cache(
             cache_path,
             ttl_seconds=ttl_seconds,
             enabled=True,
+            max_entries=max_entries,
         )
         return _DEFAULT_CACHE
 

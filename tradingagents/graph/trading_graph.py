@@ -223,10 +223,12 @@ class TradingAgentsGraph:
                     ttl_raw,
                 )
                 ttl = None
+        max_entries = self.config.get("max_llm_cache_entries", 200)
         return LLMResponseCache(
             cache_dir=os.path.join(self.config["data_cache_dir"], "llm_cache"),
             ttl_seconds=ttl,
             enabled=True,
+            max_entries=max_entries,
         )
 
     def _build_retry_policy(self) -> RetryPolicy | None:

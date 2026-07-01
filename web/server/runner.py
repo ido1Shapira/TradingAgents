@@ -38,7 +38,7 @@ _cancelled_run_ids: set[str] = set()
 def mark_run_cancelled(run_id: str) -> None:
     """Register a run as cancelled in-memory so the running graph stops fast."""
     _cancelled_run_ids.add(run_id)
-    if len(_cancelled_run_ids) > 500:
+    if len(_cancelled_run_ids) > 100:  # Reduced from 500 for 512MB constraint
         _cancelled_run_ids.clear()
 
 

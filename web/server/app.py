@@ -768,20 +768,22 @@ def create_app() -> FastAPI:
             return
         await ws.accept()
         _active_ws.add(ws)
-        rj = storage.read_run(run_id)
-        if rj is None:
-            await ws.send_json({"type": "error", "detail": "run not found"})
-            await ws.close()
-            return
-        for ev in storage.list_run_events(run_id):
-            if since and (ev.get("id") or "") <= since:
-                continue
-            await ws.send_json(ev)
-        events.subscribe(run_id, ws)
         try:
+            rj = storage.read_run(run_id)
+            if rj is None:
+                await ws.send_json({"type": "error", "detail": "run not found"})
+                await ws.close()
+                return
+            for ev in storage.list_run_events(run_id):
+                if since and (ev.get("id") or "") <= since:
+                    continue
+                await ws.send_json(ev)
+            events.subscribe(run_id, ws)
             while True:
                 await ws.receive_text()
         except WebSocketDisconnect:
+            pass
+        except Exception:
             pass
         finally:
             events.unsubscribe(run_id, ws)
@@ -795,11 +797,13 @@ def create_app() -> FastAPI:
             return
         await ws.accept()
         _active_ws.add(ws)
-        events.subscribe_global(ws)
         try:
+            events.subscribe_global(ws)
             while True:
                 await ws.receive_text()
         except WebSocketDisconnect:
+            pass
+        except Exception:
             pass
         finally:
             events.unsubscribe_global(ws)
@@ -812,6 +816,7 @@ def create_app() -> FastAPI:
             await ws.close(code=4001)
             return
         await ws.accept()
+        _active_ws.add(ws)
         lp = lp_module.log_publisher()
         if lp:
             lp.subscribe(ws)
@@ -827,9 +832,12 @@ def create_app() -> FastAPI:
                 await ws.receive_text()
         except WebSocketDisconnect:
             pass
+        except Exception:
+            pass
         finally:
             if lp:
                 lp.unsubscribe(ws)
+            _active_ws.discard(ws)
 
     # --- Background Past Runs ---
     from web.server import background_runs

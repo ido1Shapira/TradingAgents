@@ -21,10 +21,11 @@ def _reload_with_env(monkeypatch, **overrides):
 
 @pytest.mark.unit
 class TestCacheConfigDefaults:
-    def test_defaults_enable_cache_with_no_ttl(self, monkeypatch):
+    def test_defaults_enable_cache_with_ttl(self, monkeypatch):
         dc = _reload_with_env(monkeypatch)
         assert dc.DEFAULT_CONFIG["llm_cache_enabled"] is True
-        assert dc.DEFAULT_CONFIG["llm_cache_ttl_seconds"] is None
+        # 512MB constraint: default TTL is 1 hour to prevent unbounded cache growth
+        assert dc.DEFAULT_CONFIG["llm_cache_ttl_seconds"] == 3600
 
     def test_disable_cache_via_env(self, monkeypatch):
         dc = _reload_with_env(
