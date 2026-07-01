@@ -3,6 +3,7 @@ import { MessageSquare, X, Send, Loader2, ChevronDown, Plus, Maximize2, Trash2, 
 import { useChatStore, type Message } from "../stores/useChatStore";
 import { fetchTools, executeTool, setRenamedToolMap, setCurrentUserMessage, clearCurrentUserMessage, prepopulateToolContext, setConversationHistory, type ToolResult } from "../lib/agentTools";
 import { LargeChatScreen } from "./LargeChatScreen";
+import { ErrorMessage } from "./ErrorMessage";
 
 function formatDateTime(timestamp: number): string {
   return new Date(timestamp).toLocaleString("en-US", {
@@ -12,6 +13,23 @@ function formatDateTime(timestamp: number): string {
     minute: "2-digit",
     hour12: true,
   });
+}
+
+function classifyError(errorStr: string): { type: "network" | "llm" | "tool" | "stream" | "unknown"; message: string; suggestion: string } {
+  const lower = errorStr.toLowerCase();
+  if (lower.includes("network") || lower.includes("fetch") || lower.includes("connection")) {
+    return { type: "network", message: "Could not connect to the server", suggestion: "Check your connection and try again." };
+  }
+  if (lower.includes("stream") || lower.includes("sse")) {
+    return { type: "stream", message: "Received an invalid response from the server", suggestion: "Try again." };
+  }
+  if (lower.includes("tool") || lower.includes("execute")) {
+    return { type: "tool", message: errorStr, suggestion: "Verify the ticker symbol is correct." };
+  }
+  if (lower.includes("llm") || lower.includes("model") || lower.includes("api key")) {
+    return { type: "llm", message: "The AI model encountered an error", suggestion: "Check your API key and try again." };
+  }
+  return { type: "unknown", message: errorStr, suggestion: "Try again." };
 }
 
 function getSystemPrompt(tools: Array<{ name: string; description: string }>): string {
@@ -225,7 +243,20 @@ function MessageBubble({ msg }: { msg: Message }) {
           <span className="font-semibold">Calling:</span> {msg.toolCalls.map(tc => tc.name).join(", ")}
         </div>
       )}
-      <div className="whitespace-pre-wrap">{msg.content}</div>
+      {msg.content.startsWith("__ERROR__") ? (() => {
+        const parts = msg.content.split("|");
+        const type = (parts[0].replace("__ERROR__", "") || "unknown") as "network" | "llm" | "tool" | "stream" | "unknown";
+        return (
+          <ErrorMessage
+            type={type}
+            message={parts[1] || "An error occurred"}
+            suggestion={parts[2]}
+            details={parts[3]}
+          />
+        );
+      })() : (
+        <div className="whitespace-pre-wrap">{msg.content}</div>
+      )}
       {msg.isStreaming && !msg.content && (
         <span className="inline-flex gap-1 ml-1">
           <span className="w-1.5 h-1.5 bg-sky-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
@@ -454,8 +485,9 @@ export function AgentChatBubble() {
             signal: abortControllerRef.current?.signal,
           });
         } catch (fetchErr) {
+          const errDetail = fetchErr instanceof Error ? fetchErr.message : String(fetchErr);
           updateMessage(currentMsgId, {
-            content: `Network error: ${fetchErr instanceof Error ? fetchErr.message : String(fetchErr)}`,
+            content: `__ERROR__network|Could not connect to the server|${errDetail}`,
             isStreaming: false,
           });
           break;
@@ -464,7 +496,8 @@ export function AgentChatBubble() {
         if (!response.ok) {
           let errText = "Chat completion failed";
           try { errText = (await response.json()).error || errText; } catch {}
-          updateMessage(currentMsgId, { content: `Error: ${errText}`, isStreaming: false });
+          const classified = classifyError(errText);
+          updateMessage(currentMsgId, { content: `__ERROR__${classified.type}|${classified.message}|${classified.suggestion}`, isStreaming: false });
           break;
         }
 
@@ -505,7 +538,10 @@ export function AgentChatBubble() {
                 } catch {}
               }
               if (parsed.type === "error") {
-                throw new Error(parsed.error || "Stream error");
+                const streamErr = parsed.error || "Stream error";
+                const classified = classifyError(streamErr);
+                updateMessage(currentMsgId, { content: `__ERROR__${classified.type}|${classified.message}|${classified.suggestion}`, isStreaming: false });
+                break;
               }
               if (parsed.type === "done") {
                 if (parsed.tool_calls?.length > 0) {
@@ -568,9 +604,9 @@ export function AgentChatBubble() {
         if (toolCallsFromResponse.length === 0) {
           if (!fullResponse || !fullResponse.trim()) {
             if (hadExecutedTools) {
-              updateMessage(currentMsgId, { isStreaming: false });
+              updateMessage(currentMsgId, { content: "__ERROR__tool_no_summary|The analysis completed but returned no summary.|Check the tool results above for data.", isStreaming: false });
             } else {
-              updateMessage(currentMsgId, { content: "No response", isStreaming: false });
+              updateMessage(currentMsgId, { content: "__ERROR__llm_no_response|No response received from the AI model.|Check your API key and connection, then try again.", isStreaming: false });
             }
           } else {
             updateMessage(currentMsgId, { isStreaming: false });
@@ -630,17 +666,12 @@ export function AgentChatBubble() {
       }
     } catch (error) {
       console.error("AgentChat error:", error);
-      let errorMessage: string;
-      if (error instanceof Error) {
-        errorMessage = `${error.message}\n${error.stack || ""}`;
-      } else if (typeof error === "object" && error !== null) {
-        errorMessage = JSON.stringify(error, null, 2);
-      } else {
-        errorMessage = String(error);
-      }
+      const rawMsg = error instanceof Error ? error.message : String(error);
+      const classified = classifyError(rawMsg);
+      const details = error instanceof Error ? error.stack : undefined;
       addMessage({
         role: "assistant",
-        content: `Error: ${errorMessage}`
+        content: `__ERROR__${classified.type}|${classified.message}|${classified.suggestion}${details ? `|${details}` : ""}`
       });
     } finally {
       setLoading(false);
