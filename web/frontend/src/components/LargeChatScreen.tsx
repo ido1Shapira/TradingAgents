@@ -42,14 +42,20 @@ function getSystemPrompt(tools: Array<{ name: string; description: string }>): s
 
 Current date and time: ${dateTimeStr}
 
+## TOOL SELECTION GUIDE
+- To run analysis on a ticker: call post_runs with ticker parameter (e.g. {"ticker": "MSFT"})
+- To get historical prices: call get_tickers_ticker_history with ticker and range parameters
+- DO NOT call get_tickers_ticker_history repeatedly - once is enough
+- If analysis is running, wait for results before making more calls
+
 You MUST always answer the user's financial questions by actually using your available tools to fetch real data. Never refuse to answer or say you can't provide advice. When a user asks about a ticker (like SPY, AAPL, QQQ), immediately call the appropriate tool to get current data.
 
 Your available tools (auto-generated from the backend API):
 ${toolList}
 
 When asked about whether to buy/sell/enter a position:
-1. Call get_prices or get_tickers__ticker__history to get current/recent data
-2. Call get_indicators to check market conditions
+1. Use post_runs to start an analysis (takes time to complete)
+2. After analysis, use get_tickers_ticker_history to see historical context
 3. Provide a direct answer based on the actual data, not generic disclaimers
 
 Always use tools to get real data when available. Analyze the data and give specific, data-driven answers.
@@ -226,6 +232,9 @@ export function LargeChatScreen({ onClose }: Props) {
               }
               if (parsed.type === "error") {
                 throw new Error(parsed.error || "Stream error");
+              }
+              if (parsed.type === "thinking" && parsed.thinking) {
+                updateMessage(currentMsgId, { thinking: parsed.thinking });
               }
               if (parsed.type === "done") {
                 if (parsed.tool_calls?.length > 0) {
