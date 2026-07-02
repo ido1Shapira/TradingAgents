@@ -14,6 +14,133 @@ from pydantic import BaseModel
 
 router = APIRouter(prefix="/api/chat", tags=["chat"])
 
+TOOL_GUIDANCE: dict[str, dict[str, str]] = {
+    "runs_post": {
+        "what": "Start a new deep analysis run for a ticker symbol. This runs the full trading agent analysis pipeline.",
+        "when": "Use this when user asks to analyze a stock, get recommendations, or investigate a ticker. This is the PRIMARY tool for stock analysis.",
+        "output": "Returns {run_id}. The analysis runs asynchronously - poll get_runs_run_id or get_runs_run_id_health to check progress.",
+        "next": "After starting, use get_runs_run_id_health to check if analysis is complete. Do NOT call this repeatedly for the same ticker.",
+    },
+    "tickers_ticker_runs_get": {
+        "what": "List all previous analysis runs for a specific ticker.",
+        "when": "Use to see historical analysis results or check if analysis already exists for a ticker.",
+        "output": "Returns array of {run_id, status, created_at} objects. Use get_runs_run_id to get full results.",
+        "next": "If analysis exists, use get_runs_run_id to retrieve results.",
+    },
+    "tickers_ticker_history_get": {
+        "what": "Get historical price data and charts for a ticker.",
+        "when": "Use when user wants to see price trends, charts, or historical performance. Good for 'what's the trend?' or 'how has it performed?' questions.",
+        "output": "Returns {bars: [...], range: '1mo', ticker: 'SPY'}. Bars contain {date, open, high, low, close, volume}.",
+        "next": "Summarize the trend for the user. Look for higher highs, higher lows, volume patterns.",
+    },
+    "runs_run_id_get": {
+        "what": "Get the full results of a completed analysis run.",
+        "when": "Use after analysis completes to retrieve the trading recommendation, sentiment, and reasoning.",
+        "output": "Returns {run_id, status, final_decision, sentiment, confidence, key_themes: [...], events: [...]}.",
+        "next": "Present the recommendation to user: BUY/SELL/HOLD with confidence level and key reasons.",
+    },
+    "runs_run_id_health_get": {
+        "what": "Check if an analysis run is still running or has completed.",
+        "when": "Use after post_runs to poll for completion. Wait a few seconds between checks.",
+        "output": "Returns {status: 'running'|'completed'|'failed', progress: 0-100}. When status='completed', use get_runs_run_id.",
+        "next": "If status='completed', call get_runs_run_id. If 'running', wait and check again.",
+    },
+    "runs_run_id_cancel_post": {
+        "what": "Cancel a running analysis.",
+        "when": "Use if analysis is taking too long or user wants to stop.",
+        "output": "Returns {cancelled: true}.",
+        "next": "Inform user the analysis was cancelled.",
+    },
+    "watchlist_get": {
+        "what": "Get the user's watchlist - all tickers being tracked.",
+        "when": "Use at start of conversation or when user asks 'what am I tracking?' or 'show my watchlist'.",
+        "output": "Returns array of {ticker, company_name, exchange, group}.",
+        "next": "Present as a list. User can ask about any ticker on the watchlist.",
+    },
+    "prices_get": {
+        "what": "Get current prices for all tickers on the watchlist.",
+        "when": "Use when user asks for current prices, 'how are my stocks doing?' or 'show prices'.",
+        "output": "Returns {snapshot: {ticker: {price, change, change_percent, volume}}}. May be empty if no data.",
+        "next": "Display as price list with change percentages. Green = up, Red = down.",
+    },
+    "indicators_get": {
+        "what": "List all configured price alerts and indicators.",
+        "when": "Use to show user their active alerts or check existing conditions.",
+        "output": "Returns {indicators: [{id, kind, ticker, threshold, comparator, enabled}]}.",
+        "next": "Show active alerts. User can ask to add/remove alerts.",
+    },
+    "indicators_post": {
+        "what": "Create a new price alert for a ticker.",
+        "when": "Use when user says 'alert me when MSFT hits $500' or 'set a price alert'.",
+        "output": "Returns {id, kind: 'ticker_price', ticker, threshold, comparator}. Alert triggers once then deactivates.",
+        "next": "Confirm the alert was created. User will be notified when triggered.",
+    },
+    "indicators_indicator_id_delete": {
+        "what": "Delete/remove a price alert by its ID.",
+        "when": "Use when user wants to remove an alert.",
+        "output": "Returns 204 No Content on success.",
+        "next": "Confirm the alert was removed.",
+    },
+    "indicators_indicator_id_patch": {
+        "what": "Update alert parameters (threshold, comparator, enabled).",
+        "when": "Use when user wants to modify an existing alert.",
+        "output": "Returns updated indicator object.",
+        "next": "Confirm the changes.",
+    },
+    "indicators_check_post": {
+        "what": "Manually trigger a check of all price alerts against current prices.",
+        "when": "Use when user wants to manually check if any alerts have been triggered.",
+        "output": "Returns {triggered: [...], checked: [...]} showing which alerts fired.",
+        "next": "Report any triggered alerts to the user.",
+    },
+    "watchlist_post": {
+        "what": "Add a ticker to the watchlist.",
+        "when": "Use when user says 'track MSFT' or 'add to watchlist'.",
+        "output": "Returns {ticker, company_name, exchange}. Fails if already exists.",
+        "next": "Confirm added. Then user can ask to analyze it.",
+    },
+    "watchlist_ticker_delete": {
+        "what": "Remove a ticker from the watchlist.",
+        "when": "Use when user says 'stop tracking MSFT' or 'remove from watchlist'.",
+        "output": "Returns 204 No Content.",
+        "next": "Confirm removed.",
+    },
+    "watchlist_ticker_patch": {
+        "what": "Update a watchlist item (change group/category).",
+        "when": "Use when user wants to reorganize their watchlist.",
+        "output": "Returns updated watchlist item.",
+        "next": "Confirm changes.",
+    },
+    "background_runs_get": {
+        "what": "List all background analysis jobs.",
+        "when": "Use to check status of long-running analyses.",
+        "output": "Returns array of {job_id, ticker, status, created_at}.",
+        "next": "Show job statuses.",
+    },
+    "background_runs_job_id_delete": {
+        "what": "Cancel and remove a background job.",
+        "when": "Use to clean up a background job.",
+        "output": "Returns 204 No Content.",
+        "next": "Confirm cancelled.",
+    },
+    "tickers_ticker_download_get": {
+        "what": "Download historical data for a ticker as CSV/JSON.",
+        "when": "Use when user wants to export data for a ticker.",
+        "output": "Returns downloadable file with historical price data.",
+        "next": "File is downloaded automatically.",
+    },
+}
+
+
+def _get_tool_description(tool_name: str, method: str, path_params: list[str], route_description: str) -> str:
+    key = f"{tool_name}_{method.lower()}"
+    if key in TOOL_GUIDANCE:
+        guidance = TOOL_GUIDANCE[key]
+        return f"{guidance['what']}\n\nWHEN TO USE: {guidance['when']}\n\nOUTPUT: {guidance['output']}\n\nNEXT STEP: {guidance['next']}"
+    if path_params:
+        return f"{route_description}\n\nParameters: {', '.join(path_params)}"
+    return route_description
+
 
 class ProxyRequest(BaseModel):
     method: str
@@ -61,60 +188,93 @@ def extract_tool_definitions(app) -> list[dict[str, Any]]:
             # Get description from route or generate one
             description = ""
             if hasattr(route, "endpoint") and route.endpoint.__doc__:
-                description = route.endpoint.__doc__.strip().split("\n")[0]
+                route_desc = route.endpoint.__doc__.strip().split("\n")[0]
             elif path_params:
-                # Build function-style description: tool_name(param1, param2?) - purpose
                 sig_parts = []
                 for p in path_params:
                     sig_parts.append(f"{p}: string")
                 sig = f"{method.lower()}_{tool_name}({', '.join(sig_parts)})"
-                # Use first path param as main descriptor
                 main_param = path_params[0]
-                description = f"{sig} - Fetch data for {main_param}. Examples: {main_param.upper()}=\"SPY\", \"AAPL\", \"QQQ\""
+                route_desc = f"{sig} - Fetch data for {main_param}. Examples: {main_param.upper()}=\"SPY\", \"AAPL\", \"QQQ\""
             else:
-                description = f"Execute {method} on {route.path}"
+                route_desc = f"Execute {method} on {route.path}"
+
+            description = _get_tool_description(tool_name, method, path_params, route_desc)
 
             # Extract parameters from path and known query params
             parameters: dict[str, dict[str, Any]] = {}
+            required: list[str] = []
+
             for param in path_params:
+                param_desc = "REQUIRED. The ticker symbol (e.g. 'SPY', 'AAPL', 'MSFT'). Extract from conversation context."
+                if param == "indicator_id":
+                    param_desc = "REQUIRED. The unique ID of the indicator/alert. Get this from get_indicators response."
+                elif param == "run_id":
+                    param_desc = "REQUIRED. The run identifier returned from post_runs or get_tickers_ticker_runs."
+                elif param == "job_id":
+                    param_desc = "REQUIRED. The background job ID to manage."
                 parameters[param] = {
                     "type": "string",
-                    "description": (
-                        f"REQUIRED. The {param} symbol (e.g. 'SPY', 'AAPL', 'QQQ'). "
-                        f"Extract from conversation context. Must be a valid ticker symbol."
-                    ),
+                    "description": param_desc,
                 }
+                required.append(param)
 
             # Add known query parameters for commonly used endpoints
             if tool_name == "prices":
                 parameters["ticker"] = {
                     "type": "string",
-                    "description": "ticker symbol to get price for, e.g. 'SPY', 'AAPL'",
+                    "description": "Optional ticker to get specific price. If omitted, returns all tracked tickers.",
                 }
             if tool_name == "tickers_ticker_history":
                 parameters["range"] = {
                     "type": "string",
-                    "description": "Time range: '1d', '5d', '1mo', '3mo', '6mo', '1y'. Default: 'auto'",
+                    "description": "Time range: '1d', '5d', '1mo', '3mo', '6mo', '1y'. Default: 'auto'. '1mo' = 1 month of data.",
                 }
-            # NEW: Add ticker_price-specific parameters for post_indicators
             if tool_name == "indicators" and method == "POST":
                 parameters["kind"] = {
                     "type": "string",
                     "enum": ["ticker_price"],
-                    "description": "Type of alert. Use 'ticker_price' for price alerts on specific tickers.",
+                    "description": "Alert type. Always use 'ticker_price' for price alerts.",
                 }
                 parameters["ticker"] = {
                     "type": "string",
-                    "description": "REQUIRED for ticker_price alerts. The ticker symbol (e.g. 'SPY', 'AAPL').",
+                    "description": "REQUIRED. The ticker symbol to alert on (e.g. 'SPY', 'AAPL', 'MSFT').",
                 }
                 parameters["threshold"] = {
                     "type": "number",
-                    "description": "The price level to trigger the alert (e.g. 750).",
+                    "description": "REQUIRED. Price level to trigger alert (e.g. 500.00 for $500).",
                 }
                 parameters["comparator"] = {
                     "type": "string",
                     "enum": ["above", "below", "at_least", "within"],
-                    "description": "Comparison type: 'above' (price > threshold), 'below' (price < threshold), 'at_least' (price >= threshold), 'within' (price within X% of threshold).",
+                    "description": "REQUIRED. 'above'=price>threshold, 'below'=price<threshold, 'at_least'=price>=threshold, 'within'=within X% of threshold.",
+                }
+                parameters["name"] = {
+                    "type": "string",
+                    "description": "Optional friendly name for this alert (e.g. 'MSFT earnings support').",
+                }
+                parameters["enabled"] = {
+                    "type": "boolean",
+                    "description": "Optional. Set to false to disable without deleting. Default: true.",
+                }
+            if tool_name == "runs" and method == "POST":
+                parameters["ticker"] = {
+                    "type": "string",
+                    "description": "REQUIRED. Ticker to analyze. Must already be on the watchlist.",
+                }
+                parameters["force"] = {
+                    "type": "boolean",
+                    "description": "Optional. Force new analysis even if one is running. Use sparingly - wastes resources.",
+                }
+                required.append("ticker")
+            if tool_name == "indicators" and method == "POST":
+                required.extend(["ticker", "threshold", "comparator"])
+            if tool_name == "watchlist" and method == "POST":
+                required.append("ticker")
+            if tool_name == "watchlist" and method == "PATCH":
+                parameters["group"] = {
+                    "type": "string",
+                    "description": "Optional group/category name to organize tickers (e.g. 'tech', 'earnings', 'long-term').",
                 }
 
             tools.append(
@@ -124,6 +284,7 @@ def extract_tool_definitions(app) -> list[dict[str, Any]]:
                     "method": method,
                     "path": route.path,
                     "parameters": parameters,
+                    "required": required,
                 }
             )
     return tools

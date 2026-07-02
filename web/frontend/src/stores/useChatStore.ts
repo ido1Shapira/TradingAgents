@@ -20,6 +20,7 @@ export interface ChatMessage {
   toolResults?: ToolResult[];
   isStreaming?: boolean;
   toolCallId?: string;
+  thinking?: string;
 }
 
 export interface ChatSession {

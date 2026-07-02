@@ -55,22 +55,23 @@ Current date and time: ${dateTimeStr}
 ## TOOL CALLING RULES (CRITICAL)
 When you call a tool, you MUST provide ALL required parameters in the arguments JSON object.
 
-**Example of a CORRECT tool call for get_ticker_history:**
-{"name": "get_ticker_history", "arguments": {"ticker": "SPY", "range": "1mo"}}
+**To run a new analysis on a ticker (e.g. MSFT, SPY):**
+{"name": "post_runs", "arguments": {"ticker": "MSFT"}}
+This starts a deep analysis. Analysis takes time. DO NOT call this repeatedly - wait for results.
 
-**Example of an INCORRECT tool call (missing ticker):**
-{"name": "get_ticker_history", "arguments": {}}  <- THIS WILL FAIL
+**To get historical price data:**
+{"name": "get_tickers_ticker_history", "arguments": {"ticker": "SPY", "range": "1mo"}}
+Use this for historical charts and price trends.
 
-If user asks about SPY, you MUST call get_ticker_history with ticker="SPY" in the arguments, like:
-{"name": "get_ticker_history", "arguments": {"ticker": "SPY"}}
+**If you call get_tickers_ticker_history, you MUST include ticker in arguments:**
+CORRECT: {"name": "get_tickers_ticker_history", "arguments": {"ticker": "SPY"}}
+WRONG: {"name": "get_tickers_ticker_history", "arguments": {}}  <- THIS WILL FAIL
 
-DO NOT call tools without required parameters. Every parameter marked as REQUIRED must be provided.
+DO NOT call tools without required parameters.
 
 ## PRICE ALERTS
 You can set price alerts for tickers using the manage_indicators tool:
 - Create: POST with kind="ticker_price", ticker="SPY", threshold=750, comparator="above"
-- The system will notify via Telegram when the price condition is met
-- Alerts are one-shot: they trigger once then deactivate. Use reset to re-arm.
 
 Your available tools:
 ${toolList}
@@ -187,6 +188,7 @@ function MessageBubble({ msg }: { msg: Message }) {
   const isUser = msg.role === "user";
   const isTool = msg.role === "tool";
   const isAssistant = msg.role === "assistant";
+  const [showThinking, setShowThinking] = useState(false);
 
   if (isTool) {
     const parsed = parseToolContent(msg.content);
@@ -198,7 +200,7 @@ function MessageBubble({ msg }: { msg: Message }) {
     } : undefined;
 
     return (
-      <div className="bg-slate-800/80 rounded-lg px-3 py-2 text-sm border border-slate-700">
+      <div className="bg-slate-800/80 rounded-lg px-3 py-2 text-sm border border-slate-700 max-h-[300px] overflow-y-auto">
         {msg.toolCalls && msg.toolCalls.length > 0 && (
           <div className="mb-2 text-xs text-sky-400 flex items-center gap-2">
             <ArrowRight className="h-3 w-3" />
@@ -221,8 +223,8 @@ function MessageBubble({ msg }: { msg: Message }) {
   }
 
   return (
-    <div
-      className={`max-w-[85%] rounded-lg px-3 py-2 text-sm relative ${
+      <div
+      className={`max-w-[85%] max-h-[300px] overflow-y-auto rounded-lg px-3 py-2 text-sm relative ${
         isUser
           ? "bg-sky-600/30 text-slate-200 pr-8"
           : "bg-slate-800/60 text-slate-300"
@@ -241,6 +243,22 @@ function MessageBubble({ msg }: { msg: Message }) {
       {msg.toolCalls && msg.toolCalls.length > 0 && (
         <div className="mb-2 text-xs text-sky-400">
           <span className="font-semibold">Calling:</span> {msg.toolCalls.map(tc => tc.name).join(", ")}
+        </div>
+      )}
+      {msg.thinking && (
+        <div className="mb-2 text-xs">
+          <button
+            onClick={() => setShowThinking(!showThinking)}
+            className="flex items-center gap-1 text-slate-400 hover:text-slate-300"
+          >
+            <ChevronRight className={`h-3 w-3 transition-transform ${showThinking ? "rotate-90" : ""}`} />
+            <span>Thinking ({msg.thinking.length} chars)</span>
+          </button>
+          {showThinking && (
+            <div className="mt-1 pl-4 text-slate-500 border-l border-slate-700 whitespace-pre-wrap max-h-[100px] overflow-y-auto">
+              {msg.thinking}
+            </div>
+          )}
         </div>
       )}
       {msg.content.startsWith("__ERROR__") ? (() => {
@@ -542,6 +560,9 @@ export function AgentChatBubble() {
                 const classified = classifyError(streamErr);
                 updateMessage(currentMsgId, { content: `__ERROR__${classified.type}|${classified.message}|${classified.suggestion}`, isStreaming: false });
                 break;
+              }
+              if (parsed.type === "thinking" && parsed.thinking) {
+                updateMessage(currentMsgId, { thinking: parsed.thinking });
               }
               if (parsed.type === "done") {
                 if (parsed.tool_calls?.length > 0) {
