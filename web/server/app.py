@@ -27,6 +27,7 @@ from tradingagents.default_config import _ENV_OVERRIDES, DEFAULT_CONFIG
 from web.server.chat_router import router as chat_router
 
 from . import (
+    db_storage,
     events,
     indicators,
     log_publisher as lp_module,
@@ -299,6 +300,11 @@ async def lifespan(app: FastAPI):
         except OSError as exc:
             log.error("failed to remove legacy DB: %s", exc)
     storage.init_settings(data_dir=s.data_dir, cache_dir=s.cache_dir)
+    # Initialize database storage if configured
+    try:
+        await db_storage.init_db()
+    except Exception as e:
+        log.warning("DB init skipped: %s", e)
     from web.server.cloud_persistence import restore_watchlist
 
     restore_watchlist(s.data_dir)
@@ -373,6 +379,8 @@ async def lifespan(app: FastAPI):
         await feed.stop()
     await runner.stop()
     lp_module.teardown_log_publisher()
+    # Cleanup DB connection pool
+    await db_storage.close_db()
 
 
 def create_app() -> FastAPI:
