@@ -87,30 +87,91 @@ jobs:
           fi
           echo "Version bumped: $main_version -> $current_version"
 
-  deploy-dev:
-    name: deploy to dev (PR preview)
+  build-and-push:
+    name: build and push Docker image
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
-    needs: [test, lint, smoke-install, version-check]
+    if: github.event_name == 'pull_request' || (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/main-with-dashboard')
+    needs: [test, lint, smoke-install]
+    permissions:
+      id-token: write
+      contents: read
     steps:
       - uses: actions/checkout@v4
-      - name: Install Railway CLI
-        run: npm install -g @railway/cli
-      - name: Deploy to Railway
-        run: railway up --environment staging --service gleaming-light
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN_DEV }}
+      - uses: astral-sh/setup-uv@v4
+        with:
+          python-version: "3.12"
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - name: Build frontend
+        run: |
+          cd web/frontend
+          npm ci
+          npm run build
+      - id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
+      - uses: google-github-actions/setup-gcloud@v2
+      - name: Authorize Docker to Artifact Registry
+        run: gcloud auth configure-docker ${{ vars.GCP_REGION }}-docker.pkg.dev
+      - name: Build and push
+        run: |
+          IMAGE="${{ vars.GCP_REGION }}-docker.pkg.dev/${{ vars.GCP_PROJECT }}/tradingagents-images/app:${{ github.sha }}"
+          docker build -t "$IMAGE" .
+          docker push "$IMAGE"
+          echo "image=$IMAGE" >> $GITHUB_OUTPUT
+        id: build
 
-  deploy-prod:
+  deploy-staging:
+    name: deploy to staging
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    needs: [build-and-push]
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
+      - uses: google-github-actions/setup-gcloud@v2
+      - name: Run migrations
+        run: |
+          gcloud run jobs execute tradingagents-migrate \
+            --region ${{ vars.GCP_REGION }} \
+            --args="alembic","upgrade","head"
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy tradingagents-staging \
+            --image "${{ needs.build-and-push.outputs.image }}" \
+            --region ${{ vars.GCP_REGION }}
+
+  deploy-production:
     name: deploy to production
     runs-on: ubuntu-latest
     if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/main-with-dashboard') && github.event_name == 'push'
-    needs: [test, lint, smoke-install]
+    needs: [build-and-push]
+    permissions:
+      id-token: write
+      contents: read
     steps:
-      - uses: actions/checkout@v4
-      - name: Install Railway CLI
-        run: npm install -g @railway/cli
-      - name: Deploy to Railway
-        run: railway up --environment production --service gleaming-light
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN_PROD }}
+      - id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
+      - uses: google-github-actions/setup-gcloud@v2
+      - name: Run migrations
+        run: |
+          gcloud run jobs execute tradingagents-migrate \
+            --region ${{ vars.GCP_REGION }} \
+            --args="alembic","upgrade","head"
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy tradingagents-production \
+            --image "${{ needs.build-and-push.outputs.image }}" \
+            --region ${{ vars.GCP_REGION }}
