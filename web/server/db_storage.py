@@ -112,7 +112,7 @@ async def remove_ticker(ticker: str) -> None:
         await session.commit()
 
 
-async def reorder_watchlist(tickers: list[str]) -> None:
+async def reorder_watchlist(tickers: list[str]) -> list[dict]:
     async with get_session() as session:
         for idx, t in enumerate(tickers):
             await session.execute(
@@ -121,6 +121,10 @@ async def reorder_watchlist(tickers: list[str]) -> None:
                 .values(sort_order=idx)
             )
         await session.commit()
+        result = await session.execute(
+            select(WatchlistItem).order_by(WatchlistItem.sort_order)
+        )
+        return [_watchlist_to_dict(r) for r in result.scalars().all()]
 
 
 async def update_watchlist_item(ticker: str, group: str | None = None) -> dict | None:

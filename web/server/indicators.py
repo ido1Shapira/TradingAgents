@@ -13,7 +13,7 @@ import pandas as pd
 import requests
 import yfinance as yf
 
-from . import storage
+from . import db_storage, storage
 
 log = logging.getLogger(__name__)
 
@@ -159,6 +159,10 @@ def _definition_from_dict(data: dict[str, Any]) -> IndicatorDefinition:
 
 
 def read_indicators() -> list[IndicatorDefinition]:
+    if db_storage.is_available():
+        import asyncio
+        raw = asyncio.run(db_storage.read_indicators())
+        return [_definition_from_dict(item) for item in raw]
     payload = storage.read_json(_config_path())
     if not payload:
         write_indicators(DEFAULT_INDICATORS)
@@ -251,6 +255,9 @@ def add_indicator(body: dict[str, Any]) -> IndicatorDefinition:
 
 
 def remove_indicator(indicator_id: str) -> bool:
+    if db_storage.is_available():
+        import asyncio
+        return asyncio.run(db_storage.remove_indicator(indicator_id))
     rows = read_indicators()
     next_rows = [row for row in rows if row.id != indicator_id]
     if len(next_rows) == len(rows):
@@ -260,6 +267,12 @@ def remove_indicator(indicator_id: str) -> bool:
 
 
 def update_indicator(indicator_id: str, body: dict[str, Any]) -> IndicatorDefinition | None:
+    if db_storage.is_available():
+        import asyncio
+        result = asyncio.run(db_storage.update_indicator(indicator_id, body))
+        if result is None:
+            return None
+        return _definition_from_dict(result)
     rows = read_indicators()
     for i, row in enumerate(rows):
         if row.id == indicator_id:
@@ -300,6 +313,12 @@ def update_indicator(indicator_id: str, body: dict[str, Any]) -> IndicatorDefini
 
 def reset_indicator(indicator_id: str) -> IndicatorDefinition | None:
     """Reset a single indicator's triggered state to False (re-arm one-shot alert)."""
+    if db_storage.is_available():
+        import asyncio
+        result = asyncio.run(db_storage.reset_indicator(indicator_id))
+        if result is None:
+            return None
+        return _definition_from_dict(result)
     rows = read_indicators()
     for i, row in enumerate(rows):
         if row.id == indicator_id:
@@ -324,6 +343,10 @@ def reset_indicator(indicator_id: str) -> IndicatorDefinition | None:
 
 
 def reset_indicators() -> list[IndicatorDefinition]:
+    if db_storage.is_available():
+        import asyncio
+        raw = asyncio.run(db_storage.reset_indicators())
+        return [_definition_from_dict(item) for item in raw]
     write_indicators(DEFAULT_INDICATORS)
     return DEFAULT_INDICATORS
 

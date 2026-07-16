@@ -8,7 +8,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 
 from tradingagents.dataflows.utils import safe_ticker_component
-from web.server import storage
+from web.server import db_storage, storage
 
 
 class DuplicateTicker(Exception):
@@ -19,6 +19,9 @@ class DuplicateTicker(Exception):
 
 def read_watchlist() -> list[dict]:
     """Return the watchlist rows, sorted by sort_order then added_at."""
+    if db_storage.is_available():
+        import asyncio
+        return asyncio.run(db_storage.read_watchlist())
     rows = storage.read_json(storage.data_dir() / "watchlist.json")
     if not rows:
         return []
@@ -39,6 +42,11 @@ def _write_watchlist(rows: list[dict]) -> None:
 def add_ticker(ticker: str, company_name: str, exchange: str, source: str = "user") -> dict:
     """Add a ticker to the watchlist. Raises DuplicateTicker if present."""
     safe = safe_ticker_component(ticker).upper()
+    if db_storage.is_available():
+        import asyncio
+        result = asyncio.run(db_storage.add_ticker(safe, company_name, exchange, source))
+        storage.ticker_dir(safe)
+        return result
     rows = read_watchlist()
     if any(r["ticker"] == safe for r in rows):
         raise DuplicateTicker(safe)
@@ -66,6 +74,14 @@ def add_ticker(ticker: str, company_name: str, exchange: str, source: str = "use
 def ensure_agent_ticker(ticker: str, company_name: str = "", exchange: str = "") -> dict | None:
     """Add a ticker with source='agent' if not already on the watchlist. No-op if present."""
     safe = safe_ticker_component(ticker).upper()
+    if db_storage.is_available():
+        import asyncio
+        rows = asyncio.run(db_storage.read_watchlist())
+        if any(r["ticker"] == safe for r in rows):
+            return None
+        result = asyncio.run(db_storage.add_ticker(safe, company_name, exchange, "agent"))
+        storage.ticker_dir(safe)
+        return result
     rows = read_watchlist()
     for r in rows:
         if r["ticker"] == safe:
@@ -92,6 +108,11 @@ def ensure_agent_ticker(ticker: str, company_name: str = "", exchange: str = "")
 def remove_ticker(ticker: str) -> None:
     """Remove the ticker from the watchlist and delete its analysis data."""
     safe = safe_ticker_component(ticker).upper()
+    if db_storage.is_available():
+        import asyncio
+        asyncio.run(db_storage.remove_ticker(safe))
+        storage.clear_ticker_data(safe)
+        return
     rows = read_watchlist()
     next_rows = [r for r in rows if r["ticker"] != safe]
     if next_rows == rows:
@@ -119,6 +140,9 @@ def watchlist_to_dict(w: dict) -> dict:
 def update_watchlist_item(ticker: str, group: str | None = None, sort_order: int | None = None) -> dict | None:
     """Update group and/or sort_order for a single watchlist item. Returns the updated row or None."""
     safe = safe_ticker_component(ticker).upper()
+    if db_storage.is_available():
+        import asyncio
+        return asyncio.run(db_storage.update_watchlist_item(safe, group))
     rows = read_watchlist()
     for r in rows:
         if r["ticker"] == safe:
@@ -138,6 +162,9 @@ def reorder_watchlist(tickers: list[str]) -> list[dict]:
     order. This ensures deletions don't silently drop items.
     """
     safe_tickers = [safe_ticker_component(t).upper() for t in tickers]
+    if db_storage.is_available():
+        import asyncio
+        return asyncio.run(db_storage.reorder_watchlist(safe_tickers))
     rows = read_watchlist()
     ordered = []
     seen = set()
