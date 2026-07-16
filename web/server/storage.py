@@ -26,6 +26,8 @@ from typing import Any  # noqa: E402
 from zoneinfo import ZoneInfo  # noqa: E402
 
 from tradingagents.dataflows.utils import safe_ticker_component  # noqa: E402
+from web.server import db_storage  # noqa: E402
+from web.server.config import get_database_url  # noqa: E402
 
 # Module-level settings path; populated by ``init_settings()`` at app startup
 # so tests can monkeypatch a temp dir before any storage call.
@@ -36,6 +38,8 @@ _settings = {"data_dir": "", "cache_dir": ""}
 _run_dir_cache: dict[str, Path] = {}
 _RUN_DIR_CACHE_MAX = 1000
 
+_use_db = False
+
 
 def clear_run_dir_cache() -> None:
     """Drop the run directory cache.  Tests use this between scenarios."""
@@ -44,11 +48,21 @@ def clear_run_dir_cache() -> None:
 
 def init_settings(*, data_dir: str, cache_dir: str) -> None:
     """Configure storage paths. Called from app lifespan / conftest."""
+    global _use_db
     _settings["data_dir"] = data_dir
     _settings["cache_dir"] = cache_dir
     _run_dir_cache.clear()
     Path(data_dir).mkdir(parents=True, exist_ok=True)
     Path(cache_dir).mkdir(parents=True, exist_ok=True)
+    # Check if database is configured
+    if get_database_url():
+        _use_db = True
+        import asyncio
+        try:
+            asyncio.run(db_storage.init_db())
+        except Exception as e:
+            log.warning("Failed to initialize DB storage, falling back to file storage: %s", e)
+            _use_db = False
 
 
 def data_dir() -> Path:
@@ -339,6 +353,9 @@ def read_run(run_id: str) -> dict | None:
     Returns ``None`` if not found.  Results are cached so subsequent
     lookups avoid the directory walk.
     """
+    if _use_db:
+        import asyncio
+        return asyncio.run(db_storage.read_run(run_id))
     rd = _find_run_dir(run_id)
     if rd is None:
         return None
@@ -397,6 +414,9 @@ def read_run_dir(run_id: str) -> Path | None:
 
 def list_ticker_runs(ticker: str, limit: int = 50) -> list[dict]:
     """Return runs for a ticker, newest first (by started_at)."""
+    if _use_db:
+        import asyncio
+        return asyncio.run(db_storage.list_ticker_runs(ticker, limit=limit))
     td = data_dir() / safe_ticker_component(ticker).upper()
     if not td.exists():
         return []
@@ -448,6 +468,9 @@ def delete_run(run_id: str) -> bool:
     the run did not exist (so callers can treat missing runs as success
     without raising).
     """
+    if _use_db:
+        import asyncio
+        return asyncio.run(db_storage.delete_run(run_id))
     rd = _find_run_dir(run_id)
     if rd is None or not rd.exists():
         return False
@@ -459,6 +482,13 @@ def delete_run(run_id: str) -> bool:
 
 def mark_run_status(run_id: str, **fields) -> None:
     """Update fields on run.json in place. Raises if the run is missing."""
+    if _use_db:
+        import asyncio
+        status = fields.pop("status", None)
+        cancel_requested = fields.pop("cancel_requested", None)
+        summary = fields.pop("summary", None)
+        asyncio.run(db_storage.update_run_status(run_id, status=status, cancel_requested=cancel_requested, summary=summary))
+        return
     rd = read_run_dir(run_id)
     if rd is None:
         raise KeyError(f"run not found: {run_id}")
@@ -473,6 +503,9 @@ def mark_run_superseded(run_id: str) -> None:
 
 
 def list_run_events(run_id: str) -> list[dict]:
+    if _use_db:
+        import asyncio
+        return asyncio.run(db_storage.list_run_events(run_id))
     rd = read_run_dir(run_id)
     if rd is None:
         return []
@@ -480,6 +513,9 @@ def list_run_events(run_id: str) -> list[dict]:
 
 
 def list_run_llm_calls(run_id: str) -> list[dict]:
+    if _use_db:
+        import asyncio
+        return asyncio.run(db_storage.list_run_llm_calls(run_id))
     rd = read_run_dir(run_id)
     if rd is None:
         return []
@@ -487,6 +523,10 @@ def list_run_llm_calls(run_id: str) -> list[dict]:
 
 
 def append_run_event(run_id: str, event_obj: dict) -> None:
+    if _use_db:
+        import asyncio
+        asyncio.run(db_storage.append_run_event(run_id, event_obj))
+        return
     rd = read_run_dir(run_id)
     if rd is None:
         raise KeyError(f"run not found: {run_id}")
@@ -494,6 +534,10 @@ def append_run_event(run_id: str, event_obj: dict) -> None:
 
 
 def append_run_llm_call(run_id: str, call_obj: dict) -> None:
+    if _use_db:
+        import asyncio
+        asyncio.run(db_storage.append_llm_call(run_id, call_obj))
+        return
     rd = read_run_dir(run_id)
     if rd is None:
         raise KeyError(f"run not found: {run_id}")
@@ -600,6 +644,9 @@ def read_indicator_schedule() -> dict:
     falls back to indicator_schedule.json, then to defaults.
     Returns ``{"interval_ms": 0, "last_check_at": None}``.
     """
+    if _use_db:
+        import asyncio
+        return asyncio.run(db_storage.read_indicator_schedule())
     env = _read_env()
     val = os.environ.get(_IND_SCHEDULE_ENV) or env.get(_IND_SCHEDULE_ENV)
     if val:
@@ -619,6 +666,10 @@ def read_indicator_schedule() -> dict:
 
 def write_indicator_schedule(cfg: dict) -> None:
     """Persist indicator schedule to .env (durable) and JSON (runtime)."""
+    if _use_db:
+        import asyncio
+        asyncio.run(db_storage.write_indicator_schedule(cfg))
+        return
     interval_ms = int(cfg.get("interval_ms", 0))
     last_check_at = cfg.get("last_check_at")
     _write_env({_IND_SCHEDULE_ENV: str(interval_ms)})
@@ -637,6 +688,9 @@ def read_notifier_config() -> dict:
       1. Process environment (Railway env vars)
       2. .env file (local dev, persisted via UI saves)
     """
+    if _use_db:
+        import asyncio
+        return asyncio.run(db_storage.read_notifier_config())
     env = _read_env()
 
     token = (
@@ -748,6 +802,10 @@ def build_state_from_checks(checks: list[dict]) -> dict[str, dict]:
 
 def write_notifier_config(cfg: dict) -> None:
     """Persist notifier config to .env and process environment."""
+    if _use_db:
+        import asyncio
+        asyncio.run(db_storage.write_notifier_config(cfg))
+        return
     token = cfg.get("bot_token")
     chat_id = cfg.get("chat_id")
 
