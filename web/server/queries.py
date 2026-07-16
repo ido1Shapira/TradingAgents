@@ -316,8 +316,8 @@ def build_trace(run_id: str, *, since: str = "", limit: int = 500,
     Each item carries a ``kind`` discriminator and a ``ts`` field; the
     shape of the rest is per-kind (see the per-builder code below).
     """
-    rd = storage.read_run_dir(run_id)
-    if rd is None:
+    rj = storage.read_run(run_id)
+    if rj is None:
         return {"run_id": run_id, "items": [], "count": 0, "truncated": False}
 
     want_events = kinds is None or "event" in kinds
@@ -336,12 +336,11 @@ def build_trace(run_id: str, *, since: str = "", limit: int = 500,
                 "data": e.get("data") or {},
             })
     if want_stages:
-        for sp in sorted((rd / "stages").glob("*.json")):
-            d = storage.read_json(sp) or {}
+        for d in storage.read_stages(run_id):
             items.append({
                 "kind": "stage",
                 "ts": d.get("completed_at") or "",
-                "stage": d.get("stage") or sp.stem,
+                "stage": d.get("stage") or "",
                 "node": d.get("node") or "",
                 "duration_ms": d.get("duration_ms") or 0,
                 "value": d.get("value") or "",
@@ -433,14 +432,11 @@ def build_health(run_id: str) -> dict:
     total_all = sum(c.get("total_tokens") or 0 for c in llm_calls_list)
 
     # Stage summary.
-    rd = storage.read_run_dir(run_id)
     completed_stages: list[str] = []
-    if rd is not None:
-        for sp in sorted((rd / "stages").glob("*.json")):
-            d = storage.read_json(sp) or {}
-            s = d.get("stage") or sp.stem
-            if s not in completed_stages:
-                completed_stages.append(s)
+    for d in storage.read_stages(run_id):
+        s = d.get("stage") or ""
+        if s and s not in completed_stages:
+            completed_stages.append(s)
 
     status = rj.get("status") or "unknown"
     is_alive = status == "running" and (

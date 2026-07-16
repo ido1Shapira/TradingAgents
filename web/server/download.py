@@ -115,19 +115,14 @@ def generate_ticker_json(ticker: str) -> dict[str, Any]:
 
     for r in storage.list_ticker_runs(ticker.upper(), limit=5000):
         run_id = r.get("id", "")
-        run_dir = storage.read_run_dir(run_id)
         events = storage.list_run_events(run_id) if run_id else []
         llm_calls = storage.list_run_llm_calls(run_id) if run_id else []
 
         stages_data: dict[str, Any] = {}
-        if run_dir:
-            stages_dir = run_dir / "stages"
-            if stages_dir.exists():
-                for stage_file in stages_dir.iterdir():
-                    if stage_file.is_file() and stage_file.suffix == ".json":
-                        stage_data = storage.read_json(stage_file)
-                        if stage_data:
-                            stages_data[stage_file.stem] = stage_data
+        for stage_payload in storage.read_stages(run_id):
+            s_name = stage_payload.get("stage") or ""
+            if s_name:
+                stages_data[s_name] = stage_payload
 
         run_data: dict[str, Any] = {
             **r,

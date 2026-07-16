@@ -562,6 +562,25 @@ def append_run_llm_call(run_id: str, call_obj: dict) -> None:
     append_jsonl(rd / "llm_calls.jsonl", call_obj)
 
 
+def read_stages(run_id: str) -> list[dict]:
+    """Return stage payloads for a run. Tries DB first, falls back to filesystem."""
+    if _use_db:
+        import asyncio
+        try:
+            records = asyncio.run(db_storage.read_stages(run_id))
+            return [r["data"] for r in records if r.get("data")]
+        except Exception:
+            log.exception("Failed to read stages from DB for %s", run_id)
+    rd = read_run_dir(run_id)
+    if rd is None:
+        return []
+    out = []
+    for sp in sorted((rd / "stages").glob("*.json")):
+        d = read_json(sp) or {}
+        out.append(d)
+    return out
+
+
 def write_stage(run_id: str, stage: str, stage_payload: dict) -> None:
     """Write a single ``stages/{stage}.json`` atomically.
 

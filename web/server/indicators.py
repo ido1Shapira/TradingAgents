@@ -175,8 +175,7 @@ def read_indicators() -> list[IndicatorDefinition]:
 
 def _seed_db_indicators() -> None:
     import asyncio
-    for d in DEFAULT_INDICATORS:
-        asyncio.run(db_storage.add_indicator(_definition_to_dict(d)))
+    asyncio.run(db_storage.sync_indicators([_definition_to_dict(d) for d in DEFAULT_INDICATORS]))
 
 
 def write_indicators(indicators: list[IndicatorDefinition]) -> None:

@@ -1096,11 +1096,4 @@ def create_app() -> FastAPI:
 
 
 def _load_stages(run_id: str) -> list[dict]:
-    rd = storage.read_run_dir(run_id)
-    if rd is None:
-        return []
-    out = []
-    for sp in sorted((rd / "stages").glob("*.json")):
-        d = storage.read_json(sp) or {}
-        out.append(d)
-    return out
+    return storage.read_stages(run_id)
