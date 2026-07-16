@@ -21,6 +21,7 @@ export interface ToolDefinition {
   method: string;
   path: string;
   parameters: Record<string, ToolParameter>;
+  required?: string[];
 }
 
 export interface ToolResult {
@@ -355,7 +356,39 @@ export async function executeTool(
       },
     };
   }
-  
+
+  // Validate required parameters (from tool definition)
+  if (tool.required && tool.required.length > 0) {
+    const missingRequired: string[] = [];
+    for (const requiredParam of tool.required) {
+      if (sanitizedParams[requiredParam] === undefined || sanitizedParams[requiredParam] === null || sanitizedParams[requiredParam] === "") {
+        // For optional params like ticker in prices, empty is OK
+        if (requiredParam === "ticker" && tool.name.includes("prices")) continue;
+        missingRequired.push(requiredParam);
+      }
+    }
+    if (missingRequired.length > 0) {
+      const missingStr = missingRequired.join(", ");
+      const hintTicker = extractLastTickerFromConversation();
+      const error = hintTicker && missingStr.includes("ticker")
+        ? `Missing required parameters: ${missingStr}. Use ticker="${hintTicker}" (found in conversation).`
+        : `Missing required parameters: ${missingStr}. Check the tool description for required parameters.`;
+      debugLog(`executeTool ERROR: ${error}`);
+      return {
+        success: false,
+        error,
+        debug: {
+          toolName: name,
+          originalName: tool.name,
+          params,
+          sanitizedParams,
+          missingRequired,
+          recentToolContext: { ...recentToolContext },
+        },
+      };
+    }
+  }
+
   debugLog(`executeTool: sending proxy request...`);
   try {
     const response = await fetch(`${base}/api/chat/proxy`, {
@@ -379,15 +412,27 @@ export async function executeTool(
     
     const data = await response.json();
     debugLog(`executeTool: proxy response data =`, JSON.stringify(data).slice(0, 200) + "...");
-    
-    // Store successful parameter values in context for other tool calls
+
+    // Store successful input parameter values in context
     for (const [key, value] of Object.entries(sanitizedParams)) {
       if (typeof value === "string" && value.length > 0 && value.length < 20) {
-        debugLog(`executeTool: storing success context["${key}"] = "${value}"`);
+        debugLog(`executeTool: storing input context["${key}"] = "${value}"`);
         recentToolContext[key] = value;
       }
     }
-    
+
+    // Store important output values from response for chained calls
+    // e.g., run_id from post_runs, indicator_id from post_indicators, job_id from background_runs
+    if (data && typeof data === "object") {
+      const outputKeys = ["run_id", "job_id", "indicator_id", "ticker"];
+      for (const key of outputKeys) {
+        if (data[key] && typeof data[key] === "string") {
+          debugLog(`executeTool: storing output context["${key}"] = "${data[key]}"`);
+          recentToolContext[key] = data[key];
+        }
+      }
+    }
+
     debugLog(`executeTool SUCCESS: "${name}"`);
     debugLog("========================================");
     return { success: true, data };
