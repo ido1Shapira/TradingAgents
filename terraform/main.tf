@@ -82,6 +82,7 @@ resource "google_cloud_run_v2_service" "main" {
 
   template {
     service_account = google_service_account.cloud_run.email
+    startup_cpu_boost = true
     containers {
       image = "${var.region}-docker.pkg.dev/${var.project_id}/tradingagents-images/app:latest"
       ports {
