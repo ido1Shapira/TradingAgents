@@ -188,6 +188,10 @@ def reorder_watchlist(tickers: list[str]) -> list[dict]:
 def update_last_decision(ticker: str, run_id: str, decision_text: str, at: datetime) -> None:
     """Set the watchlist row's last_decision_* fields. No-op if ticker is gone."""
     safe = safe_ticker_component(ticker).upper()
+    if db_storage.is_available():
+        import asyncio
+        asyncio.run(db_storage.update_watchlist_last_decision(safe, run_id, decision_text, storage.utc_iso(at)))
+        return
     rows = read_watchlist()
     changed = False
     for r in rows:
@@ -203,6 +207,10 @@ def update_last_decision(ticker: str, run_id: str, decision_text: str, at: datet
 def clear_last_run_if_matches(ticker: str, run_id: str) -> None:
     """If the watchlist's last_run_id for ``ticker`` matches ``run_id``, clear it."""
     safe = safe_ticker_component(ticker).upper()
+    if db_storage.is_available():
+        import asyncio
+        asyncio.run(db_storage.clear_watchlist_last_run(safe, run_id))
+        return
     rows = read_watchlist()
     changed = False
     for r in rows:

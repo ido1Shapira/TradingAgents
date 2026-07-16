@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import json
 import logging
+import uuid
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
@@ -17,6 +18,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 
 from web.server.config import get_database_url
 from web.server.models import (
+    AppConfig,
     BackgroundJob,
     Indicator,
     IndicatorSchedule,
@@ -24,6 +26,7 @@ from web.server.models import (
     NotifierConfig,
     RunEvent,
     RunRecord,
+    StageRecord,
     WatchlistItem,
 )
 
@@ -152,14 +155,29 @@ def _watchlist_to_dict(row: WatchlistItem) -> dict:
         "sort_order": row.sort_order,
         "group": row.group_name,
         "created_at": row.created_at.isoformat() if row.created_at else None,
+        "last_run_id": row.last_run_id,
+        "last_decision": row.last_decision,
+        "last_decision_at": row.last_decision_at,
     }
 
 
 # ---- Runs ----
 
-async def create_run(ticker: str, date_str: str) -> str:
+async def create_run(
+    ticker: str,
+    date_str: str,
+    run_id: str | None = None,
+    status: str = "queued",
+    run_data: dict | None = None,
+) -> str:
     async with get_session() as session:
-        run = RunRecord(ticker=ticker.upper(), date=date_str, status="queued")
+        run = RunRecord(
+            id=run_id if run_id else str(uuid.uuid4()),
+            ticker=ticker.upper(),
+            date=date_str,
+            status=status,
+            run_data=run_data,
+        )
         session.add(run)
         await session.commit()
         await session.refresh(run)
@@ -182,22 +200,28 @@ async def update_run_status(
     status: str | None = None,
     cancel_requested: bool | None = None,
     summary: str | None = None,
+    **extra_fields: Any,
 ) -> None:
     async with get_session() as session:
-        vals: dict[str, Any] = {}
+        result = await session.execute(
+            select(RunRecord).where(RunRecord.id == run_id)
+        )
+        row = result.scalar_one_or_none()
+        if row is None:
+            return
         if status is not None:
-            vals["status"] = status
+            row.status = status
             if status in ("completed", "failed", "cancelled"):
-                vals["finished_at"] = datetime.now(timezone.utc)
+                row.finished_at = datetime.now(timezone.utc)
         if cancel_requested is not None:
-            vals["cancel_requested"] = 1 if cancel_requested else 0
+            row.cancel_requested = 1 if cancel_requested else 0
         if summary is not None:
-            vals["summary"] = summary
-        if vals:
-            await session.execute(
-                update(RunRecord).where(RunRecord.id == run_id).values(**vals)
-            )
-            await session.commit()
+            row.summary = summary
+        if extra_fields:
+            current_data = dict(row.run_data) if row.run_data else {}
+            current_data.update(extra_fields)
+            row.run_data = current_data
+        await session.commit()
 
 
 async def list_ticker_runs(ticker: str, limit: int = 50) -> list[dict]:
@@ -221,7 +245,7 @@ async def delete_run(run_id: str) -> bool:
 
 
 def _run_to_dict(row: RunRecord) -> dict:
-    return {
+    result = {
         "id": row.id,
         "ticker": row.ticker,
         "date": row.date,
@@ -232,6 +256,9 @@ def _run_to_dict(row: RunRecord) -> dict:
         "cancel_requested": bool(row.cancel_requested),
         "run_type": row.run_type,
     }
+    if row.run_data:
+        result.update(row.run_data)
+    return result
 
 
 # ---- Run Events ----
@@ -380,6 +407,25 @@ async def reset_indicator(indicator_id: str) -> dict | None:
         return _indicator_to_dict(row)
 
 
+async def sync_indicators(indicator_list: list[dict]) -> None:
+    async with get_session() as session:
+        await session.execute(delete(Indicator))
+        for data in indicator_list:
+            ind = Indicator(
+                id=data.get("id", str(uuid.uuid4())),
+                kind=data["kind"],
+                name=data.get("name"),
+                threshold=data.get("threshold"),
+                description=data.get("description"),
+                enabled=1 if data.get("enabled", True) else 0,
+                ticker=data.get("ticker"),
+                comparator=data.get("comparator"),
+                triggered=1 if data.get("triggered") else 0,
+            )
+            session.add(ind)
+        await session.commit()
+
+
 def _indicator_to_dict(row: Indicator) -> dict:
     return {
         "id": row.id,
@@ -496,4 +542,93 @@ async def list_background_jobs(limit: int = 50) -> list[dict]:
                 "last_run_at": j.last_run_at.isoformat() if j.last_run_at else None,
             }
             for j in result.scalars().all()
+        ]
+
+
+# ---- Watchlist Decision Fields ----
+
+async def update_watchlist_last_decision(ticker: str, run_id: str, decision_text: str, at_iso: str) -> None:
+    async with get_session() as session:
+        result = await session.execute(
+            select(WatchlistItem).where(WatchlistItem.ticker == ticker.upper())
+        )
+        for row in result.scalars().all():
+            row.last_run_id = run_id
+            row.last_decision = decision_text
+            row.last_decision_at = at_iso
+        await session.commit()
+
+
+async def clear_watchlist_last_run(ticker: str, run_id: str) -> None:
+    async with get_session() as session:
+        result = await session.execute(
+            select(WatchlistItem).where(WatchlistItem.ticker == ticker.upper())
+        )
+        for row in result.scalars().all():
+            if row.last_run_id == run_id:
+                row.last_run_id = None
+                row.last_decision = None
+                row.last_decision_at = None
+        await session.commit()
+
+
+# ---- Indicator State (via AppConfig KV store) ----
+
+_INDICATOR_STATE_KEY = "indicator_state"
+
+
+async def read_indicator_state() -> dict:
+    async with get_session() as session:
+        result = await session.execute(
+            select(AppConfig).where(AppConfig.key == _INDICATOR_STATE_KEY)
+        )
+        row = result.scalar_one_or_none()
+        if row is None or not row.value:
+            return {}
+        return json.loads(row.value)
+
+
+async def write_indicator_state(state: dict) -> None:
+    async with get_session() as session:
+        result = await session.execute(
+            select(AppConfig).where(AppConfig.key == _INDICATOR_STATE_KEY)
+        )
+        row = result.scalar_one_or_none()
+        if row is None:
+            row = AppConfig(key=_INDICATOR_STATE_KEY, value=json.dumps(state))
+            session.add(row)
+        else:
+            row.value = json.dumps(state)
+        await session.commit()
+
+
+# ---- Stages ----
+
+async def write_stage(run_id: str, stage: str, stage_payload: dict) -> None:
+    async with get_session() as session:
+        rec = StageRecord(
+            run_id=run_id,
+            stage=stage,
+            data=stage_payload,
+        )
+        session.add(rec)
+        await session.commit()
+
+
+async def read_stages(run_id: str) -> list[dict]:
+    async with get_session() as session:
+        result = await session.execute(
+            select(StageRecord)
+            .where(StageRecord.run_id == run_id)
+            .order_by(StageRecord.created_at)
+        )
+        return [
+            {
+                "id": r.id,
+                "run_id": r.run_id,
+                "stage": r.stage,
+                "data": r.data,
+                "created_at": r.created_at.isoformat() if r.created_at else None,
+            }
+            for r in result.scalars().all()
         ]

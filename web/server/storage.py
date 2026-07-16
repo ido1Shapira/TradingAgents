@@ -338,6 +338,18 @@ def create_run_dir(
         "total_duration_s": None,
     }
     write_json_atomic(run_dir / "run.json", run_json)
+    if _use_db:
+        import asyncio
+        try:
+            asyncio.run(db_storage.create_run(
+                ticker=ticker,
+                date_str=started_at.date().isoformat(),
+                run_id=run_id,
+                status="running",
+                run_data=dict(run_json),
+            ))
+        except Exception:
+            log.exception("Failed to create DB run record for %s", run_id)
     return {
         "run_dir": run_dir,
         "run_id": run_id,
@@ -487,7 +499,13 @@ def mark_run_status(run_id: str, **fields) -> None:
         status = fields.pop("status", None)
         cancel_requested = fields.pop("cancel_requested", None)
         summary = fields.pop("summary", None)
-        asyncio.run(db_storage.update_run_status(run_id, status=status, cancel_requested=cancel_requested, summary=summary))
+        asyncio.run(db_storage.update_run_status(
+            run_id,
+            status=status,
+            cancel_requested=cancel_requested,
+            summary=summary,
+            **fields,
+        ))
         return
     rd = read_run_dir(run_id)
     if rd is None:
@@ -551,6 +569,12 @@ def write_stage(run_id: str, stage: str, stage_payload: dict) -> None:
     cache in sync (so a reader can list progress without walking
     stages/).
     """
+    if _use_db:
+        import asyncio
+        try:
+            asyncio.run(db_storage.write_stage(run_id, stage, stage_payload))
+        except Exception:
+            log.exception("Failed to write stage to DB: %s / %s", run_id, stage)
     rd = read_run_dir(run_id)
     if rd is None:
         raise KeyError(f"run not found: {run_id}")
@@ -731,6 +755,12 @@ def read_indicator_state() -> dict[str, dict]:
 
     Returns ``{}`` when no prior state exists (first run or deleted file).
     """
+    if _use_db:
+        import asyncio
+        try:
+            return asyncio.run(db_storage.read_indicator_state())
+        except Exception:
+            log.exception("Failed to read indicator state from DB")
     path = data_dir() / _INDICATOR_STATE_FILE
     payload = read_json(path)
     if not payload:
@@ -740,6 +770,12 @@ def read_indicator_state() -> dict[str, dict]:
 
 def write_indicator_state(state: dict[str, dict]) -> None:
     """Persist indicator check results so the next run can detect changes."""
+    if _use_db:
+        import asyncio
+        try:
+            asyncio.run(db_storage.write_indicator_state(state))
+        except Exception:
+            log.exception("Failed to write indicator state to DB")
     path = data_dir() / _INDICATOR_STATE_FILE
     write_json_atomic(path, state)
 

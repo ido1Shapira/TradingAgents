@@ -3,7 +3,7 @@ from __future__ import annotations
 import uuid
 from datetime import datetime, timezone
 
-from sqlalchemy import Column, DateTime, Float, Integer, String, Text
+from sqlalchemy import JSON, Column, DateTime, Float, Integer, String, Text
 from sqlalchemy.orm import declarative_base
 
 Base = declarative_base()
@@ -28,12 +28,15 @@ class WatchlistItem(Base):
     sort_order = Column(Integer, default=0)
     group_name = Column(String(100), nullable=True)
     created_at = Column(DateTime(timezone=True), default=_utcnow)
+    last_run_id = Column(String(100), nullable=True)
+    last_decision = Column(String(500), nullable=True)
+    last_decision_at = Column(String(30), nullable=True)
 
 
 class RunRecord(Base):
     __tablename__ = "runs"
 
-    id = Column(String(36), primary_key=True, default=_uuid)
+    id = Column(String(100), primary_key=True)
     ticker = Column(String(20), nullable=False, index=True)
     date = Column(String(20), nullable=False)
     status = Column(String(20), default="queued")
@@ -42,6 +45,7 @@ class RunRecord(Base):
     summary = Column(Text, nullable=True)
     cancel_requested = Column(Integer, default=0)
     run_type = Column(String(20), default="manual")
+    run_data = Column(JSON, nullable=True)
 
 
 class RunEvent(Base):
@@ -104,6 +108,16 @@ class NotifierConfig(Base):
     enabled = Column(Integer, default=0)
     bot_token = Column(String(200), nullable=True)
     chat_id = Column(String(50), nullable=True)
+
+
+class StageRecord(Base):
+    __tablename__ = "stages"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    run_id = Column(String(100), nullable=False, index=True)
+    stage = Column(String(50), nullable=False)
+    data = Column(JSON, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=_utcnow)
 
 
 class BackgroundJob(Base):

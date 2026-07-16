@@ -27,11 +27,14 @@ def upgrade() -> None:
         sa.Column("sort_order", sa.Integer(), server_default="0"),
         sa.Column("group_name", sa.String(100), nullable=True),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=True),
+        sa.Column("last_run_id", sa.String(100), nullable=True),
+        sa.Column("last_decision", sa.String(500), nullable=True),
+        sa.Column("last_decision_at", sa.String(30), nullable=True),
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_table(
         "runs",
-        sa.Column("id", sa.String(36), nullable=False),
+        sa.Column("id", sa.String(100), nullable=False),
         sa.Column("ticker", sa.String(20), nullable=False, index=True),
         sa.Column("date", sa.String(20), nullable=False),
         sa.Column("status", sa.String(20), server_default="queued"),
@@ -40,12 +43,13 @@ def upgrade() -> None:
         sa.Column("summary", sa.Text(), nullable=True),
         sa.Column("cancel_requested", sa.Integer(), server_default="0"),
         sa.Column("run_type", sa.String(20), server_default="manual"),
+        sa.Column("run_data", sa.JSON(), nullable=True),
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_table(
         "run_events",
         sa.Column("id", sa.String(36), nullable=False),
-        sa.Column("run_id", sa.String(36), nullable=False, index=True),
+        sa.Column("run_id", sa.String(100), nullable=False, index=True),
         sa.Column("event_type", sa.String(50), nullable=False),
         sa.Column("data", sa.Text(), nullable=True),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=True),
@@ -54,7 +58,7 @@ def upgrade() -> None:
     op.create_table(
         "llm_calls",
         sa.Column("id", sa.String(36), nullable=False),
-        sa.Column("run_id", sa.String(36), nullable=False, index=True),
+        sa.Column("run_id", sa.String(100), nullable=False, index=True),
         sa.Column("provider", sa.String(50), nullable=True),
         sa.Column("model", sa.String(100), nullable=True),
         sa.Column("prompt_tokens", sa.Integer(), nullable=True),
@@ -99,6 +103,15 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_table(
+        "stages",
+        sa.Column("id", sa.Integer(), autoincrement=True, nullable=False),
+        sa.Column("run_id", sa.String(100), nullable=False, index=True),
+        sa.Column("stage", sa.String(50), nullable=False),
+        sa.Column("data", sa.JSON(), nullable=True),
+        sa.Column("created_at", sa.DateTime(timezone=True), nullable=True),
+        sa.PrimaryKeyConstraint("id"),
+    )
+    op.create_table(
         "background_jobs",
         sa.Column("id", sa.String(36), nullable=False),
         sa.Column("ticker", sa.String(20), nullable=False),
@@ -115,6 +128,7 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     op.drop_table("background_jobs")
+    op.drop_table("stages")
     op.drop_table("notifier_config")
     op.drop_table("app_config")
     op.drop_table("indicator_schedule")

@@ -162,6 +162,9 @@ def read_indicators() -> list[IndicatorDefinition]:
     if db_storage.is_available():
         import asyncio
         raw = asyncio.run(db_storage.read_indicators())
+        if not raw:
+            _seed_db_indicators()
+            raw = asyncio.run(db_storage.read_indicators())
         return [_definition_from_dict(item) for item in raw]
     payload = storage.read_json(_config_path())
     if not payload:
@@ -170,7 +173,17 @@ def read_indicators() -> list[IndicatorDefinition]:
     return [_definition_from_dict(item) for item in payload.get("indicators", [])]
 
 
+def _seed_db_indicators() -> None:
+    import asyncio
+    for d in DEFAULT_INDICATORS:
+        asyncio.run(db_storage.add_indicator(_definition_to_dict(d)))
+
+
 def write_indicators(indicators: list[IndicatorDefinition]) -> None:
+    if db_storage.is_available():
+        import asyncio
+        asyncio.run(db_storage.sync_indicators([_definition_to_dict(d) for d in indicators]))
+        return
     storage.write_json_atomic(
         _config_path(),
         {"indicators": [_definition_to_dict(defn) for defn in indicators]},
