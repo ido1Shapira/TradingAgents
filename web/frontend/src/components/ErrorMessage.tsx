@@ -20,7 +20,7 @@ const TYPE_CONFIG: Record<ErrorType, { icon: typeof AlertCircle; label: string; 
 
 export function ErrorMessage({ type, message, details, suggestion }: ErrorMessageProps) {
   const [expanded, setExpanded] = useState(false);
-  const config = TYPE_CONFIG[type];
+  const config = TYPE_CONFIG[type] ?? TYPE_CONFIG.unknown;
   const Icon = config.icon;
 
   return (

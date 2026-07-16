@@ -142,6 +142,10 @@ class RunIn(BaseModel):
     force: bool = False
 
 
+class DeleteRunsIn(BaseModel):
+    run_ids: list[str]
+
+
 class DownloadTickersIn(BaseModel):
     tickers: list[str]
     format: str = "zip"
@@ -737,9 +741,6 @@ def create_app() -> FastAPI:
         if ticker:
             queries.clear_last_run_if_matches(ticker, run_id)
         return {"deleted": deleted, "run_id": run_id, "ticker": ticker}
-
-    class DeleteRunsIn(BaseModel):
-        run_ids: list[str]
 
     @app.post("/api/runs/delete-bulk")
     def delete_runs_bulk(body: DeleteRunsIn) -> dict:
