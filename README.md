@@ -317,6 +317,36 @@ What does not vary anymore: the analyzed company identity is resolved determinis
 
 Backtest results are not guaranteed to match any published figure. Returns depend on the model, the temperature, the date range, data quality, and the sampling above. Treat the framework as a research scaffold for studying multi-agent analysis, not as a strategy with a fixed, replicable return.
 
+## Deployment
+
+This project deploys to Google Cloud Run.
+
+### Prerequisites
+1. GCP project with billing enabled
+2. Terraform installed
+
+### Infrastructure
+```bash
+cd terraform
+terraform init
+terraform plan
+terraform apply
+```
+
+### CI/CD
+The GitHub Actions workflow builds and deploys automatically:
+- PR → staging deployment
+- Push to `main` → production deployment
+
+### Manual deploy
+```bash
+gcloud auth login
+docker build -t tradingagents-app .
+docker tag tradingagents-app $REGION-docker.pkg.dev/$PROJECT/tradingagents-images/app:latest
+docker push $REGION-docker.pkg.dev/$PROJECT/tradingagents-images/app:latest
+gcloud run deploy tradingagents-production --image $REGION-docker.pkg.dev/$PROJECT/tradingagents-images/app:latest
+```
+
 ## Contributing
 
 Contributions are welcome: bug fixes, documentation, and feature ideas; past contributions are credited per release in [`CHANGELOG.md`](CHANGELOG.md).
