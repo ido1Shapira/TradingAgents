@@ -79,12 +79,12 @@ resource "google_cloud_run_v2_service" "main" {
   name     = "tradingagents"
   location = var.region
   ingress  = "INGRESS_TRAFFIC_ALL"
+  deletion_protection = false
 
   template {
     service_account = google_service_account.cloud_run.email
-    startup_cpu_boost = true
     containers {
-      image = "${var.region}-docker.pkg.dev/${var.project_id}/tradingagents-images/app:latest"
+      image = "${var.region}-docker.pkg.dev/${var.project_id}/tradingagents-images/app:ci-gcs-storage"
       ports {
         container_port = 8000
       }
@@ -94,6 +94,7 @@ resource "google_cloud_run_v2_service" "main" {
           memory = var.cloud_run_memory
           cpu    = var.cloud_run_cpu
         }
+        startup_cpu_boost = true
       }
 
       # Free-tier-friendly startup
@@ -115,10 +116,8 @@ resource "google_cloud_run_v2_service" "main" {
         failure_threshold = 3
       }
 
-      env {
-        name  = "PORT"
-        value = "8000"
-      }
+      # PORT is auto-set by Cloud Run (do not set it here — GCP rejects the
+      # reserved name with "The following reserved env names were provided: PORT").
       env {
         name  = "TRADINGAGENTS_DASHBOARD_HOST"
         value = "0.0.0.0"
@@ -189,6 +188,8 @@ resource "google_iam_workload_identity_pool_provider" "github" {
     "attribute.actor"      = "assertion.actor"
     "attribute.repository" = "assertion.repository"
   }
+
+  attribute_condition = "attribute.repository == \"ido1Shapira/TradingAgents\""
 
   oidc {
     issuer_uri = "https://token.actions.githubusercontent.com"

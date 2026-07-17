@@ -6,6 +6,9 @@ read-side helpers that shape data for the API live in ``queries.py``.
 All timestamps in persisted files are UTC ISO-8601 with ``Z`` suffix.
 The only Israel-local representation is the run directory slug,
 which is purely for human readability.
+
+When the env var ``GCS_BUCKET`` is set, all IO is redirected to GCS via
+the ``gcs`` sub-module so data survives Cloud Run cold starts.
 """
 
 from __future__ import annotations
@@ -31,6 +34,11 @@ from tradingagents.dataflows.utils import safe_ticker_component  # noqa: E402
 # so tests can monkeypatch a temp dir before any storage call.
 _settings = {"data_dir": "", "cache_dir": ""}
 
+# GCS backend — lazily initialised in ``init_settings()`` when ``GCS_BUCKET``
+# is set.  All IO functions in this module check ``gcs.is_enabled()`` before
+# operating locally.
+_gcs = None  # module imported once, cached here
+
 # Cache mapping run_id → run directory path, avoiding O(n) directory walks.
 # Populated lazily by ``_find_run_dir``.
 _run_dir_cache: dict[str, Path] = {}
@@ -49,6 +57,16 @@ def init_settings(*, data_dir: str, cache_dir: str) -> None:
     _run_dir_cache.clear()
     Path(data_dir).mkdir(parents=True, exist_ok=True)
     Path(cache_dir).mkdir(parents=True, exist_ok=True)
+    bucket = os.environ.get("GCS_BUCKET")
+    if bucket:
+        _init_gcs(bucket, data_dir)
+
+
+def _init_gcs(bucket: str, data_root: str) -> None:
+    global _gcs
+    from web.server import gcs as gcs_module
+    _gcs = gcs_module
+    _gcs.init(bucket, data_root)
 
 
 def data_dir() -> Path:
@@ -59,11 +77,55 @@ def cache_dir() -> Path:
     return Path(_settings["cache_dir"])
 
 
+# ── GCS-aware filesystem helpers ────────────────────────────────────────
+
+
+def _gcs_path_exists(path: Path) -> bool:
+    if _gcs and _gcs.is_enabled():
+        return _gcs.exists(path)
+    return path.exists()
+
+
+def _gcs_path_is_dir(path: Path) -> bool:
+    if _gcs and _gcs.is_enabled():
+        return _gcs.is_dir(path)
+    return path.is_dir()
+
+
+def _gcs_iterdir(path: Path) -> list[Path]:
+    """Return sorted Path children under *path* (like ``Path.iterdir``)."""
+    if _gcs and _gcs.is_enabled():
+        names = _gcs.list_prefix(path)
+        return sorted(path / n for n in names)
+    if not path.exists():
+        return []
+    return sorted(path.iterdir())
+
+
+def _gcs_rmtree(path: Path) -> None:
+    """Remove a directory tree (recursive)."""
+    if _gcs and _gcs.is_enabled():
+        _gcs.delete_prefix(path)
+        return
+    if path.exists():
+        shutil.rmtree(path)
+
+
+def _gcs_mkdir(path: Path) -> None:
+    """Create directory (no-op in GCS, implicit)."""
+    if _gcs and _gcs.is_enabled():
+        return
+    path.mkdir(parents=True, exist_ok=True)
+
+
+# ── Directory helpers ───────────────────────────────────────────────────
+
+
 def ticker_dir(ticker: str) -> Path:
     """Return ``data/{ticker}/`` (creating it)."""
     safe = safe_ticker_component(ticker).upper()
     p = data_dir() / safe
-    p.mkdir(parents=True, exist_ok=True)
+    _gcs_mkdir(p)
     return p
 
 
@@ -75,7 +137,7 @@ def ticker_runs_dir(ticker: str, date_iso: str) -> Path:
     """
     safe = safe_ticker_component(ticker).upper()
     p = data_dir() / safe / date_iso
-    p.mkdir(parents=True, exist_ok=True)
+    _gcs_mkdir(p)
     return p
 
 
@@ -129,6 +191,9 @@ def write_json_atomic(path: Path | str, data: Any) -> None:
     to the caller as ``PermissionError``.
     """
     path = Path(path)
+    if _gcs and _gcs.is_enabled():
+        _gcs.write_json(path, data)
+        return
     path.parent.mkdir(parents=True, exist_ok=True)
     fd, tmp = tempfile.mkstemp(dir=str(path.parent), prefix=f".{path.name}.", suffix=".tmp")
     try:
@@ -150,8 +215,11 @@ def read_json(path: Path | str) -> Any | None:
     caller doesn't silently overwrite a recoverable source of truth
     (e.g. the watchlist).
     """
+    p = Path(path)
+    if _gcs and _gcs.is_enabled():
+        return _gcs.read_json(p)
     try:
-        with open(path, encoding="utf-8") as f:
+        with open(p, encoding="utf-8") as f:
             return json.load(f)
     except FileNotFoundError:
         return None
@@ -175,6 +243,9 @@ def append_jsonl(path: Path | str, obj: Any) -> None:
     mid-write) is handled by ``read_jsonl``.
     """
     path = Path(path)
+    if _gcs and _gcs.is_enabled():
+        _gcs.append_jsonl(path, obj)
+        return
     path.parent.mkdir(parents=True, exist_ok=True)
     line = json.dumps(obj, ensure_ascii=False, separators=(",", ":"))
     with open(path, "a", encoding="utf-8") as f:
@@ -185,6 +256,8 @@ def append_jsonl(path: Path | str, obj: Any) -> None:
 def read_jsonl(path: Path | str) -> list[Any]:
     """Read JSONL, skipping any malformed last line (incomplete write)."""
     p = Path(path)
+    if _gcs and _gcs.is_enabled():
+        return _gcs.read_jsonl(p)
     if not p.exists():
         return []
     out: list[Any] = []
@@ -196,8 +269,6 @@ def read_jsonl(path: Path | str) -> list[Any]:
             try:
                 out.append(json.loads(s))
             except json.JSONDecodeError:
-                # Truncated last line from a crash — skip it. Earlier
-                # lines are valid and preserved.
                 continue
     return out
 
@@ -239,11 +310,13 @@ def clear_ticker_data(ticker: str) -> None:
     """
     safe = safe_ticker_component(ticker).upper()
     td = data_dir() / safe
-    if td.exists():
-        shutil.rmtree(td)
+    _gcs_rmtree(td)
     cp = cache_dir() / "checkpoints" / f"{safe}.db"
-    if cp.exists():
-        cp.unlink()
+    if _gcs_path_exists(cp):
+        if _gcs and _gcs.is_enabled():
+            _gcs.delete(cp)
+        else:
+            cp.unlink()
 
 
 # ---- run directory helpers ----
@@ -294,11 +367,11 @@ def create_run_dir(
     # Race-avoidance: if a dir with this slug already exists (unlikely at
     # second resolution but possible in tests), append a counter.
     n = 1
-    while run_dir.exists():
+    while _gcs_path_exists(run_dir):
         run_dir = td / f"{slug}__{n}"
         n += 1
-    run_dir.mkdir(parents=True)
-    (run_dir / "stages").mkdir()
+    _gcs_mkdir(run_dir)
+    _gcs_mkdir(run_dir / "stages")
     run_id = run_id_for(ticker, started_at)
     _run_dir_cache[run_id] = run_dir
     _trim_run_dir_cache()
@@ -352,11 +425,14 @@ def _trim_run_dir_cache() -> None:
             if culled >= len(_run_dir_cache) - _RUN_DIR_CACHE_MAX // 2:
                 break
             p = _run_dir_cache[rid]
-            if not p.exists():
+            if not _gcs_path_exists(p):
                 del _run_dir_cache[rid]
                 culled += 1
         if len(_run_dir_cache) > _RUN_DIR_CACHE_MAX:
-            keys = sorted(_run_dir_cache, key=lambda k: _run_dir_cache[k].stat().st_mtime if _run_dir_cache[k].exists() else 0)
+            keys = sorted(
+                _run_dir_cache,
+                key=lambda k: _run_dir_cache[k].stat().st_mtime if _run_dir_cache[k].exists() else 0,
+            )
             for k in keys[:len(_run_dir_cache) - _RUN_DIR_CACHE_MAX // 2]:
                 del _run_dir_cache[k]
 
@@ -364,13 +440,13 @@ def _trim_run_dir_cache() -> None:
 def _find_run_dir(run_id: str) -> Path | None:
     """Locate the run directory for ``run_id``, using and populating the cache."""
     cached = _run_dir_cache.get(run_id)
-    if cached is not None and cached.exists():
+    if cached is not None and _gcs_path_exists(cached):
         return cached
-    for td in data_dir().iterdir():
-        if not td.is_dir():
+    for td in _gcs_iterdir(data_dir()):
+        if not _gcs_path_is_dir(td):
             continue
-        for sd in td.iterdir():
-            if not sd.is_dir():
+        for sd in _gcs_iterdir(td):
+            if not _gcs_path_is_dir(sd):
                 continue
             rj = read_json(sd / "run.json")
             if rj and rj.get("id") == run_id:
@@ -390,7 +466,7 @@ def read_run_dir(run_id: str) -> Path | None:
         "read_run_dir: run %s not found under %s; ticker dirs: %s",
         run_id,
         dd,
-        [str(td.name) for td in dd.iterdir() if td.is_dir()],
+        [str(td.name) for td in _gcs_iterdir(dd) if _gcs_path_is_dir(td)],
     )
     return None
 
@@ -398,11 +474,11 @@ def read_run_dir(run_id: str) -> Path | None:
 def list_ticker_runs(ticker: str, limit: int = 50) -> list[dict]:
     """Return runs for a ticker, newest first (by started_at)."""
     td = data_dir() / safe_ticker_component(ticker).upper()
-    if not td.exists():
+    if not _gcs_path_exists(td):
         return []
     rows: list[dict] = []
-    for sd in td.iterdir():
-        if not sd.is_dir():
+    for sd in _gcs_iterdir(td):
+        if not _gcs_path_is_dir(sd):
             continue
         rj = read_json(sd / "run.json")
         if rj:
@@ -418,10 +494,10 @@ def find_resumable_run(ticker: str, today_iso: str) -> dict | None:
     ``today_iso``. Returns ``None`` if no such run exists.
     """
     td = data_dir() / safe_ticker_component(ticker).upper()
-    if not td.exists():
+    if not _gcs_path_exists(td):
         return None
-    for sd in td.iterdir():
-        if not sd.is_dir():
+    for sd in _gcs_iterdir(td):
+        if not _gcs_path_is_dir(sd):
             continue
         rj = read_json(sd / "run.json")
         if not rj:
@@ -449,9 +525,9 @@ def delete_run(run_id: str) -> bool:
     without raising).
     """
     rd = _find_run_dir(run_id)
-    if rd is None or not rd.exists():
+    if rd is None or not _gcs_path_exists(rd):
         return False
-    shutil.rmtree(rd)
+    _gcs_rmtree(rd)
     _run_dir_cache.pop(run_id, None)
     log.info("deleted run dir for %s: %s", run_id, rd)
     return True
@@ -522,17 +598,16 @@ def write_stage(run_id: str, stage: str, stage_payload: dict) -> None:
 def walk_data_dir() -> Iterable[Path]:
     """Yield every ticker subdir under data/. Used by startup cleanup."""
     dd = data_dir()
-    if not dd.exists():
+    if not _gcs_path_exists(dd):
         return
-    try:
-        entries = list(dd.iterdir())
-    except PermissionError:
-        return
-    for td in entries:
-        if td.name == "lost+found" or not td.is_dir():
+    for td in _gcs_iterdir(dd):
+        if td.name == "lost+found" or not _gcs_path_is_dir(td):
             continue
         try:
-            td.iterdir()
+            if _gcs and _gcs.is_enabled():
+                _gcs.list_prefix(td)
+            else:
+                td.iterdir()
         except PermissionError:
             continue
         yield td

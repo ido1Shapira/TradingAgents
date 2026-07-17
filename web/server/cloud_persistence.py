@@ -1,22 +1,15 @@
 """Cloud persistence shim.
 
 On Cloud Run, the container filesystem is ephemeral — anything written to
-disk is lost when the instance scales to zero.  The previous implementation
-backed the watchlist up to a Render environment variable via the Render API.
+disk is lost when the instance scales to zero.  The GCS-backed storage
+layer in ``storage.py`` (enabled when ``GCS_BUCKET`` is set) transparently
+persists all data to the provisioned Cloud Storage bucket.
 
-That Render code path is gone (we migrated to Google Cloud Run; see
-``docs/superpowers/specs/2026-07-17-gcp-cloud-run-deploy-design.md``).
-
-For now, both ``restore_watchlist()`` and ``backup_watchlist()`` are no-ops.
-A future spec will mirror watchlist (and other data) to the provisioned GCS
-bucket. The public function signatures are preserved so callers in
-``app.py`` and ``queries.py`` stay unchanged.
-
-Usage
------
-On app startup, call ``restore_watchlist()`` after ``storage.init_settings()``.
-After every write to the watchlist JSON file, call ``backup_watchlist()``.
+``restore_watchlist()`` and ``backup_watchlist()`` are preserved as public
+API hooks for callers in ``app.py`` and ``queries.py``.  With GCS enabled
+they are no-ops because the underlying IO already reads/writes the bucket.
 """
+
 from __future__ import annotations
 
 import logging
@@ -25,11 +18,25 @@ from pathlib import Path
 log = logging.getLogger(__name__)
 
 
+def _gcs_active() -> bool:
+    try:
+        from web.server import gcs
+        return gcs.is_enabled()
+    except ImportError:
+        return False
+
+
 def restore_watchlist(data_dir: str | Path) -> None:
-    """No-op on Cloud Run. GCS mirroring is a future spec."""
-    log.debug("restore_watchlist is a no-op on Cloud Run (GCS mirroring not yet enabled)")
+    """Restore watchlist from GCS (no-op — GCS is the primary backend)."""
+    if _gcs_active():
+        log.debug("restore_watchlist: GCS active, data is already cloud-backed")
+    else:
+        log.debug("restore_watchlist: no GCS bucket configured; local filesystem only")
 
 
 def backup_watchlist(data_dir: str | Path) -> None:
-    """No-op on Cloud Run. GCS mirroring is a future spec."""
-    log.debug("backup_watchlist is a no-op on Cloud Run (GCS mirroring not yet enabled)")
+    """Backup watchlist to GCS (no-op — GCS is the primary backend)."""
+    if _gcs_active():
+        log.debug("backup_watchlist: GCS active, data is already cloud-backed")
+    else:
+        log.debug("backup_watchlist: no GCS bucket configured; local filesystem only")
