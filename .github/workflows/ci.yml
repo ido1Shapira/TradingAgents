@@ -163,7 +163,62 @@ jobs:
           --project="${{ vars.GCP_PROJECT_ID }}"
           --quiet
           || echo "Binding already exists"
-      - name: Set environment variables (before deploy)
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy tradingagents \
+            --image="$IMAGE" \
+            --region=us-central1 \
+            --project="${{ vars.GCP_PROJECT_ID }}" \
+            --quiet \
+            --no-traffic
+      - name: Get latest revision name
+        id: revision
+        run: |
+          REVISION=$(gcloud run revisions list \
+            --service=tradingagents \
+            --region=us-central1 \
+            --project="${{ vars.GCP_PROJECT_ID }}" \
+            --format="value(name)" \
+            --limit=1)
+          echo "REVISION_NAME=$REVISION" >> "$GITHUB_ENV"
+          echo "Revision: $REVISION"
+      - name: Wait for revision ready and collect logs
+        run: |
+          REVISION="${{ env.REVISION_NAME }}"
+          for i in $(seq 1 15); do
+            STATUS=$(gcloud run revisions describe "$REVISION" \
+              --region=us-central1 \
+              --project="${{ vars.GCP_PROJECT_ID }}" \
+              --format="value(status.conditions[0].reason)")
+            if [ "$STATUS" == "Ready" ]; then
+              echo "Revision ready"
+              exit 0
+            fi
+            echo "Status: $STATUS (attempt $i)"
+            # Dump container logs
+            gcloud logging read "resource.type=cloud_run_revision AND resource.labels.revision_name=\"$REVISION\"" \
+              --project="${{ vars.GCP_PROJECT_ID }}" \
+              --limit=20 \
+              --format="value(textPayload)" 2>/dev/null || true
+            sleep 10
+          done
+          # Final log dump before failing
+          echo "=== Container logs ==="
+          gcloud logging read "resource.type=cloud_run_revision AND resource.labels.revision_name=\"$REVISION\"" \
+            --project="${{ vars.GCP_PROJECT_ID }}" \
+            --limit=50 \
+            --format="value(textPayload)" 2>/dev/null || echo "No logs"
+          exit 1
+      - name: Update traffic
+        if: success()
+        run: |
+          gcloud run services update-traffic tradingagents \
+            --to-latest \
+            --region=us-central1 \
+            --project="${{ vars.GCP_PROJECT_ID }}" \
+            --quiet
+      - name: Set environment variables (for future revisions)
+        if: always()
         run: |
           gcloud run services update tradingagents \
             --region=us-central1 \
@@ -199,17 +254,4 @@ jobs:
               TRADINGAGENTS_INDICATOR_CHECK_INTERVAL_MS=${{ secrets.TRADINGAGENTS_INDICATOR_CHECK_INTERVAL_MS }},\
               TRADINGAGENTS_AGENT_SCHEDULE_INTERVAL_H=${{ secrets.TRADINGAGENTS_AGENT_SCHEDULE_INTERVAL_H }},\
               GCS_BUCKET=${{ secrets.GCS_BUCKET }}" \
-            --quiet
-      - name: Deploy to Cloud Run
-        run: |
-          gcloud run deploy tradingagents \
-            --image="$IMAGE" \
-            --region=us-central1 \
-            --project="${{ vars.GCP_PROJECT_ID }}" \
-            --quiet \
-            --no-traffic
-          gcloud run services update-traffic tradingagents \
-            --to-latest \
-            --region=us-central1 \
-            --project="${{ vars.GCP_PROJECT_ID }}" \
-            --quiet
+            --quiet || echo "Env var update skipped (revision not updated)"
