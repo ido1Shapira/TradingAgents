@@ -84,7 +84,7 @@ resource "google_cloud_run_v2_service" "main" {
   template {
     service_account = google_service_account.cloud_run.email
     containers {
-      image = "${var.region}-docker.pkg.dev/${var.project_id}/tradingagents-images/app:ci-gcs-storage"
+      image = "${var.region}-docker.pkg.dev/${var.project_id}/tradingagents-images/app:latest"
       ports {
         container_port = 8000
       }
