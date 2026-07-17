@@ -40,6 +40,7 @@ dependencies = [
     "aiosqlite>=0.20.0",
     "itsdangerous>=2.1.2",
     "python-telegram-bot>=21.0",
+    "google-cloud-storage>=2.16.0",
 ]
 
 [project.optional-dependencies]
