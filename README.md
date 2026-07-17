@@ -1,14 +1,3 @@
----
-title: TradingAgents Dashboard
-emoji: 📈
-colorFrom: green
-colorTo: green
-sdk: docker
-app_port: 8000
-pinned: false
-license: mit
----
-
 <p align="center">
   <img src="assets/TauricResearch.png" style="width: 60%; height: auto;">
 </p>
