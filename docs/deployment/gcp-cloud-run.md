@@ -64,25 +64,20 @@ trigger the `deploy-cloud-run` GitHub Actions job.
 
 ## 3. Setting app secrets (LLM API keys, etc.)
 
-Cloud Run env vars are NOT set by terraform (only infra-level vars like
-`PORT`, `TRADINGAGENTS_DATA_DIR` are). Set the application-level secrets
-once after the first deploy:
+App env vars are set automatically by the CI/CD deploy job. They are stored
+as GitHub Actions **secrets** (one per key) and passed to Cloud Run via
+`gcloud run services update --update-env-vars` after every deploy.
 
-```bash
-gcloud run services update tradingagents \
-  --region=us-central1 \
-  --update-env-vars \
-    OPENAI_API_KEY=sk-...,\
-    GOOGLE_API_KEY=...,\
-    ANTHROPIC_API_KEY=...
-```
+To add or update a secret:
 
-To update a subset, use `--update-env-vars KEY=VAL` again with the new
-values. To remove: `--remove-env-vars KEY1,KEY2`.
+1. Add it in GitHub (Settings → Secrets and variables → Actions → New
+   repository secret).
+2. Add the `${{ secrets.YOUR_KEY }}` reference to
+   `.github/workflows/ci.yml` in the `Set environment variables` step.
+3. Push — the next CI run will propagate it.
 
-> **Note:** Secrets set via `--update-env-vars` are visible in the GCP
-> console plaintext to project owners. A future spec may migrate these to
-> Secret Manager.
+> The old `gcloud run services update --update-env-vars` hand-roll is no
+> longer needed; the CI pipeline handles it.
 
 ## 4. Redeploying
 
@@ -135,17 +130,19 @@ If costs creep up unexpectedly, the usual culprits:
 
 These are explicit out-of-scope follow-ups (see spec §10):
 
-- **Ephemeral filesystem:** past runs, watchlist state, and `.env` config
-  reset on every cold start. The container has no persistent volume. The
-  `cloud_persistence.py` module is a no-op stub — GCS sync is a future spec.
-- **No Secret Manager integration:** LLM API keys live in Cloud Run env
-  vars. Rotating a key means re-deploying with `--update-env-vars`.
+- **Ephemeral filesystem:** past runs, watchlist, and indicators reset on
+  every cold start. A GCS storage backend (`web/server/gcs.py`) is now wired
+  into `storage.py` — when `GCS_BUCKET` is set (it is on Cloud Run), all IO
+  reads from and writes to GCS, surviving cold starts.
+- **No Secret Manager integration:** LLM API keys live in GitHub Actions
+  secrets and are passed to Cloud Run as env vars. Rotating a key means
+  updating the GitHub secret and pushing.
 - **No custom domain:** the dashboard is reachable at
   `https://tradingagents-<hash>-uc.a.run.app` only. Adding a custom domain
   is a future spec.
-- **No PR-preview deploys:** the previous `deploy-dev` Railway job that ran
-  on every PR is gone. A future spec may add a `tradingagents-staging`
-  Cloud Run service for PR previews.
+- **No PR-preview deploys:** only pushes to `main` / `main-with-dashboard`
+  deploy. A future spec may add a `tradingagents-staging` Cloud Run service
+  for PR previews.
 - **No VPC connector / private network:** the service uses direct public
   ingress per `INGRESS_TRAFFIC_ALL`.
 
@@ -165,7 +162,7 @@ These are explicit out-of-scope follow-ups (see spec §10):
 **Cloud Run revision fails startup probe (`/api/health`):**
 - Cloud Run logs: `gcloud run services logs read tradingagents --region=us-central1`
 - Common cause: missing required env var (e.g., `AUTH_DISABLED=true` is
-  required to start without a login form — already set in terraform).
+  required to start without a login form — set in the CI/CD env-vars step).
 - The new revision will not receive traffic while it is unhealthy. Existing
   latest-healthy revision keeps serving.
 

@@ -709,7 +709,7 @@ def read_notifier_config() -> dict:
     Return notifier config from environment variables.
 
     Sources checked in order:
-      1. Process environment (Railway env vars)
+      1. Process environment (Cloud Run env vars / local shell)
       2. .env file (local dev, persisted via UI saves)
     """
     env = _read_env()
