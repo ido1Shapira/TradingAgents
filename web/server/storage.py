@@ -57,50 +57,26 @@ def init_settings(*, data_dir: str, cache_dir: str) -> None:
     _run_dir_cache.clear()
     Path(data_dir).mkdir(parents=True, exist_ok=True)
     Path(cache_dir).mkdir(parents=True, exist_ok=True)
-    bucket = os.environ.get("GCS_BUCKET")
-    if bucket:
-        _init_gcs_async(bucket, data_dir)
+    _init_gcs(data_dir)
 
 
-def _init_gcs(bucket: str, data_root: str) -> None:
-    """Synchronous GCS init — imports ``google.cloud.storage``.
+def _init_gcs(data_root: str) -> None:
+    """Initialise the GCS backend if ``GCS_BUCKET`` is set.
 
-    The import can hang on gVisor (Cloud Run sandbox) so this is
-    normally called from a background thread (see ``_init_gcs_async``).
+    Uses direct REST API calls (stdlib ``urllib.request``) — no C
+    extensions, safe on gVisor / Cloud Run sandbox.  Fails gracefully:
+    ``_gcs`` stays ``None`` and all IO falls back to the local filesystem.
     """
     global _gcs
+    bucket = os.environ.get("GCS_BUCKET")
+    if not bucket:
+        return
     try:
         from web.server import gcs as gcs_module
+        gcs_module.init(bucket, data_root)
         _gcs = gcs_module
-        _gcs.init(bucket, data_root)
     except Exception:
         pass  # logged inside gcs.init
-
-
-def _init_gcs_async(bucket: str, data_root: str) -> None:
-    """Start GCS init in a daemon thread with a 10 s startup timeout.
-
-    If the ``google.cloud.storage`` import hangs (known gVisor issue)
-    the container still starts — storage functions transparently fall
-    back to the local filesystem until the background init completes.
-    Even if the thread is still running, ``_gcs.is_enabled()`` will
-    return ``False`` (because ``_bucket`` is still ``None``), so all
-    ``_gcs and _gcs.is_enabled()`` checks in this module correctly
-    pick the local-filesystem branch.
-    """
-    import threading
-
-    def _do():
-        _init_gcs(bucket, data_root)
-
-    t = threading.Thread(target=_do, daemon=True)
-    t.start()
-    t.join(timeout=10)
-    if _gcs is None or not _gcs.is_enabled():
-        log.info(
-            "GCS init deferred to background thread (timeout 10 s); "
-            "storage operations will use local filesystem until ready"
-        )
 
 
 def data_dir() -> Path:

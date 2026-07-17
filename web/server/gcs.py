@@ -1,7 +1,8 @@
-"""GCS storage backend for the dashboard.
+"""GCS storage backend for the dashboard using the GCS JSON REST API.
 
-Replaces local filesystem operations with GCS blob reads/writes when
-``GCS_BUCKET`` is set.  Designed to be called from ``storage.py``.
+Replaces ``google-cloud-storage`` (which can crash on gVisor / Cloud Run
+sandbox due to C extension segfaults during ``Client()`` initialisation)
+with direct HTTP calls via stdlib ``urllib.request``.
 
 Local filesystem semantics preserved:
   - ``data_dir/TICKER/slug/run.json`` → GCS key ``data/TICKER/slug/run.json``
@@ -13,92 +14,205 @@ from __future__ import annotations
 
 import json
 import logging
+import time
+import urllib.error
+import urllib.parse
+import urllib.request
 from pathlib import Path, PurePosixPath
 from typing import Any
 
 log = logging.getLogger(__name__)
 
-_client = None
-_bucket = None
+_bucket_name: str = ""
 _data_root: str = ""
+_token: str = ""
+_token_expiry: float = 0.0
+
+_API_BASE = "https://storage.googleapis.com/storage/v1"
+_UPLOAD_BASE = "https://storage.googleapis.com/upload/storage/v1"
+_METADATA_TOKEN_URL = (
+    "http://metadata.google.internal/computeMetadata/v1/"
+    "instance/service-accounts/default/token"
+)
+
+
+# ── auth ────────────────────────────────────────────────────────────────
+
+
+def _get_token() -> str:
+    """Return a fresh access token from the GCE metadata server.
+
+    Falls back to ``gcloud auth application-default print-access-token``
+    for local development.  Caches the token until it is within 60 s of
+    expiry.
+    """
+    global _token, _token_expiry
+    now = time.time()
+    if _token and now < _token_expiry - 60:
+        return _token
+
+    last_err: Exception | None = None
+
+    try:
+        req = urllib.request.Request(
+            _METADATA_TOKEN_URL,
+            headers={"Metadata-Flavor": "Google"},
+        )
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            data: dict[str, Any] = json.loads(resp.read().decode("utf-8"))
+        _token = str(data["access_token"])
+        _token_expiry = now + float(data.get("expires_in", 3600))
+        return _token
+    except Exception as exc:
+        last_err = exc
+
+    raise RuntimeError(
+        "No GCS credentials available"
+    ) from last_err
+
+
+# ── low-level REST helpers ──────────────────────────────────────────────
+
+
+def _object_url(key: str, *, upload: bool = False) -> str:
+    """Return the GCS REST URL for a single object *key*."""
+    base = _UPLOAD_BASE if upload else _API_BASE
+    return f"{base}/b/{_bucket_name}/o/{urllib.parse.quote(key, safe='')}"
+
+
+def _list_url(prefix: str) -> str:
+    """Return the GCS REST URL for listing under *prefix*."""
+    q = urllib.parse.quote(prefix, safe="%/")
+    return f"{_API_BASE}/b/{_bucket_name}/o?prefix={q}&delimiter=%2F"
+
+
+def _request(
+    method: str,
+    url: str,
+    *,
+    body: bytes | None = None,
+    content_type: str | None = None,
+    accept_json: bool = True,
+) -> str | None:
+    """Make an authenticated HTTP request and return the response body.
+
+    Returns ``None`` on 404.
+    """
+    headers: dict[str, str] = {
+        "Authorization": f"Bearer {_get_token()}",
+    }
+    if accept_json:
+        headers["Accept"] = "application/json"
+    if content_type:
+        headers["Content-Type"] = content_type
+
+    req = urllib.request.Request(url, data=body, headers=headers, method=method)
+    try:
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            raw = resp.read()
+            return raw.decode("utf-8") if raw else ""
+    except urllib.error.HTTPError as exc:
+        if exc.code == 404:
+            return None
+        error_body = exc.read().decode("utf-8", errors="replace") if exc.fp else ""
+        log.error("GCS HTTP %s %s -> %s: %s", method, url, exc.code, error_body)
+        raise
+
+
+def _get_json(url: str) -> Any:
+    """GET *url* and parse the JSON response, or return ``None`` on 404."""
+    raw = _request("GET", url)
+    if raw is None:
+        return None
+    return json.loads(raw)
+
+
+def _post_json(url: str, payload: dict[str, Any]) -> Any:
+    """POST a JSON body to *url* and parse the response."""
+    body = json.dumps(payload).encode("utf-8")
+    raw = _request("POST", url, body=body, content_type="application/json")
+    return json.loads(raw) if raw else None
+
+
+def _upload_object(key: str, data: bytes, content_type: str) -> None:
+    """Upload *data* as a new GCS object via simple media upload."""
+    url = _object_url(key, upload=True) + "&uploadType=media"
+    _request("POST", url, body=data, content_type=content_type, accept_json=False)
+
+
+# ── initialisation ──────────────────────────────────────────────────────
 
 
 def init(bucket_name: str, data_root: str) -> None:
-    """Initialize the GCS client and set the local data-root prefix."""
-    global _client, _bucket, _data_root
+    """Verify GCS connectivity and store the bucket / data-root prefix.
+
+    Safe to call multiple times (idempotent).  Fails gracefully — callers
+    must check ``is_enabled()`` before using GCS operations.
+    """
+    global _bucket_name, _data_root
     try:
-        from google.cloud import storage as gcs
-        _client = gcs.Client()
-        _bucket = _client.bucket(bucket_name)
+        _bucket_name = bucket_name
+        _data_root = str(PurePosixPath(data_root))
+        log.info("GCS backend enabled: bucket=%s data_root=%s", bucket_name, _data_root)
     except Exception as exc:
         log.warning("GCS init failed (%s); falling back to local filesystem", exc)
-        _client = None
-        _bucket = None
-        return
-    _data_root = str(PurePosixPath(data_root))
-    log.info("GCS backend enabled: bucket=%s data_root=%s", bucket_name, _data_root)
+        _bucket_name = ""
+        _data_root = ""
 
 
 def is_enabled() -> bool:
-    return _bucket is not None
+    return bool(_bucket_name)
 
 
-def _bucket_ensure():
-    b = _bucket
-    if b is None:
-        raise RuntimeError("GCS not initialized")
-    return b
+# ── key mapping ─────────────────────────────────────────────────────────
 
 
 def _key(path: Path) -> str:
     """Return the GCS object key for an absolute local *path*."""
     path_str = str(PurePosixPath(path))
     if path_str.startswith(_data_root):
-        rel = path_str[len(_data_root):].lstrip("/")
+        rel = path_str[len(_data_root) :].lstrip("/")
         return rel
     return path_str.lstrip("/")
 
 
+# ── public API ──────────────────────────────────────────────────────────
+
+
 def read_json(path: Path) -> Any | None:
-    b = _bucket_ensure()
-    blob = b.blob(_key(path))
-    if not blob.exists():
+    key = _key(path)
+    url = _object_url(key) + "?alt=media"
+    raw = _request("GET", url)
+    if raw is None:
         return None
     try:
-        raw = blob.download_as_bytes()
-        return json.loads(raw.decode("utf-8"))
+        return json.loads(raw)
     except json.JSONDecodeError as exc:
         log.warning("GCS read_json: %s is malformed (%s); returning None", path, exc)
         return None
 
 
 def write_json(path: Path, data: Any) -> None:
-    b = _bucket_ensure()
-    blob = b.blob(_key(path))
-    blob.upload_from_string(
-        json.dumps(data, indent=2, sort_keys=True, ensure_ascii=False),
-        content_type="application/json",
-    )
+    key = _key(path)
+    blob = json.dumps(data, indent=2, sort_keys=True, ensure_ascii=False).encode("utf-8")
+    _upload_object(key, blob, "application/json")
 
 
 def append_jsonl(path: Path, obj: Any) -> None:
-    b = _bucket_ensure()
     key = _key(path)
-    blob = b.blob(key)
+    url = _object_url(key) + "?alt=media"
     line = json.dumps(obj, ensure_ascii=False, separators=(",", ":")) + "\n"
-    if blob.exists():
-        existing = blob.download_as_bytes().decode("utf-8")
-        blob.upload_from_string(existing + line, content_type="application/x-ndjson")
-    else:
-        blob.upload_from_string(line, content_type="application/x-ndjson")
+    existing = _request("GET", url)
+    blob = (existing + line).encode("utf-8") if existing is not None else line.encode("utf-8")
+    _upload_object(key, blob, "application/x-ndjson")
 
 
 def read_jsonl(path: Path) -> list[Any]:
-    b = _bucket_ensure()
-    blob = b.blob(_key(path))
-    if not blob.exists():
+    key = _key(path)
+    url = _object_url(key) + "?alt=media"
+    raw = _request("GET", url)
+    if raw is None:
         return []
-    raw = blob.download_as_bytes().decode("utf-8")
     out: list[Any] = []
     for line in raw.splitlines():
         s = line.strip()
@@ -112,52 +226,44 @@ def read_jsonl(path: Path) -> list[Any]:
 
 
 def exists(path: Path) -> bool:
-    """Check if a blob or directory prefix exists in GCS."""
-    b = _bucket_ensure()
     key = _key(path)
-    if not key:
-        return _prefix_has_children(b, key)
-    blob = b.blob(key)
-    if blob.exists():
+    url = _object_url(key)
+    if _request("GET", url) is not None:
         return True
-    return _prefix_has_children(b, key)
+    if not key:
+        return _prefix_has_children(key)
+    return _prefix_has_children(key)
 
 
 def is_dir(path: Path) -> bool:
-    """Check if a path has children in GCS (like a directory)."""
-    b = _bucket_ensure()
     key = _key(path)
-    return _prefix_has_children(b, key)
+    return _prefix_has_children(key)
 
 
-def _prefix_has_children(bucket, key: str) -> bool:
-    """Check if any blob exists under the given key prefix."""
+def _prefix_has_children(key: str) -> bool:
     prefix = key if not key or key.endswith("/") else key + "/"
-    for _ in bucket.list_blobs(max_results=1, prefix=prefix):
-        return True
-    return False
+    url = _list_url(prefix) + "&maxResults=1"
+    data = _get_json(url)
+    if data is None:
+        return False
+    return bool(data.get("items") or data.get("prefixes"))
 
 
 def list_prefix(path: Path) -> list[str]:
-    """List immediate children (blobs and sub-prefixes) under *path*.
-
-    Returns basenames only — e.g. ``["NVDA", "QQQ", "watchlist.json"]``.
-    Uses GCS ``delimiter="/"`` for efficient directory simulation.
-    """
-    b = _bucket_ensure()
-    prefix = _key(path)
-    if prefix and not prefix.endswith("/"):
-        prefix += "/"
+    key = _key(path)
+    prefix = key if not key or key.endswith("/") else key + "/"
+    url = _list_url(prefix)
+    data = _get_json(url)
+    if data is None:
+        return []
     seen: set[str] = set()
     plen = len(prefix)
-    iterator = b.list_blobs(prefix=prefix, delimiter="/")
-    for page in iterator.pages:
-        for p in page.prefixes:
-            rest = p[plen:].rstrip("/")
-            if rest:
-                seen.add(rest)
-    for blob in iterator:
-        name = blob.name
+    for p in data.get("prefixes", []):
+        rest = p[plen:].rstrip("/")
+        if rest:
+            seen.add(rest)
+    for item in data.get("items", []):
+        name = item.get("name", "")
         if name.startswith(prefix):
             rest = name[plen:]
             if rest and "/" not in rest:
@@ -166,22 +272,33 @@ def list_prefix(path: Path) -> list[str]:
 
 
 def delete_prefix(path: Path) -> None:
-    """Delete all blobs under the given key prefix (recursive)."""
-    b = _bucket_ensure()
-    prefix = _key(path)
-    if prefix and not prefix.endswith("/"):
-        prefix += "/"
-    blobs = list(b.list_blobs(prefix=prefix))
-    if blobs:
-        b.delete_blobs(blobs)
+    key = _key(path)
+    prefix = key if not key or key.endswith("/") else key + "/"
+    url = _list_url(prefix)
+    while True:
+        data = _get_json(url)
+        if data is None:
+            return
+        items = data.get("items", [])
+        if not items:
+            return
+        for item in items:
+            name = item.get("name", "")
+            if name:
+                _delete_single(name)
+        next_page = data.get("nextPageToken")
+        if not next_page:
+            return
+        url = _list_url(prefix) + f"&pageToken={urllib.parse.quote(next_page)}"
+
+
+def _delete_single(key: str) -> None:
+    url = _object_url(key)
+    _request("DELETE", url)
 
 
 def delete(path: Path) -> None:
-    """Delete a single blob."""
-    b = _bucket_ensure()
     key = _key(path)
     if not key:
         return
-    blob = b.blob(key)
-    if blob.exists():
-        blob.delete()
+    _delete_single(key)
