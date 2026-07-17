@@ -21,9 +21,17 @@ RUN apt-get update -qq && apt-get install -y -qq curl \
 RUN mkdir -p /home/appuser/app && cp -r /build/. /home/appuser/app
 WORKDIR /home/appuser/app
 
+RUN useradd -r -u 1000 -g root appuser \
+    && chown -R appuser:root /home/appuser/app /build \
+    && mkdir -p /data/cache \
+    && chown -R appuser:root /data
+
 EXPOSE 8000
 
 COPY docker-entrypoint.sh /docker-entrypoint.sh
-RUN chmod +x /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh \
+    && chown appuser:root /docker-entrypoint.sh
+
+USER appuser
 
 ENTRYPOINT ["/docker-entrypoint.sh"]

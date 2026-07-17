@@ -135,6 +135,56 @@ For local models with Ollama:
 docker compose --profile ollama run --rm tradingagents-ollama
 ```
 
+### Deploy to Google Cloud Run (free tier)
+
+The dashboard can be deployed to [Google Cloud Run](https://cloud.google.com/run)
+on a GCP Always-Free-tier budget. Push to `main` and a GitHub Actions job
+(`deploy-cloud-run`) builds and pushes the Docker image to Artifact Registry
+then deploys a new Cloud Run revision.
+
+**One-time bootstrap** (see [`docs/deployment/gcp-cloud-run.md`](docs/deployment/gcp-cloud-run.md) for the full runbook):
+
+```bash
+# 1. Authenticate gcloud
+gcloud auth login && gcloud config set project trading-agent-9058
+
+# 2. Apply the terraform stack (infra already exists for trading-agent-9058;
+#    re-applies cleanly and only adds startup_cpu_boost on first run after this PR)
+cd terraform
+terraform init
+terraform apply \
+  -var=project_id=trading-agent-9058 \
+  -var=github_owner=<your-github-handle> \
+  -var=github_repo=TradingAgents
+
+# 3. Read outputs and set them as GitHub repo *variables* (not secrets —
+#    they aren't sensitive): GCP_PROJECT_ID, GCP_WORKLOAD_IDENTITY_PROVIDER,
+#    GCP_SERVICE_ACCOUNT_EMAIL, GCP_ARTIFACT_REGISTRY_REPO
+terraform output workload_identity_provider deploy_service_account_email cloud_run_url
+```
+
+**Set LLM API keys** (one-time; values persist in Cloud Run env):
+
+```bash
+gcloud run services update tradingagents \
+  --region=us-central1 \
+  --update-env-vars OPENAI_API_KEY=...,GOOGLE_API_KEY=...
+```
+
+**Push to deploy:**
+```bash
+git push origin main          # triggers deploy-cloud-run job
+```
+
+**Free-tier caveats:**
+- Cloud Run scales to zero after ~15 min idle; the next request cold-starts
+  in under 10 seconds (startup CPU boost is enabled).
+- The container filesystem is **ephemeral** — past runs, watchlist state, and
+  `.env` config reset on cold start. Mirroring this state to the provisioned
+  GCS bucket is a planned follow-up spec.
+- Egress to non-North-America destinations is billable but stays well under
+  free-tier limits for personal dashboard use.
+
 ### Required APIs
 
 TradingAgents supports multiple LLM providers. Set the API key for your chosen provider:

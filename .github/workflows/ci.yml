@@ -87,30 +87,43 @@ jobs:
           fi
           echo "Version bumped: $main_version -> $current_version"
 
-  deploy-dev:
-    name: deploy to dev (PR preview)
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
-    needs: [test, lint, smoke-install, version-check]
-    steps:
-      - uses: actions/checkout@v4
-      - name: Install Railway CLI
-        run: npm install -g @railway/cli
-      - name: Deploy to Railway
-        run: railway up --environment staging --service gleaming-light
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN_DEV }}
-
-  deploy-prod:
-    name: deploy to production
+  deploy-cloud-run:
+    name: deploy to Google Cloud Run
     runs-on: ubuntu-latest
     if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/main-with-dashboard') && github.event_name == 'push'
     needs: [test, lint, smoke-install]
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - uses: actions/checkout@v4
-      - name: Install Railway CLI
-        run: npm install -g @railway/cli
-      - name: Deploy to Railway
-        run: railway up --environment production --service gleaming-light
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN_PROD }}
+      - name: Authenticate to Google Cloud (WIF)
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_SERVICE_ACCOUNT_EMAIL }}
+      - name: Set up gcloud CLI
+        uses: google-github-actions/setup-gcloud@v2
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
+      - name: Build and push image
+        run: |
+          SHORT_SHA=${GITHUB_SHA::7}
+          IMAGE="${{ vars.GCP_ARTIFACT_REGISTRY_REPO }}/app:${SHORT_SHA}"
+          docker build -t "$IMAGE" -t "${{ vars.GCP_ARTIFACT_REGISTRY_REPO }}/app:latest" .
+          docker push "$IMAGE"
+          docker push "${{ vars.GCP_ARTIFACT_REGISTRY_REPO }}/app:latest"
+          echo "IMAGE=$IMAGE" >> "$GITHUB_ENV"
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy tradingagents \
+            --image="$IMAGE" \
+            --region=us-central1 \
+            --project="${{ vars.GCP_PROJECT_ID }}" \
+            --quiet \
+            --no-traffic
+          gcloud run services update-traffic tradingagents \
+            --to-latest \
+            --region=us-central1 \
+            --project="${{ vars.GCP_PROJECT_ID }}" \
+            --quiet
