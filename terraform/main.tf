@@ -190,7 +190,6 @@ resource "google_iam_workload_identity_pool_provider" "github" {
   }
 
   attribute_condition = "attribute.repository == \"ido1Shapira/TradingAgents\""
-
   oidc {
     issuer_uri = "https://token.actions.githubusercontent.com"
   }
@@ -224,4 +223,12 @@ resource "google_service_account_iam_member" "deploy_workload_identity_user" {
   service_account_id = google_service_account.deploy.name
   role               = "roles/iam.workloadIdentityUser"
   member             = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.github.name}/attribute.repository/${var.github_owner}/${var.github_repo}"
+}
+
+# Allow the deploy SA to act-as the Cloud Run SA when running
+# ``gcloud run deploy`` (needs ``iam.serviceAccounts.actAs``).
+resource "google_service_account_iam_member" "deploy_cloud_run_act_as" {
+  service_account_id = google_service_account.cloud_run.name
+  role               = "roles/iam.serviceAccountUser"
+  member             = "serviceAccount:${google_service_account.deploy.email}"
 }
