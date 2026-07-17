@@ -114,6 +114,15 @@ jobs:
           docker push "$IMAGE"
           docker push "${{ vars.GCP_ARTIFACT_REGISTRY_REPO }}/app:latest"
           echo "IMAGE=$IMAGE" >> "$GITHUB_ENV"
+      - name: Grant deploy SA actAs on Cloud Run SA
+        run: >
+          gcloud iam service-accounts add-iam-policy-binding
+          tradingagents-cloud-run@trading-agent-9058.iam.gserviceaccount.com
+          --member="serviceAccount:${{ vars.GCP_SERVICE_ACCOUNT_EMAIL }}"
+          --role="roles/iam.serviceAccountUser"
+          --project="${{ vars.GCP_PROJECT_ID }}"
+          --quiet
+          || echo "Binding already exists"
       - name: Deploy to Cloud Run
         run: |
           gcloud run deploy tradingagents \
@@ -126,4 +135,41 @@ jobs:
             --to-latest \
             --region=us-central1 \
             --project="${{ vars.GCP_PROJECT_ID }}" \
+            --quiet
+      - name: Set environment variables
+        run: |
+          gcloud run services update tradingagents \
+            --region=us-central1 \
+            --project="${{ vars.GCP_PROJECT_ID }}" \
+            --update-env-vars="\
+              AUTH_SECRET=${{ secrets.AUTH_SECRET }},\
+              ALLOWED_EMAILS=${{ secrets.ALLOWED_EMAILS }},\
+              GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }},\
+              GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }},\
+              OAUTH_REDIRECT_URI=${{ secrets.OAUTH_REDIRECT_URI }},\
+              GOOGLE_API_KEY=${{ secrets.GOOGLE_API_KEY }},\
+              OPENROUTER_API_KEY=${{ secrets.OPENROUTER_API_KEY }},\
+              FRED_API_KEY=${{ secrets.FRED_API_KEY }},\
+              ALPHA_VANTAGE_API_KEY=${{ secrets.ALPHA_VANTAGE_API_KEY }},\
+              TRADINGAGENTS_LLM_BACKEND_URL=${{ secrets.TRADINGAGENTS_LLM_BACKEND_URL }},\
+              OPENAI_COMPATIBLE_API_KEY=${{ secrets.OPENAI_COMPATIBLE_API_KEY }},\
+              TRADINGAGENTS_LLM_PROVIDER=${{ secrets.TRADINGAGENTS_LLM_PROVIDER }},\
+              TRADINGAGENTS_DEEP_THINK_LLM=${{ secrets.TRADINGAGENTS_DEEP_THINK_LLM }},\
+              TRADINGAGENTS_QUICK_THINK_LLM=${{ secrets.TRADINGAGENTS_QUICK_THINK_LLM }},\
+              TRADINGAGENTS_OUTPUT_LANGUAGE=${{ secrets.TRADINGAGENTS_OUTPUT_LANGUAGE }},\
+              TRADINGAGENTS_MAX_DEBATE_ROUNDS=${{ secrets.TRADINGAGENTS_MAX_DEBATE_ROUNDS }},\
+              TRADINGAGENTS_MAX_RISK_ROUNDS=${{ secrets.TRADINGAGENTS_MAX_RISK_ROUNDS }},\
+              TRADINGAGENTS_FREE_KEYS_ENABLED=${{ secrets.TRADINGAGENTS_FREE_KEYS_ENABLED }},\
+              TRADINGAGENTS_LLM_CACHE_ENABLED=${{ secrets.TRADINGAGENTS_LLM_CACHE_ENABLED }},\
+              TRADINGAGENTS_LLM_CACHE_TTL=${{ secrets.TRADINGAGENTS_LLM_CACHE_TTL }},\
+              TRADINGAGENTS_MAX_HISTORY_BAR_CACHE_SIZE=${{ secrets.TRADINGAGENTS_MAX_HISTORY_BAR_CACHE_SIZE }},\
+              TRADINGAGENTS_MAX_RUN_DIR_CACHE_SIZE=${{ secrets.TRADINGAGENTS_MAX_RUN_DIR_CACHE_SIZE }},\
+              TRADINGAGENTS_MAX_STATES_IN_MEMORY=${{ secrets.TRADINGAGENTS_MAX_STATES_IN_MEMORY }},\
+              TRADINGAGENTS_MAX_BACKGROUND_JOB_DURATIONS=${{ secrets.TRADINGAGENTS_MAX_BACKGROUND_JOB_DURATIONS }},\
+              TRADINGAGENTS_TELEGRAM_BOT_TOKEN=${{ secrets.TRADINGAGENTS_TELEGRAM_BOT_TOKEN }},\
+              TRADINGAGENTS_TELEGRAM_CHAT_ID=${{ secrets.TRADINGAGENTS_TELEGRAM_CHAT_ID }},\
+              TRADINGAGENTS_TELEGRAM_NOTIFIER_ENABLED=${{ secrets.TRADINGAGENTS_TELEGRAM_NOTIFIER_ENABLED }},\
+              TRADINGAGENTS_INDICATOR_CHECK_INTERVAL_MS=${{ secrets.TRADINGAGENTS_INDICATOR_CHECK_INTERVAL_MS }},\
+              TRADINGAGENTS_AGENT_SCHEDULE_INTERVAL_H=${{ secrets.TRADINGAGENTS_AGENT_SCHEDULE_INTERVAL_H }},\
+              GCS_BUCKET=${{ secrets.GCS_BUCKET }}" \
             --quiet
