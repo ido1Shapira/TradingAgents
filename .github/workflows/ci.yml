@@ -163,20 +163,7 @@ jobs:
           --project="${{ vars.GCP_PROJECT_ID }}"
           --quiet
           || echo "Binding already exists"
-      - name: Deploy to Cloud Run
-        run: |
-          gcloud run deploy tradingagents \
-            --image="$IMAGE" \
-            --region=us-central1 \
-            --project="${{ vars.GCP_PROJECT_ID }}" \
-            --quiet \
-            --no-traffic
-          gcloud run services update-traffic tradingagents \
-            --to-latest \
-            --region=us-central1 \
-            --project="${{ vars.GCP_PROJECT_ID }}" \
-            --quiet
-      - name: Set environment variables
+      - name: Set environment variables (before deploy)
         run: |
           gcloud run services update tradingagents \
             --region=us-central1 \
@@ -212,4 +199,17 @@ jobs:
               TRADINGAGENTS_INDICATOR_CHECK_INTERVAL_MS=${{ secrets.TRADINGAGENTS_INDICATOR_CHECK_INTERVAL_MS }},\
               TRADINGAGENTS_AGENT_SCHEDULE_INTERVAL_H=${{ secrets.TRADINGAGENTS_AGENT_SCHEDULE_INTERVAL_H }},\
               GCS_BUCKET=${{ secrets.GCS_BUCKET }}" \
+            --quiet
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy tradingagents \
+            --image="$IMAGE" \
+            --region=us-central1 \
+            --project="${{ vars.GCP_PROJECT_ID }}" \
+            --quiet \
+            --no-traffic
+          gcloud run services update-traffic tradingagents \
+            --to-latest \
+            --region=us-central1 \
+            --project="${{ vars.GCP_PROJECT_ID }}" \
             --quiet
