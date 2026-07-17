@@ -88,32 +88,41 @@ jobs:
           echo "Version bumped: $main_version -> $current_version"
 
   smoke-test:
-    name: smoke test production Cloud Run
+    name: smoke test (build + local container)
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write
+    needs: [test, lint, smoke-install]
     steps:
       - uses: actions/checkout@v4
-      - name: Authenticate to Google Cloud (WIF)
-        uses: google-github-actions/auth@v2
-        with:
-          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-          service_account: ${{ vars.GCP_SERVICE_ACCOUNT_EMAIL }}
-      - name: Set up gcloud CLI
-        uses: google-github-actions/setup-gcloud@v2
-      - name: Smoke test — verify Cloud Run is serving requests
+      - name: Build Docker image
+        run: docker build -t tradingagents:ci-test .
+      - name: Start container
         run: |
-          SERVICE_URL=$(gcloud run services describe tradingagents \
-            --region=us-central1 \
-            --project="${{ vars.GCP_PROJECT_ID }}" \
-            --format="value(status.url)" \
-            --quiet)
-          echo "Service URL: $SERVICE_URL"
-          curl -sfS "$SERVICE_URL/api/health" | jq -e '.status == "ok"'
+          docker run -d \
+            --name tradingagents-smoke \
+            -p 8000:8000 \
+            -e AUTH_DISABLED=true \
+            tradingagents:ci-test
+      - name: Wait for container to be ready
+        run: |
+          for i in $(seq 1 30); do
+            if curl -sfS http://localhost:8000/api/health > /dev/null 2>&1; then
+              echo "Container ready"
+              break
+            fi
+            echo "Waiting... ($i)"
+            sleep 2
+          done
+      - name: Test health endpoint
+        run: |
+          curl -sfS http://localhost:8000/api/health | jq -e '.status == "ok"'
           echo "Health check passed"
-          curl -sfS "$SERVICE_URL/api/version" | jq -e 'has("version")'
+      - name: Test version endpoint
+        run: |
+          curl -sfS http://localhost:8000/api/version | jq -e 'has("version")'
           echo "Version endpoint passed"
+      - name: Clean up
+        if: always()
+        run: docker rm -f tradingagents-smoke 2>/dev/null || true
 
   deploy-cloud-run:
     name: deploy to Google Cloud Run
