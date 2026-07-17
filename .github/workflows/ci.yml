@@ -100,18 +100,21 @@ jobs:
           docker run -d \
             --name tradingagents-smoke \
             -p 8000:8000 \
+            -e PORT=8000 \
             -e AUTH_DISABLED=true \
             tradingagents:ci-test
       - name: Wait for container to be ready
         run: |
-          for i in $(seq 1 30); do
+          for i in $(seq 1 60); do
             if curl -sfS http://localhost:8000/api/health > /dev/null 2>&1; then
               echo "Container ready"
               break
             fi
+            docker logs tradingagents-smoke 2>&1 | tail -5
             echo "Waiting... ($i)"
             sleep 2
           done
+          curl -sfS http://localhost:8000/api/health > /dev/null 2>&1 || { echo "Container never became ready"; docker logs tradingagents-smoke; exit 1; }
       - name: Test health endpoint
         run: |
           curl -sfS http://localhost:8000/api/health | jq -e '.status == "ok"'
