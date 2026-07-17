@@ -22,7 +22,7 @@ RUN mkdir -p /home/appuser/app && cp -r /build/. /home/appuser/app
 WORKDIR /home/appuser/app
 
 RUN useradd -r -u 1000 -g root appuser \
-    && chown -R appuser:root /home/appuser/app /build \
+    && chown -R appuser:root /home/appuser /build \
     && mkdir -p /data/cache \
     && chown -R appuser:root /data
 
