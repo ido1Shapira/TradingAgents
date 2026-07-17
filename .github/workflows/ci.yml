@@ -173,3 +173,16 @@ jobs:
               TRADINGAGENTS_AGENT_SCHEDULE_INTERVAL_H=${{ secrets.TRADINGAGENTS_AGENT_SCHEDULE_INTERVAL_H }},\
               GCS_BUCKET=${{ secrets.GCS_BUCKET }}" \
             --quiet
+      - name: Smoke test — verify Cloud Run is serving requests
+        run: |
+          SERVICE_URL=$(gcloud run services describe tradingagents \
+            --region=us-central1 \
+            --project="${{ vars.GCP_PROJECT_ID }}" \
+            --format="value(status.url)" \
+            --quiet)
+          echo "Service URL: $SERVICE_URL"
+          sleep 5
+          curl -sfS "$SERVICE_URL/api/health" | jq -e '.status == "ok"'
+          echo "Health check passed"
+          curl -sfS "$SERVICE_URL/api/version" | jq -e 'has("version")'
+          echo "Version endpoint passed"
