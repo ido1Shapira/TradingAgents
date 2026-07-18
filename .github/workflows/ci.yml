@@ -126,20 +126,14 @@ jobs:
           #   - GCS_BUCKET set to a fake name — triggers GCS init code path
           #     but operations fail gracefully and fall back to local FS
           #   - AUTH_DISABLED=true (matches terraform)
-          #   - Read-only root FS (--read-only) matches Cloud Run sandbox
-          #     (Cloud Run allows writes to the container layer but they're
-          #     ephemeral; --read-only is stricter but exercises the same
-          #     "all writes go to /data" contract)
           #
-          # /data is a tmpfs mount (writable, in-memory) that mirrors the
-          # Cloud Run ephemeral writable layer.
+          # /data was created in the Dockerfile with appuser ownership, so
+          # the container's writable filesystem allows writes there (same
+          # ephemeral-layer semantics as Cloud Run).
           docker run -d \
             --name tradingagents-smoke \
             -p 8000:8000 \
             --memory=512m \
-            --read-only \
-            --tmpfs /tmp:rw,size=64m \
-            --tmpfs /data:rw,size=128m \
             -e PORT=8080 \
             -e TRADINGAGENTS_DASHBOARD_HOST=0.0.0.0 \
             -e TRADINGAGENTS_DASHBOARD_PORT=8000 \
