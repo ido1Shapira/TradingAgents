@@ -261,8 +261,7 @@ jobs:
             --region=us-central1 \
             --project="${{ vars.GCP_PROJECT_ID }}" \
             --quiet \
-            --no-traffic \
-            --set-env-vars="TRADINGAGENTS_DASHBOARD_HOST=0.0.0.0,GCS_BUCKET=${{ secrets.GCS_BUCKET }},TRADINGAGENTS_DATA_DIR=/data,TRADINGAGENTS_CACHE_DIR=/data/cache,AUTH_DISABLED=true,TRADINGAGENTS_API_RATE_LIMIT=30/minute"
+            --no-traffic
       - name: Get latest revision name
         id: revision
         run: |
