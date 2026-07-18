@@ -213,6 +213,12 @@ resource "google_project_iam_member" "deploy_cloud_run_developer" {
   member  = "serviceAccount:${google_service_account.deploy.email}"
 }
 
+resource "google_project_iam_member" "deploy_log_viewer" {
+  project = var.project_id
+  role    = "roles/logging.viewer"
+  member  = "serviceAccount:${google_service_account.deploy.email}"
+}
+
 resource "google_project_iam_member" "deploy_storage_admin" {
   project = var.project_id
   role    = "roles/storage.objectAdmin"
