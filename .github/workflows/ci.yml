@@ -247,6 +247,13 @@ jobs:
           --project="${{ vars.GCP_PROJECT_ID }}"
           --quiet
           || echo "Binding already exists"
+      - name: Grant deploy SA log viewer
+        run: >
+          gcloud projects add-iam-policy-binding "${{ vars.GCP_PROJECT_ID }}"
+          --member="serviceAccount:${{ vars.GCP_SERVICE_ACCOUNT_EMAIL }}"
+          --role="roles/logging.viewer"
+          --quiet
+          || echo "Binding already exists"
       - name: Deploy to Cloud Run
         run: |
           gcloud run deploy tradingagents \
@@ -254,7 +261,8 @@ jobs:
             --region=us-central1 \
             --project="${{ vars.GCP_PROJECT_ID }}" \
             --quiet \
-            --no-traffic
+            --no-traffic \
+            --set-env-vars="TRADINGAGENTS_DASHBOARD_HOST=0.0.0.0,GCS_BUCKET=${{ secrets.GCS_BUCKET }},TRADINGAGENTS_DATA_DIR=/data,TRADINGAGENTS_CACHE_DIR=/data/cache,AUTH_DISABLED=true,TRADINGAGENTS_API_RATE_LIMIT=30/minute"
       - name: Get latest revision name
         id: revision
         run: |
