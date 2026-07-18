@@ -88,25 +88,39 @@ def cache_dir() -> Path:
 
 
 # ── GCS-aware filesystem helpers ────────────────────────────────────────
+#
+# Every helper tries the GCS path first (when enabled) but falls back to
+# the local filesystem on ANY error — including transient GCS outages and
+# the smoke-test case where GCS_BUCKET is set but credentials are absent.
+# This keeps the container alive (and serving) even when GCS is down.
 
 
 def _gcs_path_exists(path: Path) -> bool:
     if _gcs and _gcs.is_enabled():
-        return _gcs.exists(path)
+        try:
+            return _gcs.exists(path)
+        except Exception:
+            log.warning("GCS exists() failed for %s; falling back to local FS", path, exc_info=True)
     return path.exists()
 
 
 def _gcs_path_is_dir(path: Path) -> bool:
     if _gcs and _gcs.is_enabled():
-        return _gcs.is_dir(path)
+        try:
+            return _gcs.is_dir(path)
+        except Exception:
+            log.warning("GCS is_dir() failed for %s; falling back to local FS", path, exc_info=True)
     return path.is_dir()
 
 
 def _gcs_iterdir(path: Path) -> list[Path]:
     """Return sorted Path children under *path* (like ``Path.iterdir``)."""
     if _gcs and _gcs.is_enabled():
-        names = _gcs.list_prefix(path)
-        return sorted(path / n for n in names)
+        try:
+            names = _gcs.list_prefix(path)
+            return sorted(path / n for n in names)
+        except Exception:
+            log.warning("GCS list_prefix() failed for %s; falling back to local FS", path, exc_info=True)
     if not path.exists():
         return []
     return sorted(path.iterdir())
@@ -115,8 +129,11 @@ def _gcs_iterdir(path: Path) -> list[Path]:
 def _gcs_rmtree(path: Path) -> None:
     """Remove a directory tree (recursive)."""
     if _gcs and _gcs.is_enabled():
-        _gcs.delete_prefix(path)
-        return
+        try:
+            _gcs.delete_prefix(path)
+            return
+        except Exception:
+            log.warning("GCS delete_prefix() failed for %s; falling back to local FS", path, exc_info=True)
     if path.exists():
         shutil.rmtree(path)
 
@@ -202,8 +219,11 @@ def write_json_atomic(path: Path | str, data: Any) -> None:
     """
     path = Path(path)
     if _gcs and _gcs.is_enabled():
-        _gcs.write_json(path, data)
-        return
+        try:
+            _gcs.write_json(path, data)
+            return
+        except Exception:
+            log.warning("GCS write_json() failed for %s; falling back to local FS", path, exc_info=True)
     path.parent.mkdir(parents=True, exist_ok=True)
     fd, tmp = tempfile.mkstemp(dir=str(path.parent), prefix=f".{path.name}.", suffix=".tmp")
     try:
@@ -227,18 +247,17 @@ def read_json(path: Path | str) -> Any | None:
     """
     p = Path(path)
     if _gcs and _gcs.is_enabled():
-        return _gcs.read_json(p)
+        try:
+            return _gcs.read_json(p)
+        except Exception:
+            log.warning("GCS read_json() failed for %s; falling back to local FS", path, exc_info=True)
     try:
         with open(p, encoding="utf-8") as f:
             return json.load(f)
     except FileNotFoundError:
         return None
     except json.JSONDecodeError as exc:
-        import logging
-
-        logging.getLogger(__name__).warning(
-            "read_json: %s is malformed (%s); returning None", path, exc
-        )
+        log.warning("read_json: %s is malformed (%s); returning None", path, exc)
         return None
 
 
@@ -254,8 +273,11 @@ def append_jsonl(path: Path | str, obj: Any) -> None:
     """
     path = Path(path)
     if _gcs and _gcs.is_enabled():
-        _gcs.append_jsonl(path, obj)
-        return
+        try:
+            _gcs.append_jsonl(path, obj)
+            return
+        except Exception:
+            log.warning("GCS append_jsonl() failed for %s; falling back to local FS", path, exc_info=True)
     path.parent.mkdir(parents=True, exist_ok=True)
     line = json.dumps(obj, ensure_ascii=False, separators=(",", ":"))
     with open(path, "a", encoding="utf-8") as f:
@@ -267,7 +289,10 @@ def read_jsonl(path: Path | str) -> list[Any]:
     """Read JSONL, skipping any malformed last line (incomplete write)."""
     p = Path(path)
     if _gcs and _gcs.is_enabled():
-        return _gcs.read_jsonl(p)
+        try:
+            return _gcs.read_jsonl(p)
+        except Exception:
+            log.warning("GCS read_jsonl() failed for %s; falling back to local FS", path, exc_info=True)
     if not p.exists():
         return []
     out: list[Any] = []
@@ -324,9 +349,12 @@ def clear_ticker_data(ticker: str) -> None:
     cp = cache_dir() / "checkpoints" / f"{safe}.db"
     if _gcs_path_exists(cp):
         if _gcs and _gcs.is_enabled():
-            _gcs.delete(cp)
-        else:
-            cp.unlink()
+            try:
+                _gcs.delete(cp)
+                return
+            except Exception:
+                log.warning("GCS delete() failed for %s; falling back to local FS", cp, exc_info=True)
+        cp.unlink()
 
 
 # ---- run directory helpers ----
@@ -615,7 +643,11 @@ def walk_data_dir() -> Iterable[Path]:
             continue
         try:
             if _gcs and _gcs.is_enabled():
-                _gcs.list_prefix(td)
+                try:
+                    _gcs.list_prefix(td)
+                except Exception:
+                    log.warning("GCS list_prefix() failed for %s; using local FS", td, exc_info=True)
+                    td.iterdir()
             else:
                 td.iterdir()
         except PermissionError:

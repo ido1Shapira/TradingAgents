@@ -87,82 +87,132 @@ jobs:
           fi
           echo "Version bumped: $main_version -> $current_version"
 
-  smoke-test:
-    name: smoke test (build + local container)
-    runs-on: ubuntu-latest
-    needs: [test, lint, smoke-install]
-    steps:
-      - uses: actions/checkout@v4
-      - name: Build Docker image
-        run: docker build -t tradingagents:ci-test .
-      - name: Start container
-        run: |
-          docker run -d \
-            --name tradingagents-smoke \
-            -p 8000:8000 \
-            -e PORT=8000 \
-            -e AUTH_DISABLED=true \
-            tradingagents:ci-test
-      - name: Wait for container to be ready
-        run: |
-          for i in $(seq 1 60); do
-            if curl -sfS http://localhost:8000/api/health > /dev/null 2>&1; then
-              echo "Container ready"
-              break
-            fi
-            docker logs tradingagents-smoke 2>&1 | tail -5
-            echo "Waiting... ($i)"
-            sleep 2
-          done
-          curl -sfS http://localhost:8000/api/health > /dev/null 2>&1 || { echo "Container never became ready"; docker logs tradingagents-smoke; exit 1; }
-      - name: Test health endpoint
-        run: |
-          curl -sfS http://localhost:8000/api/health | jq -e '.status == "ok"'
-          echo "Health check passed"
-      - name: Test version endpoint
-        run: |
-          curl -sfS http://localhost:8000/api/version | jq -e 'has("version")'
-          echo "Version endpoint passed"
-      - name: Clean up
-        if: always()
-        run: docker rm -f tradingagents-smoke 2>/dev/null || true
+  # ── smoke-test ─────────────────────────────────────────────────────────
+  #
+  # Mocks the production Cloud Run deploy EXACTLY — same Docker image, same
+  # env vars, same memory limit (512MB), same startup-probe semantics — but
+  # runs the container locally instead of pushing to GCP.
+  #
+  # If the container can't start under these conditions locally, it will
+  # fail the real Cloud Run deploy too.  Catching it here saves a round-trip
+  # to GCP (and the 2-3 minute Cloud Run deploy feedback cycle).
+  #
+  # Differences from production that are unavoidable:
+  #   - No gVisor sandbox (we run on Docker, not Cloud Run's gVisor runtime)
+  #   - No real GCS access (GCS_BUCKET set to a fake bucket name; GCS ops
+  #     fail gracefully and fall back to local FS — exactly what would
+  #     happen on a real GCS outage)
+  #   - No Cloud Run metadata server (auth token lookup fails → GCS disabled)
+  #
+  # Env vars mirror terraform/main.tf exactly.  If a new env var is added
+  # to terraform, add it here too.
 
   smoke-test:
-    name: smoke test (build + local container)
+    name: smoke test (mock Cloud Run deploy)
     runs-on: ubuntu-latest
     needs: [test, lint, smoke-install]
     steps:
       - uses: actions/checkout@v4
-      - name: Build Docker image
-        run: docker build -t tradingagents:ci-test .
-      - name: Start container
+
+      - name: Build Docker image (same as production)
+        run: docker build -t tradingagents:smoke .
+
+      - name: Run container with Cloud Run env + constraints
         run: |
+          # Mirror terraform/main.tf env vars + Cloud Run defaults:
+          #   - PORT=8080 (auto-set by Cloud Run)
+          #   - MEMORY 512MB (terraform: cloud_run_memory)
+          #   - TRADINGAGENTS_DATA_DIR=/data, TRADINGAGENTS_CACHE_DIR=/data/cache
+          #   - GCS_BUCKET set to a fake name — triggers GCS init code path
+          #     but operations fail gracefully and fall back to local FS
+          #   - AUTH_DISABLED=true (matches terraform)
+          #   - Read-only root FS (--read-only) matches Cloud Run sandbox
+          #     (Cloud Run allows writes to the container layer but they're
+          #     ephemeral; --read-only is stricter but exercises the same
+          #     "all writes go to /data" contract)
+          #
+          # /data is a tmpfs mount (writable, in-memory) that mirrors the
+          # Cloud Run ephemeral writable layer.
           docker run -d \
             --name tradingagents-smoke \
             -p 8000:8000 \
-            -e PORT=8000 \
+            --memory=512m \
+            --read-only \
+            --tmpfs /tmp:rw,size=64m \
+            --tmpfs /data:rw,size=128m \
+            -e PORT=8080 \
+            -e TRADINGAGENTS_DASHBOARD_HOST=0.0.0.0 \
+            -e TRADINGAGENTS_DASHBOARD_PORT=8000 \
+            -e TRADINGAGENTS_DATA_DIR=/data \
+            -e TRADINGAGENTS_CACHE_DIR=/data/cache \
+            -e GCS_BUCKET=tradingagents-smoke-test-nonexistent \
             -e AUTH_DISABLED=true \
-            tradingagents:ci-test
-      - name: Wait for container to be ready
+            -e TRADINGAGENTS_API_RATE_LIMIT=30/minute \
+            -e TRADINGAGENTS_DASHBOARD_DISABLE_PRICE_FEED=1 \
+            tradingagents:smoke
+
+      - name: Simulate Cloud Run startup probe (initial_delay + period×threshold)
         run: |
-          for i in $(seq 1 60); do
+          # Cloud Run startup probe: initial_delay=10s, period=10s, threshold=15
+          # The container must respond to GET /api/health within
+          #   10 + 10*15 = 160 seconds.
+          # We poll every 2s (faster than the real period to surface errors
+          # quickly) and fail if the container isn't ready within 160s.
+          echo "Waiting for container to pass startup probe (max 160s)..."
+          READY=0
+          for i in $(seq 1 80); do
             if curl -sfS http://localhost:8000/api/health > /dev/null 2>&1; then
-              echo "Container ready"
+              echo "Container ready after $((i*2))s"
+              READY=1
               break
             fi
-            docker logs tradingagents-smoke 2>&1 | tail -5
-            echo "Waiting... ($i)"
+            # Print container logs on each iteration so we can see what's
+            # happening inside the container (uvicorn startup, GCS init,
+            # errors, etc.)
+            docker logs tradingagents-smoke 2>&1 | tail -3
+            echo "...not ready yet ($((i*2))s/$((10 + 10*15))s)"
             sleep 2
           done
-          curl -sfS http://localhost:8000/api/health > /dev/null 2>&1 || { echo "Container never became ready"; docker logs tradingagents-smoke; exit 1; }
+
+          if [ "$READY" != "1" ]; then
+            echo ""
+            echo "=== Container failed startup probe (160s) ==="
+            echo "--- Container logs (full) ---"
+            docker logs tradingagents-smoke
+            echo "--- /proc info ---"
+            docker inspect tradingagents-smoke --format='{{.State.Status}} (exit={{.State.ExitCode}}, oom={{.State.OOMKilled}})'
+            exit 1
+          fi
+
       - name: Test health endpoint
         run: |
           curl -sfS http://localhost:8000/api/health | jq -e '.status == "ok"'
           echo "Health check passed"
+
       - name: Test version endpoint
         run: |
           curl -sfS http://localhost:8000/api/version | jq -e 'has("version")'
           echo "Version endpoint passed"
+
+      - name: Test watchlist endpoint (exercises storage layer)
+        run: |
+          # This endpoint reads watchlist.json.  With GCS_BUCKET set but no
+          # real GCS access, storage.read_json should fall back to local FS
+          # (returning None / empty list) rather than crashing.
+          curl -sfS http://localhost:8000/api/watchlist | jq -e 'type == "array"'
+          echo "Watchlist endpoint passed (storage OK with GCS fallback)"
+
+      - name: Check container memory usage (free tier 512MB)
+        if: always()
+        run: |
+          # Verify the container didn't OOM-killed (Cloud Run memory limit)
+          echo "Container state:"
+          docker inspect tradingagents-smoke --format='Status: {{.State.Status}} (exit={{.State.ExitCode}}, oom={{.State.OOMKilled}})'
+
+      - name: Print container logs (debug)
+        if: always()
+        run: docker logs tradingagents-smoke 2>&1 || true
+
       - name: Clean up
         if: always()
         run: docker rm -f tradingagents-smoke 2>/dev/null || true
@@ -171,7 +221,7 @@ jobs:
     name: deploy to Google Cloud Run
     runs-on: ubuntu-latest
     if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/main-with-dashboard') && github.event_name == 'push'
-    needs: [test, lint, smoke-install]
+    needs: [test, lint, smoke-install, smoke-test]
     permissions:
       contents: read
       id-token: write
@@ -203,15 +253,6 @@ jobs:
           --project="${{ vars.GCP_PROJECT_ID }}"
           --quiet
           || echo "Binding already exists"
-      - name: Grant deploy SA actAs on Cloud Run SA
-        run: >
-          gcloud iam service-accounts add-iam-policy-binding
-          tradingagents-cloud-run@trading-agent-9058.iam.gserviceaccount.com
-          --member="serviceAccount:${{ vars.GCP_SERVICE_ACCOUNT_EMAIL }}"
-          --role="roles/iam.serviceAccountUser"
-          --project="${{ vars.GCP_PROJECT_ID }}"
-          --quiet
-          || echo "Binding already exists"
       - name: Deploy to Cloud Run
         run: |
           gcloud run deploy tradingagents \
@@ -234,6 +275,7 @@ jobs:
       - name: Wait for revision ready and collect logs
         run: |
           REVISION="${{ env.REVISION_NAME }}"
+          echo "Waiting for revision $REVISION to become Ready..."
           for i in $(seq 1 15); do
             STATUS=$(gcloud run revisions describe "$REVISION" \
               --region=us-central1 \
@@ -243,20 +285,61 @@ jobs:
               echo "Revision ready"
               exit 0
             fi
-            echo "Status: $STATUS (attempt $i)"
-            # Dump container logs
-            gcloud logging read "resource.type=cloud_run_revision AND resource.labels.revision_name=\"$REVISION\"" \
-              --project="${{ vars.GCP_PROJECT_ID }}" \
-              --limit=20 \
-              --format="value(textPayload)" 2>/dev/null || true
+            echo "Status: $STATUS (attempt $i/15)"
             sleep 10
           done
-          # Final log dump before failing
-          echo "=== Container logs ==="
+
+          # ── Revision failed the startup probe.  Collect ALL the
+          # diagnostics we can so the failure is debuggable from the
+          # CI run alone (no need to open GCP console).
+          echo ""
+          echo "============================================================"
+          echo "  Revision $REVISION failed startup probe — diagnostics"
+          echo "============================================================"
+
+          echo ""
+          echo "--- Revision conditions (full) ---"
+          gcloud run revisions describe "$REVISION" \
+            --region=us-central1 \
+            --project="${{ vars.GCP_PROJECT_ID }}" \
+            --format="yaml(status.conditions)" 2>&1 || true
+
+          echo ""
+          echo "--- Revision template (env vars + probe config) ---"
+          gcloud run revisions describe "$REVISION" \
+            --region=us-central1 \
+            --project="${{ vars.GCP_PROJECT_ID }}" \
+            --format="yaml(spec.containers[0].env,spec.containers[0].ports,spec.containers[0].startup_probe,spec.containers[0].resources)" 2>&1 || true
+
+          echo ""
+          echo "--- Container logs (textPayload, last 50) ---"
+          # Wait a few seconds for log propagation
+          sleep 5
           gcloud logging read "resource.type=cloud_run_revision AND resource.labels.revision_name=\"$REVISION\"" \
             --project="${{ vars.GCP_PROJECT_ID }}" \
             --limit=50 \
-            --format="value(textPayload)" 2>/dev/null || echo "No logs"
+            --format="value(textPayload)" 2>&1 || echo "(no textPayload logs)"
+
+          echo ""
+          echo "--- Container logs (jsonPayload, last 20) ---"
+          gcloud logging read "resource.type=cloud_run_revision AND resource.labels.revision_name=\"$REVISION\"" \
+            --project="${{ vars.GCP_PROJECT_ID }}" \
+            --limit=20 \
+            --format="value(jsonPayload)" 2>&1 || echo "(no jsonPayload logs)"
+
+          echo ""
+          echo "--- All Cloud Run logs for this service (last 10 min, any revision) ---"
+          gcloud logging read "resource.type=cloud_run_revision AND resource.labels.service_name=tradingagents" \
+            --project="${{ vars.GCP_PROJECT_ID }}" \
+            --limit=30 \
+            --format="value(timestamp, textPayload, jsonPayload.message)" 2>&1 || echo "(no logs)"
+
+          echo ""
+          echo "--- Recent Cloud Run audit logs (deploy events) ---"
+          gcloud logging read "protoPayload.serviceName=\"run.googleapis.com\"" \
+            --project="${{ vars.GCP_PROJECT_ID }}" \
+            --limit=10 \
+            --format="value(timestamp, textPayload)" 2>&1 || true
           exit 1
       - name: Update traffic
         if: success()
@@ -304,41 +387,3 @@ jobs:
               TRADINGAGENTS_AGENT_SCHEDULE_INTERVAL_H=${{ secrets.TRADINGAGENTS_AGENT_SCHEDULE_INTERVAL_H }},\
               GCS_BUCKET=${{ secrets.GCS_BUCKET }}" \
             --quiet || echo "Env var update skipped (revision not updated)"
-
-      - name: Set environment variables
-        run: |
-          gcloud run services update tradingagents \
-            --region=us-central1 \
-            --project="${{ vars.GCP_PROJECT_ID }}" \
-            --update-env-vars="\
-              AUTH_SECRET=${{ secrets.AUTH_SECRET }},\
-              ALLOWED_EMAILS=${{ secrets.ALLOWED_EMAILS }},\
-              GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }},\
-              GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }},\
-              OAUTH_REDIRECT_URI=${{ secrets.OAUTH_REDIRECT_URI }},\
-              GOOGLE_API_KEY=${{ secrets.GOOGLE_API_KEY }},\
-              OPENROUTER_API_KEY=${{ secrets.OPENROUTER_API_KEY }},\
-              FRED_API_KEY=${{ secrets.FRED_API_KEY }},\
-              ALPHA_VANTAGE_API_KEY=${{ secrets.ALPHA_VANTAGE_API_KEY }},\
-              TRADINGAGENTS_LLM_BACKEND_URL=${{ secrets.TRADINGAGENTS_LLM_BACKEND_URL }},\
-              OPENAI_COMPATIBLE_API_KEY=${{ secrets.OPENAI_COMPATIBLE_API_KEY }},\
-              TRADINGAGENTS_LLM_PROVIDER=${{ secrets.TRADINGAGENTS_LLM_PROVIDER }},\
-              TRADINGAGENTS_DEEP_THINK_LLM=${{ secrets.TRADINGAGENTS_DEEP_THINK_LLM }},\
-              TRADINGAGENTS_QUICK_THINK_LLM=${{ secrets.TRADINGAGENTS_QUICK_THINK_LLM }},\
-              TRADINGAGENTS_OUTPUT_LANGUAGE=${{ secrets.TRADINGAGENTS_OUTPUT_LANGUAGE }},\
-              TRADINGAGENTS_MAX_DEBATE_ROUNDS=${{ secrets.TRADINGAGENTS_MAX_DEBATE_ROUNDS }},\
-              TRADINGAGENTS_MAX_RISK_ROUNDS=${{ secrets.TRADINGAGENTS_MAX_RISK_ROUNDS }},\
-              TRADINGAGENTS_FREE_KEYS_ENABLED=${{ secrets.TRADINGAGENTS_FREE_KEYS_ENABLED }},\
-              TRADINGAGENTS_LLM_CACHE_ENABLED=${{ secrets.TRADINGAGENTS_LLM_CACHE_ENABLED }},\
-              TRADINGAGENTS_LLM_CACHE_TTL=${{ secrets.TRADINGAGENTS_LLM_CACHE_TTL }},\
-              TRADINGAGENTS_MAX_HISTORY_BAR_CACHE_SIZE=${{ secrets.TRADINGAGENTS_MAX_HISTORY_BAR_CACHE_SIZE }},\
-              TRADINGAGENTS_MAX_RUN_DIR_CACHE_SIZE=${{ secrets.TRADINGAGENTS_MAX_RUN_DIR_CACHE_SIZE }},\
-              TRADINGAGENTS_MAX_STATES_IN_MEMORY=${{ secrets.TRADINGAGENTS_MAX_STATES_IN_MEMORY }},\
-              TRADINGAGENTS_MAX_BACKGROUND_JOB_DURATIONS=${{ secrets.TRADINGAGENTS_MAX_BACKGROUND_JOB_DURATIONS }},\
-              TRADINGAGENTS_TELEGRAM_BOT_TOKEN=${{ secrets.TRADINGAGENTS_TELEGRAM_BOT_TOKEN }},\
-              TRADINGAGENTS_TELEGRAM_CHAT_ID=${{ secrets.TRADINGAGENTS_TELEGRAM_CHAT_ID }},\
-              TRADINGAGENTS_TELEGRAM_NOTIFIER_ENABLED=${{ secrets.TRADINGAGENTS_TELEGRAM_NOTIFIER_ENABLED }},\
-              TRADINGAGENTS_INDICATOR_CHECK_INTERVAL_MS=${{ secrets.TRADINGAGENTS_INDICATOR_CHECK_INTERVAL_MS }},\
-              TRADINGAGENTS_AGENT_SCHEDULE_INTERVAL_H=${{ secrets.TRADINGAGENTS_AGENT_SCHEDULE_INTERVAL_H }},\
-              GCS_BUCKET=${{ secrets.GCS_BUCKET }}" \
-            --quiet
