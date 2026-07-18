@@ -260,8 +260,7 @@ jobs:
             --image="$IMAGE" \
             --region=us-central1 \
             --project="${{ vars.GCP_PROJECT_ID }}" \
-            --quiet \
-            --no-traffic
+            --quiet
       - name: Get latest revision name
         id: revision
         run: |
