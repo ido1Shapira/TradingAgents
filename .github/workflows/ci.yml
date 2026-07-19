@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, main-with-dashboard]
+    branches: [main-with-dashboard]
   pull_request:
 
 concurrency:
@@ -214,7 +214,7 @@ jobs:
   deploy-cloud-run:
     name: deploy to Google Cloud Run
     runs-on: ubuntu-latest
-    if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/main-with-dashboard') && github.event_name == 'push'
+    if: github.ref == 'refs/heads/main-with-dashboard' && github.event_name == 'push'
     needs: [test, lint, smoke-install, smoke-test]
     permissions:
       contents: read
@@ -256,10 +256,12 @@ jobs:
           || echo "Binding already exists"
       - name: Deploy to Cloud Run
         run: |
-          gcloud run deploy tradingagents \
+          gcloud beta run deploy tradingagents \
             --image="$IMAGE" \
             --region=us-central1 \
             --project="${{ vars.GCP_PROJECT_ID }}" \
+            --startup-probe=http-get=/api/health:8000 \
+            --concurrency=80 \
             --quiet
       - name: Get latest revision name
         id: revision
@@ -313,33 +315,32 @@ jobs:
 
           echo ""
           echo "--- Container logs (textPayload, last 50) ---"
-          # Wait a few seconds for log propagation
           sleep 5
           gcloud logging read "resource.type=cloud_run_revision AND resource.labels.revision_name=\"$REVISION\"" \
             --project="${{ vars.GCP_PROJECT_ID }}" \
             --limit=50 \
-            --format="value(textPayload)" 2>&1 || echo "(no textPayload logs)"
+            --format="value(textPayload)" 2>/dev/null || echo "(could not read logs — deploy SA likely lacks roles/logging.viewer)"
 
           echo ""
           echo "--- Container logs (jsonPayload, last 20) ---"
           gcloud logging read "resource.type=cloud_run_revision AND resource.labels.revision_name=\"$REVISION\"" \
             --project="${{ vars.GCP_PROJECT_ID }}" \
             --limit=20 \
-            --format="value(jsonPayload)" 2>&1 || echo "(no jsonPayload logs)"
+            --format="value(jsonPayload)" 2>/dev/null || echo "(could not read logs)"
 
           echo ""
           echo "--- All Cloud Run logs for this service (last 10 min, any revision) ---"
           gcloud logging read "resource.type=cloud_run_revision AND resource.labels.service_name=tradingagents" \
             --project="${{ vars.GCP_PROJECT_ID }}" \
             --limit=30 \
-            --format="value(timestamp, textPayload, jsonPayload.message)" 2>&1 || echo "(no logs)"
+            --format="value(timestamp, textPayload, jsonPayload.message)" 2>/dev/null || echo "(could not read logs)"
 
           echo ""
           echo "--- Recent Cloud Run audit logs (deploy events) ---"
           gcloud logging read "protoPayload.serviceName=\"run.googleapis.com\"" \
             --project="${{ vars.GCP_PROJECT_ID }}" \
             --limit=10 \
-            --format="value(timestamp, textPayload)" 2>&1 || true
+            --format="value(timestamp, textPayload)" 2>/dev/null || true
           exit 1
       - name: Update traffic
         if: success()
