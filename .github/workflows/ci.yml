@@ -256,7 +256,7 @@ jobs:
           || echo "Binding already exists"
       - name: Deploy to Cloud Run
         run: |
-          gcloud beta run deploy tradingagents \
+          gcloud run deploy tradingagents \
             --image="$IMAGE" \
             --region=us-central1 \
             --project="${{ vars.GCP_PROJECT_ID }}" \
