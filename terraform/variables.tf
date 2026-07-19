@@ -20,12 +20,6 @@ variable "github_repo" {
   default     = "TradingAgents"
 }
 
-variable "gcs_bucket_name" {
-  description = "Name of the GCS bucket; must be globally unique. Stays within free tier (5GB Standard)."
-  type        = string
-  default     = "tradingagent-data-files"
-}
-
 variable "cloud_run_memory" {
   description = "Cloud Run memory in MiB (free tier covers this up to 4GB-seconds/request)"
   type        = string

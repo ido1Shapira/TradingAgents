@@ -13,7 +13,3 @@ output "workload_identity_provider" {
 output "deploy_service_account_email" {
   value = google_service_account.deploy.email
 }
-
-output "gcs_bucket_name" {
-  value = google_storage_bucket.data.name
-}

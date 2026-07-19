@@ -20,52 +20,10 @@ resource "google_artifact_registry_repository" "main" {
   depends_on    = [google_project_service.apis["artifactregistry.googleapis.com"]]
 }
 
-# Cloud Storage bucket for persistent data (free tier: 5GB Standard)
-resource "google_storage_bucket" "data" {
-  name                     = "${var.gcs_bucket_name}-${var.project_id}"
-  location                 = var.region
-  force_destroy            = false
-  storage_class            = "STANDARD"
-  uniform_bucket_level_access = true
-  public_access_prevention    = "enforced"
-
-  versioning {
-    enabled = true
-  }
-
-  # Auto-cleanup old files (free-tier keepers: 5GB max)
-  lifecycle_rule {
-    action {
-      type          = "SetStorageClass"
-      storage_class = "NEARLINE"
-    }
-    condition {
-      age = 30
-    }
-  }
-
-  lifecycle_rule {
-    action {
-      type = "Delete"
-    }
-    condition {
-      age = 365
-    }
-  }
-
-  depends_on = [google_project_service.apis["storage.googleapis.com"]]
-}
-
 # Cloud Run service account
 resource "google_service_account" "cloud_run" {
   account_id   = "tradingagents-cloud-run"
   display_name = "TradingAgents Cloud Run service account"
-}
-
-resource "google_storage_bucket_iam_member" "cloud_run_storage" {
-  bucket = google_storage_bucket.data.name
-  role   = "roles/storage.objectAdmin"
-  member = "serviceAccount:${google_service_account.cloud_run.email}"
 }
 
 resource "google_project_iam_member" "cloud_run_secret_accessor" {
@@ -76,9 +34,9 @@ resource "google_project_iam_member" "cloud_run_secret_accessor" {
 
 # Cloud Run service (single shared deployment; staging prefix removed to keep free)
 resource "google_cloud_run_v2_service" "main" {
-  name     = "tradingagents"
-  location = var.region
-  ingress  = "INGRESS_TRAFFIC_ALL"
+  name                = "tradingagents"
+  location            = var.region
+  ingress             = "INGRESS_TRAFFIC_ALL"
   deletion_protection = false
 
   template {
@@ -123,10 +81,6 @@ resource "google_cloud_run_v2_service" "main" {
         value = "0.0.0.0"
       }
       env {
-        name  = "GCS_BUCKET"
-        value = google_storage_bucket.data.name
-      }
-      env {
         name  = "TRADINGAGENTS_DATA_DIR"
         value = "/data"
       }
@@ -146,7 +100,7 @@ resource "google_cloud_run_v2_service" "main" {
 
     scaling {
       min_instance_count = 0
-      max_instance_count = 2  # stay below async-workload pressure
+      max_instance_count = 2 # stay below async-workload pressure
     }
   }
 
@@ -216,12 +170,6 @@ resource "google_project_iam_member" "deploy_cloud_run_developer" {
 resource "google_project_iam_member" "deploy_log_viewer" {
   project = var.project_id
   role    = "roles/logging.viewer"
-  member  = "serviceAccount:${google_service_account.deploy.email}"
-}
-
-resource "google_project_iam_member" "deploy_storage_admin" {
-  project = var.project_id
-  role    = "roles/storage.objectAdmin"
   member  = "serviceAccount:${google_service_account.deploy.email}"
 }
 
