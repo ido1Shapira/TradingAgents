@@ -12,7 +12,6 @@ import base64
 import json
 import logging
 import re
-import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -93,7 +92,7 @@ def _check_write_budget() -> None:
 def read_json(path: Path) -> Any | None:
     """Return parsed JSON at RTDB node, or None if missing."""
     ref = _db.reference(_rtdb_path(path))
-    snap = ref.get()
+    snap = ref.get(timeout=10)
     if snap is None:
         return None
     return snap
@@ -103,20 +102,20 @@ def write_json(path: Path, data: Any) -> None:
     """Replace RTDB node with data. Creates parents automatically."""
     _check_write_budget()
     ref = _db.reference(_rtdb_path(path))
-    ref.set(data)
+    ref.set(data, timeout=10)
 
 
 def append_jsonl(path: Path, obj: Any) -> None:
     """Push obj onto RTDB list. Atomic."""
     _check_write_budget()
     ref = _db.reference(_rtdb_path(path))
-    ref.push(obj)
+    ref.push(obj, timeout=10)
 
 
 def read_jsonl(path: Path) -> list[Any]:
     """Return all entries in RTDB list in insertion order."""
     ref = _db.reference(_rtdb_path(path))
-    snap = ref.get()
+    snap = ref.get(timeout=10)
     if snap is None:
         return []
     if isinstance(snap, list):
@@ -127,21 +126,21 @@ def read_jsonl(path: Path) -> list[Any]:
 def exists(path: Path) -> bool:
     """True if RTDB node exists OR has any child keys."""
     ref = _db.reference(_rtdb_path(path))
-    snap = ref.get()
+    snap = ref.get(timeout=10)
     return snap is not None
 
 
 def is_dir(path: Path) -> bool:
     """True if RTDB node has any child keys."""
     ref = _db.reference(_rtdb_path(path))
-    snap = ref.get(shallow=True)
+    snap = ref.get(shallow=True, timeout=10)
     return isinstance(snap, dict) and len(snap) > 0
 
 
 def list_prefix(path: Path) -> list[str]:
     """Return sorted immediate child key names under RTDB node."""
     ref = _db.reference(_rtdb_path(path))
-    snap = ref.get(shallow=True)
+    snap = ref.get(shallow=True, timeout=10)
     if snap is None:
         return []
     if isinstance(snap, dict):
@@ -153,11 +152,11 @@ def delete_prefix(path: Path) -> None:
     """Recursively delete RTDB node and all children."""
     _check_write_budget()
     ref = _db.reference(_rtdb_path(path))
-    ref.delete()
+    ref.delete(timeout=10)
 
 
 def delete(path: Path) -> None:
     """Delete a single RTDB node."""
     _check_write_budget()
     ref = _db.reference(_rtdb_path(path))
-    ref.delete()
+    ref.delete(timeout=10)
