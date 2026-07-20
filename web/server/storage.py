@@ -7,8 +7,9 @@ All timestamps in persisted files are UTC ISO-8601 with ``Z`` suffix.
 The only Israel-local representation is the run directory slug,
 which is purely for human readability.
 
-When the env var ``GCS_BUCKET`` is set, all IO is redirected to GCS via
-the ``gcs`` sub-module so data survives Cloud Run cold starts.
+When the env vars ``FIREBASE_SERVICE_ACCOUNT`` and ``FIREBASE_DATABASE_URL``
+are set, all IO is redirected to Firebase RTDB via the ``firebase_rtdb``
+sub-module so data survives Cloud Run cold starts.
 """
 
 from __future__ import annotations
@@ -34,10 +35,10 @@ from tradingagents.dataflows.utils import safe_ticker_component  # noqa: E402
 # so tests can monkeypatch a temp dir before any storage call.
 _settings = {"data_dir": "", "cache_dir": ""}
 
-# GCS backend — lazily initialised in ``init_settings()`` when ``GCS_BUCKET``
-# is set.  All IO functions in this module check ``gcs.is_enabled()`` before
-# operating locally.
-_gcs = None  # module imported once, cached here
+# Remote backend — lazily initialised in ``init_settings()`` when Firebase
+# credentials are set.  All IO functions in this module check
+# ``_remote.is_enabled()`` before operating locally.
+_remote = None  # module imported once, cached here
 
 # Cache mapping run_id → run directory path, avoiding O(n) directory walks.
 # Populated lazily by ``_find_run_dir``.
@@ -57,26 +58,26 @@ def init_settings(*, data_dir: str, cache_dir: str) -> None:
     _run_dir_cache.clear()
     Path(data_dir).mkdir(parents=True, exist_ok=True)
     Path(cache_dir).mkdir(parents=True, exist_ok=True)
-    _init_gcs(data_dir)
+    _init_remote(data_dir)
 
 
-def _init_gcs(data_root: str) -> None:
-    """Initialise the GCS backend if ``GCS_BUCKET`` is set.
+def _init_remote(data_root: str) -> None:
+    """Initialise the remote backend if ``FIREBASE_SERVICE_ACCOUNT`` is set.
 
-    Uses direct REST API calls (stdlib ``urllib.request``) — no C
-    extensions, safe on gVisor / Cloud Run sandbox.  Fails gracefully:
-    ``_gcs`` stays ``None`` and all IO falls back to the local filesystem.
+    Uses the ``firebase_rtdb`` sub-module.  Fails gracefully:
+    ``_remote`` stays ``None`` and all IO falls back to the local filesystem.
     """
-    global _gcs
-    bucket = os.environ.get("GCS_BUCKET")
-    if not bucket:
+    global _remote
+    creds = os.environ.get("FIREBASE_SERVICE_ACCOUNT")
+    db_url = os.environ.get("FIREBASE_DATABASE_URL")
+    if not creds or not db_url:
         return
     try:
-        from web.server import gcs as gcs_module
-        gcs_module.init(bucket, data_root)
-        _gcs = gcs_module
+        from web.server import firebase_rtdb as rt_module
+        rt_module.init(creds, db_url, data_root)
+        _remote = rt_module
     except Exception:
-        pass  # logged inside gcs.init
+        pass  # logged inside firebase_rtdb.init
 
 
 def data_dir() -> Path:
@@ -87,60 +88,60 @@ def cache_dir() -> Path:
     return Path(_settings["cache_dir"])
 
 
-# ── GCS-aware filesystem helpers ────────────────────────────────────────
+# ── Remote-aware filesystem helpers ─────────────────────────────────────
 #
-# Every helper tries the GCS path first (when enabled) but falls back to
-# the local filesystem on ANY error — including transient GCS outages and
-# the smoke-test case where GCS_BUCKET is set but credentials are absent.
-# This keeps the container alive (and serving) even when GCS is down.
+# Every helper tries the remote path first (when enabled) but falls back
+# to the local filesystem on ANY error — including transient remote
+# outages and the smoke-test case where credentials are absent.
+# This keeps the container alive (and serving) even when remote is down.
 
 
-def _gcs_path_exists(path: Path) -> bool:
-    if _gcs and _gcs.is_enabled():
+def _remote_path_exists(path: Path) -> bool:
+    if _remote and _remote.is_enabled():
         try:
-            return _gcs.exists(path)
+            return _remote.exists(path)
         except Exception:
-            log.warning("GCS exists() failed for %s; falling back to local FS", path, exc_info=True)
+            log.warning("Remote exists() failed for %s; falling back to local FS", path, exc_info=True)
     return path.exists()
 
 
-def _gcs_path_is_dir(path: Path) -> bool:
-    if _gcs and _gcs.is_enabled():
+def _remote_path_is_dir(path: Path) -> bool:
+    if _remote and _remote.is_enabled():
         try:
-            return _gcs.is_dir(path)
+            return _remote.is_dir(path)
         except Exception:
-            log.warning("GCS is_dir() failed for %s; falling back to local FS", path, exc_info=True)
+            log.warning("Remote is_dir() failed for %s; falling back to local FS", path, exc_info=True)
     return path.is_dir()
 
 
-def _gcs_iterdir(path: Path) -> list[Path]:
+def _remote_iterdir(path: Path) -> list[Path]:
     """Return sorted Path children under *path* (like ``Path.iterdir``)."""
-    if _gcs and _gcs.is_enabled():
+    if _remote and _remote.is_enabled():
         try:
-            names = _gcs.list_prefix(path)
+            names = _remote.list_prefix(path)
             return sorted(path / n for n in names)
         except Exception:
-            log.warning("GCS list_prefix() failed for %s; falling back to local FS", path, exc_info=True)
+            log.warning("Remote list_prefix() failed for %s; falling back to local FS", path, exc_info=True)
     if not path.exists():
         return []
     return sorted(path.iterdir())
 
 
-def _gcs_rmtree(path: Path) -> None:
+def _remote_rmtree(path: Path) -> None:
     """Remove a directory tree (recursive)."""
-    if _gcs and _gcs.is_enabled():
+    if _remote and _remote.is_enabled():
         try:
-            _gcs.delete_prefix(path)
+            _remote.delete_prefix(path)
             return
         except Exception:
-            log.warning("GCS delete_prefix() failed for %s; falling back to local FS", path, exc_info=True)
+            log.warning("Remote delete_prefix() failed for %s; falling back to local FS", path, exc_info=True)
     if path.exists():
         shutil.rmtree(path)
 
 
-def _gcs_mkdir(path: Path) -> None:
-    """Create directory (no-op in GCS, implicit)."""
-    if _gcs and _gcs.is_enabled():
+def _remote_mkdir(path: Path) -> None:
+    """Create directory (no-op in remote, implicit)."""
+    if _remote and _remote.is_enabled():
         return
     path.mkdir(parents=True, exist_ok=True)
 
@@ -152,7 +153,7 @@ def ticker_dir(ticker: str) -> Path:
     """Return ``data/{ticker}/`` (creating it)."""
     safe = safe_ticker_component(ticker).upper()
     p = data_dir() / safe
-    _gcs_mkdir(p)
+    _remote_mkdir(p)
     return p
 
 
@@ -164,7 +165,7 @@ def ticker_runs_dir(ticker: str, date_iso: str) -> Path:
     """
     safe = safe_ticker_component(ticker).upper()
     p = data_dir() / safe / date_iso
-    _gcs_mkdir(p)
+    _remote_mkdir(p)
     return p
 
 
@@ -218,12 +219,12 @@ def write_json_atomic(path: Path | str, data: Any) -> None:
     to the caller as ``PermissionError``.
     """
     path = Path(path)
-    if _gcs and _gcs.is_enabled():
+    if _remote and _remote.is_enabled():
         try:
-            _gcs.write_json(path, data)
+            _remote.write_json(path, data)
             return
         except Exception:
-            log.warning("GCS write_json() failed for %s; falling back to local FS", path, exc_info=True)
+            log.warning("Remote write_json() failed for %s; falling back to local FS", path, exc_info=True)
     path.parent.mkdir(parents=True, exist_ok=True)
     fd, tmp = tempfile.mkstemp(dir=str(path.parent), prefix=f".{path.name}.", suffix=".tmp")
     try:
@@ -246,11 +247,11 @@ def read_json(path: Path | str) -> Any | None:
     (e.g. the watchlist).
     """
     p = Path(path)
-    if _gcs and _gcs.is_enabled():
+    if _remote and _remote.is_enabled():
         try:
-            return _gcs.read_json(p)
+            return _remote.read_json(p)
         except Exception:
-            log.warning("GCS read_json() failed for %s; falling back to local FS", path, exc_info=True)
+            log.warning("Remote read_json() failed for %s; falling back to local FS", path, exc_info=True)
     try:
         with open(p, encoding="utf-8") as f:
             return json.load(f)
@@ -272,12 +273,12 @@ def append_jsonl(path: Path | str, obj: Any) -> None:
     mid-write) is handled by ``read_jsonl``.
     """
     path = Path(path)
-    if _gcs and _gcs.is_enabled():
+    if _remote and _remote.is_enabled():
         try:
-            _gcs.append_jsonl(path, obj)
+            _remote.append_jsonl(path, obj)
             return
         except Exception:
-            log.warning("GCS append_jsonl() failed for %s; falling back to local FS", path, exc_info=True)
+            log.warning("Remote append_jsonl() failed for %s; falling back to local FS", path, exc_info=True)
     path.parent.mkdir(parents=True, exist_ok=True)
     line = json.dumps(obj, ensure_ascii=False, separators=(",", ":"))
     with open(path, "a", encoding="utf-8") as f:
@@ -288,11 +289,11 @@ def append_jsonl(path: Path | str, obj: Any) -> None:
 def read_jsonl(path: Path | str) -> list[Any]:
     """Read JSONL, skipping any malformed last line (incomplete write)."""
     p = Path(path)
-    if _gcs and _gcs.is_enabled():
+    if _remote and _remote.is_enabled():
         try:
-            return _gcs.read_jsonl(p)
+            return _remote.read_jsonl(p)
         except Exception:
-            log.warning("GCS read_jsonl() failed for %s; falling back to local FS", path, exc_info=True)
+            log.warning("Remote read_jsonl() failed for %s; falling back to local FS", path, exc_info=True)
     if not p.exists():
         return []
     out: list[Any] = []
@@ -345,15 +346,15 @@ def clear_ticker_data(ticker: str) -> None:
     """
     safe = safe_ticker_component(ticker).upper()
     td = data_dir() / safe
-    _gcs_rmtree(td)
+    _remote_rmtree(td)
     cp = cache_dir() / "checkpoints" / f"{safe}.db"
-    if _gcs_path_exists(cp):
-        if _gcs and _gcs.is_enabled():
+    if _remote_path_exists(cp):
+        if _remote and _remote.is_enabled():
             try:
-                _gcs.delete(cp)
+                _remote.delete(cp)
                 return
             except Exception:
-                log.warning("GCS delete() failed for %s; falling back to local FS", cp, exc_info=True)
+                log.warning("Remote delete() failed for %s; falling back to local FS", cp, exc_info=True)
         cp.unlink()
 
 
@@ -405,11 +406,11 @@ def create_run_dir(
     # Race-avoidance: if a dir with this slug already exists (unlikely at
     # second resolution but possible in tests), append a counter.
     n = 1
-    while _gcs_path_exists(run_dir):
+    while _remote_path_exists(run_dir):
         run_dir = td / f"{slug}__{n}"
         n += 1
-    _gcs_mkdir(run_dir)
-    _gcs_mkdir(run_dir / "stages")
+    _remote_mkdir(run_dir)
+    _remote_mkdir(run_dir / "stages")
     run_id = run_id_for(ticker, started_at)
     _run_dir_cache[run_id] = run_dir
     _trim_run_dir_cache()
@@ -463,7 +464,7 @@ def _trim_run_dir_cache() -> None:
             if culled >= len(_run_dir_cache) - _RUN_DIR_CACHE_MAX // 2:
                 break
             p = _run_dir_cache[rid]
-            if not _gcs_path_exists(p):
+            if not _remote_path_exists(p):
                 del _run_dir_cache[rid]
                 culled += 1
         if len(_run_dir_cache) > _RUN_DIR_CACHE_MAX:
@@ -478,13 +479,13 @@ def _trim_run_dir_cache() -> None:
 def _find_run_dir(run_id: str) -> Path | None:
     """Locate the run directory for ``run_id``, using and populating the cache."""
     cached = _run_dir_cache.get(run_id)
-    if cached is not None and _gcs_path_exists(cached):
+    if cached is not None and _remote_path_exists(cached):
         return cached
-    for td in _gcs_iterdir(data_dir()):
-        if not _gcs_path_is_dir(td):
+    for td in _remote_iterdir(data_dir()):
+        if not _remote_path_is_dir(td):
             continue
-        for sd in _gcs_iterdir(td):
-            if not _gcs_path_is_dir(sd):
+        for sd in _remote_iterdir(td):
+            if not _remote_path_is_dir(sd):
                 continue
             rj = read_json(sd / "run.json")
             if rj and rj.get("id") == run_id:
@@ -504,7 +505,7 @@ def read_run_dir(run_id: str) -> Path | None:
         "read_run_dir: run %s not found under %s; ticker dirs: %s",
         run_id,
         dd,
-        [str(td.name) for td in _gcs_iterdir(dd) if _gcs_path_is_dir(td)],
+        [str(td.name) for td in _remote_iterdir(dd) if _remote_path_is_dir(td)],
     )
     return None
 
@@ -512,11 +513,11 @@ def read_run_dir(run_id: str) -> Path | None:
 def list_ticker_runs(ticker: str, limit: int = 50) -> list[dict]:
     """Return runs for a ticker, newest first (by started_at)."""
     td = data_dir() / safe_ticker_component(ticker).upper()
-    if not _gcs_path_exists(td):
+    if not _remote_path_exists(td):
         return []
     rows: list[dict] = []
-    for sd in _gcs_iterdir(td):
-        if not _gcs_path_is_dir(sd):
+    for sd in _remote_iterdir(td):
+        if not _remote_path_is_dir(sd):
             continue
         rj = read_json(sd / "run.json")
         if rj:
@@ -532,10 +533,10 @@ def find_resumable_run(ticker: str, today_iso: str) -> dict | None:
     ``today_iso``. Returns ``None`` if no such run exists.
     """
     td = data_dir() / safe_ticker_component(ticker).upper()
-    if not _gcs_path_exists(td):
+    if not _remote_path_exists(td):
         return None
-    for sd in _gcs_iterdir(td):
-        if not _gcs_path_is_dir(sd):
+    for sd in _remote_iterdir(td):
+        if not _remote_path_is_dir(sd):
             continue
         rj = read_json(sd / "run.json")
         if not rj:
@@ -563,9 +564,9 @@ def delete_run(run_id: str) -> bool:
     without raising).
     """
     rd = _find_run_dir(run_id)
-    if rd is None or not _gcs_path_exists(rd):
+    if rd is None or not _remote_path_exists(rd):
         return False
-    _gcs_rmtree(rd)
+    _remote_rmtree(rd)
     _run_dir_cache.pop(run_id, None)
     log.info("deleted run dir for %s: %s", run_id, rd)
     return True
@@ -636,17 +637,17 @@ def write_stage(run_id: str, stage: str, stage_payload: dict) -> None:
 def walk_data_dir() -> Iterable[Path]:
     """Yield every ticker subdir under data/. Used by startup cleanup."""
     dd = data_dir()
-    if not _gcs_path_exists(dd):
+    if not _remote_path_exists(dd):
         return
-    for td in _gcs_iterdir(dd):
-        if td.name == "lost+found" or not _gcs_path_is_dir(td):
+    for td in _remote_iterdir(dd):
+        if td.name == "lost+found" or not _remote_path_is_dir(td):
             continue
         try:
-            if _gcs and _gcs.is_enabled():
+            if _remote and _remote.is_enabled():
                 try:
-                    _gcs.list_prefix(td)
+                    _remote.list_prefix(td)
                 except Exception:
-                    log.warning("GCS list_prefix() failed for %s; using local FS", td, exc_info=True)
+                    log.warning("Remote list_prefix() failed for %s; using local FS", td, exc_info=True)
                     td.iterdir()
             else:
                 td.iterdir()
