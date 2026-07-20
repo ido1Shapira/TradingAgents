@@ -1,4 +1,5 @@
 """Unit tests for ``web.server.firebase_rtdb`` with mocked Firebase Admin SDK."""
+
 from __future__ import annotations
 
 import base64
@@ -6,12 +7,11 @@ import json
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
 from web.server import firebase_rtdb as frtdb
-
 
 # ── helpers ─────────────────────────────────────────────────────────────
 
@@ -69,7 +69,7 @@ class FakeRef:
     def get(self, shallow: bool = False, timeout: int | None = None) -> Any:
         val = self._resolve()
         if shallow and isinstance(val, dict):
-            return {k: True for k in val}
+            return dict.fromkeys(val)
         return val
 
     def set(self, value: Any, timeout: int | None = None) -> None:
@@ -153,7 +153,9 @@ class TestInit:
 
         fake_firebase_admin = MagicMock()
         monkeypatch.setitem(sys.modules, "firebase_admin", fake_firebase_admin)
-        monkeypatch.setitem(sys.modules, "firebase_admin.credentials", fake_firebase_admin.credentials)
+        monkeypatch.setitem(
+            sys.modules, "firebase_admin.credentials", fake_firebase_admin.credentials
+        )
         monkeypatch.setitem(sys.modules, "firebase_admin.db", fake_firebase_admin.db)
 
         frtdb.init(_fake_service_account_base64(), "https://test.firebaseio.com", "/data")
