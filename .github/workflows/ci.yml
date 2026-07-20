@@ -219,6 +219,7 @@ jobs:
     permissions:
       contents: read
       id-token: write
+      packages: write
     steps:
       - uses: actions/checkout@v4
       - name: Authenticate to Google Cloud (WIF)
@@ -228,15 +229,19 @@ jobs:
           service_account: ${{ vars.GCP_SERVICE_ACCOUNT_EMAIL }}
       - name: Set up gcloud CLI
         uses: google-github-actions/setup-gcloud@v2
-      - name: Configure Docker for Artifact Registry
-        run: gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - name: Build and push image
         run: |
           SHORT_SHA=${GITHUB_SHA::7}
-          IMAGE="${{ vars.GCP_ARTIFACT_REGISTRY_REPO }}/app:${SHORT_SHA}"
-          docker build -t "$IMAGE" -t "${{ vars.GCP_ARTIFACT_REGISTRY_REPO }}/app:latest" .
+          IMAGE="ghcr.io/${{ github.repository }}/app:${SHORT_SHA}"
+          docker build -t "$IMAGE" -t "ghcr.io/${{ github.repository }}/app:latest" .
           docker push "$IMAGE"
-          docker push "${{ vars.GCP_ARTIFACT_REGISTRY_REPO }}/app:latest"
+          docker push "ghcr.io/${{ github.repository }}/app:latest"
           echo "IMAGE=$IMAGE" >> "$GITHUB_ENV"
       - name: Grant deploy SA actAs on Cloud Run SA
         run: >
@@ -260,8 +265,15 @@ jobs:
             --image="$IMAGE" \
             --region=us-central1 \
             --project="${{ vars.GCP_PROJECT_ID }}" \
-            --startup-probe=http-get=/api/health:8000 \
+            --port=8000 \
+            --memory=512Mi \
+            --cpu=1000m \
             --concurrency=80 \
+            --min-instances=0 \
+            --max-instances=2 \
+            --cpu-boost \
+            --startup-probe="httpGet.path=/api/health,httpGet.port=8000,initialDelaySeconds=10,periodSeconds=10,failureThreshold=15" \
+            --liveness-probe="httpGet.path=/api/health,httpGet.port=8000,periodSeconds=30,failureThreshold=3" \
             --quiet
       - name: Get latest revision name
         id: revision

@@ -1,23 +1,12 @@
 resource "google_project_service" "apis" {
   for_each = toset([
     "run.googleapis.com",
-    "artifactregistry.googleapis.com",
     "iamcredentials.googleapis.com",
     "cloudresourcemanager.googleapis.com",
-    "storage.googleapis.com",
     "secretmanager.googleapis.com",
   ])
   service            = each.key
   disable_on_destroy = false
-}
-
-# Artifact Registry for Docker images
-resource "google_artifact_registry_repository" "main" {
-  location      = var.region
-  repository_id = "tradingagents-images"
-  description   = "Docker images for TradingAgents"
-  format        = "DOCKER"
-  depends_on    = [google_project_service.apis["artifactregistry.googleapis.com"]]
 }
 
 # Cloud Run service account
@@ -42,7 +31,7 @@ resource "google_cloud_run_v2_service" "main" {
   template {
     service_account = google_service_account.cloud_run.email
     containers {
-      image = "${var.region}-docker.pkg.dev/${var.project_id}/tradingagents-images/app:latest"
+      image = "ghcr.io/ido1shapira/tradingagents/app:latest"
       ports {
         container_port = 8000
       }
@@ -111,7 +100,6 @@ resource "google_cloud_run_v2_service" "main" {
 
   depends_on = [
     google_project_service.apis["run.googleapis.com"],
-    google_artifact_registry_repository.main,
   ]
 }
 
@@ -153,12 +141,6 @@ resource "google_iam_workload_identity_pool_provider" "github" {
 resource "google_service_account" "deploy" {
   account_id   = "tradingagents-deploy"
   display_name = "TradingAgents GitHub Actions deploy account"
-}
-
-resource "google_project_iam_member" "deploy_artifact_registry_writer" {
-  project = var.project_id
-  role    = "roles/artifactregistry.writer"
-  member  = "serviceAccount:${google_service_account.deploy.email}"
 }
 
 resource "google_project_iam_member" "deploy_cloud_run_developer" {
