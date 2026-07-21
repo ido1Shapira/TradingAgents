@@ -1,0 +1,159 @@
+- generic [ref=f1e2]:
+  - generic [ref=f1e3]:
+    - link "Skip to content" [ref=f1e4] [cursor=pointer]:
+      - /url: "#start-of-content"
+    - banner [ref=f1e6]:
+      - heading "Navigation Menu" [level=2] [ref=f1e7]
+      - generic [ref=f1e8]:
+        - link "Homepage" [ref=f1e10] [cursor=pointer]:
+          - /url: /
+        - generic [ref=f1e13]:
+          - navigation "Global" [ref=f1e16]:
+            - list [ref=f1e17]:
+              - listitem [ref=f1e18]:
+                - button "Platform" [ref=f1e20] [cursor=pointer]
+              - listitem [ref=f1e23]:
+                - button "Solutions" [ref=f1e25] [cursor=pointer]
+              - listitem [ref=f1e28]:
+                - button "Resources" [ref=f1e30] [cursor=pointer]
+              - listitem [ref=f1e33]:
+                - button "Open Source" [ref=f1e35] [cursor=pointer]
+              - listitem [ref=f1e38]:
+                - button "Enterprise" [ref=f1e40] [cursor=pointer]
+              - listitem [ref=f1e43]:
+                - link "Pricing" [ref=f1e44] [cursor=pointer]:
+                  - /url: https://github.com/pricing
+          - generic [ref=f1e46]:
+            - button "Search or jump to…" [ref=f1e49] [cursor=pointer]:
+              - generic [ref=f1e53]: Search or jump to...
+            - link "Sign in" [ref=f1e59] [cursor=pointer]:
+              - /url: /login?return_to=https%3A%2F%2Fgithub.com%2Fusers%2Fido1shapira%2Fpackages%2Fcontainer%2Ftradingagents%252Fapp%2F1046550211
+            - link "Sign up" [ref=f1e60] [cursor=pointer]:
+              - /url: /signup?ref_cta=Sign+up&ref_loc=header+logged+out&ref_page=%2Fusers%2Fido1shapira%2Fpackages%2Fcontainer%2Ftradingagents%252Fapp%2F1046550211&source=header
+            - button "Appearance settings" [ref=f1e63] [cursor=pointer]
+  - main [ref=f1e66]:
+    - generic [ref=f1e67]:
+      - generic [ref=f1e70]:
+        - heading [level=1] [ref=f1e71]:
+          - link [ref=f1e72] [cursor=pointer]:
+            - /url: /ido1Shapira
+            - img "@ido1Shapira" [ref=f1e73]
+            - text: ido1Shapira
+        - navigation "User":
+          - link "Repositories" [ref=f1e74] [cursor=pointer]:
+            - /url: /ido1Shapira?tab=repositories
+          - link "Projects" [ref=f1e77] [cursor=pointer]:
+            - /url: /users/ido1Shapira/projects?type=classic
+          - link "Packages" [ref=f1e80] [cursor=pointer]:
+            - /url: /users/ido1Shapira/packages
+      - generic [ref=f1e83]:
+        - navigation "Breadcrumb" [ref=f1e85]:
+          - list [ref=f1e86]:
+            - listitem [ref=f1e87]:
+              - link "tradingagents/app" [ref=f1e88] [cursor=pointer]:
+                - /url: /users/ido1shapira/packages/container/package/tradingagents%2Fapp
+            - listitem [ref=f1e89]:
+              - link "Versions" [ref=f1e90] [cursor=pointer]:
+                - /url: /users/ido1shapira/packages/container/tradingagents%2Fapp/versions
+            - listitem [ref=f1e91]:
+              - link "sha256:7b2f68f737073bb5ac395ace7f47357b1b21d7deb40c4b499484162c4b0dbc17" [ref=f1e92]:
+                - /url: /users/ido1shapira/packages/container/tradingagents%2Fapp/1046550211
+        - heading "sha256:7b2f68f737073bb5ac395ace7f47357b1b21d7deb40c4b499484162c4b0dbc17 Latest" [level=1] [ref=f1e93]:
+          - generic [ref=f1e94]:
+            - text: sha256:7b2f68f737073bb5ac395ace7f47357b1b21d7deb40c4b499484162c4b0dbc17
+            - generic [ref=f1e95]: Latest
+        - generic [ref=f1e96]:
+          - generic [ref=f1e97]:
+            - generic [ref=f1e100]:
+              - generic [ref=f1e101]:
+                - heading "Install from the command line" [level=5] [ref=f1e102]
+                - link "Learn more about packages" [ref=f1e106] [cursor=pointer]:
+                  - /url: https://docs.github.com/packages/getting-started-with-github-container-registry/about-github-container-registry
+              - code [ref=f1e108]:
+                - button "Copy" [ref=f1e110] [cursor=pointer]: $ docker pull ghcr.io/ido1shapira/tradingagents/app@sha256:7b2f68f737073bb5ac395ace7f47357b1b21d7deb40c4b499484162c4b0dbc17
+              - heading "Use as base image in Dockerfile:" [level=5] [ref=f1e112]
+              - code [ref=f1e116]:
+                - button "Copy" [ref=f1e118] [cursor=pointer]: FROM ghcr.io/ido1shapira/tradingagents/app@sha256:7b2f68f737073bb5ac395ace7f47357b1b21d7deb40c4b499484162c4b0dbc17
+            - paragraph [ref=f1e121]:
+              - generic [ref=f1e122]: Loading
+            - heading "Manifest" [level=4] [ref=f1e127]
+            - code [ref=f1e129]:
+              - generic [ref=f1e130]: "{ \"digest\": \"sha256:7b2f68f737073bb5ac395ace7f47357b1b21d7deb40c4b499484162c4b0dbc17\", \"mediaType\": \"application/vnd.docker.distribution.manifest.v2+json\", \"size\": 3254, \"config\": { \"digest\": \"sha256:2a904e48c22646c8c11d38cd80109b6fe8ab48dacbceeac85c3ce8f6583b4bcb\", \"mediaType\": \"application/vnd.docker.container.image.v1+json\", \"size\": 8683 }, \"layers\": [ { \"digest\": \"sha256:f96fde5c75797c606f16a7c6001ccbb2ae8d458933e4ef8ac92581fb4b530da6\", \"mediaType\": \"application/vnd.oci.image.layer.v1.tar+gzip\", \"size\": 30782651 }, { \"digest\": \"sha256:98db2485a0d07a8914586b02387e3813aa7e9fed79ab252898d3e96e21c717ea\", \"mediaType\": \"application/vnd.oci.image.layer.v1.tar+gzip\", \"size\": 1293301 }, { \"digest\": \"sha256:48347b15c85fd6dde9c5b0259f378fbaee3ce231b30a42f2f2bcc4ea0285cbc9\", \"mediaType\": \"application/vnd.oci.image.layer.v1.tar+gzip\", \"size\": 12108405 }, { \"digest\": \"sha256:fd079632edc0ab4e9d10c77ec348d5057a976e6fc508e93855548096dec2ae1e\", \"mediaType\": \"application/vnd.oci.image.layer.v1.tar+gzip\", \"size\": 250 }, { \"digest\": \"sha256:e3637ecf091f377519de7af55c4ffa713ad90a02731734b6accd8bd697b66196\", \"mediaType\": \"application/vnd.oci.image.layer.v1.tar+gzip\", \"size\": 93 }, { \"digest\": \"sha256:493aa77d930bb54e4405f712e7093fdfb8c837ff329583954f3368e23576a52a\", \"mediaType\": \"application/octet-stream\", \"size\": 342 }, { \"digest\": \"sha256:d62b703923c47a0562ef5b0d5851ce3377e9df49c0c29a3866344bd7c98a40a6\", \"mediaType\": \"application/octet-stream\", \"size\": 250879 }, { \"digest\": \"sha256:68c7adb2c03e52e6f9491fb04a796a3c19f49039679c8b33800f215ff649891a\", \"mediaType\": \"application/octet-stream\", \"size\": 300 }, { \"digest\": \"sha256:5f9ffeaab9aa05a5eb9cec991b61b111c73fed17b07c5e308db0ac0c160b88b8\", \"mediaType\": \"application/octet-stream\", \"size\": 115778 }, { \"digest\": \"sha256:d025e4903a98bd7f4cd48e0a83be9771ddd08d2a162f9991bc7ba14b8d50442b\", \"mediaType\": \"application/octet-stream\", \"size\": 311100 }, { \"digest\": \"sha256:84327b119a43a6dc82918f95fa7cf1e69200eb4aaeb4f4b77eedffa9eab9ba3e\", \"mediaType\": \"application/octet-stream\", \"size\": 735540 }, { \"digest\": \"sha256:0037d3066a90deb0b29905d5a5d8e776a75c65ffd42f68e3d9d623a681829469\", \"mediaType\": \"application/octet-stream\", \"size\": 275469 }, { \"digest\": \"sha256:fce879b00634703b55f4d466a991fd6919c354a20765e5c98dadb50a149fbc3e\", \"mediaType\": \"application/octet-stream\", \"size\": 88216805 }, { \"digest\": \"sha256:1d03022fdd451c70aa6aa44ff2529bae76b5909c2b512327a1341d31eef7507f\", \"mediaType\": \"application/octet-stream\", \"size\": 142931816 }, { \"digest\": \"sha256:2a904e48c22646c8c11d38cd80109b6fe8ab48dacbceeac85c3ce8f6583b4bcb\", \"mediaType\": \"application/octet-stream\", \"size\": 8683 } ] }"
+          - generic [ref=f1e131]:
+            - generic [ref=f1e132]:
+              - heading "Details" [level=4] [ref=f1e133]
+              - list [ref=f1e134]:
+                - listitem [ref=f1e135]:
+                  - link "tradingagents/app" [ref=f1e139] [cursor=pointer]:
+                    - /url: /users/ido1shapira/packages/container/package/tradingagents%2Fapp
+                - listitem [ref=f1e140]:
+                  - img "@ido1Shapira" [ref=f1e142]
+                  - link "ido1Shapira" [ref=f1e144] [cursor=pointer]:
+                    - /url: /ido1Shapira
+                - listitem [ref=f1e145]:
+                  - generic [ref=f1e149]: 1 day ago
+            - separator [ref=f1e150]
+            - generic [ref=f1e151]:
+              - heading "Download activity" [level=4] [ref=f1e152]
+              - generic "Download activity of this version" [ref=f1e153]
+              - list [ref=f1e157]:
+                - listitem [ref=f1e158]:
+                  - generic [ref=f1e159]: Total downloads
+                  - generic [ref=f1e160]: "2"
+                - listitem [ref=f1e161]:
+                  - generic [ref=f1e162]: Last 30 days
+                  - generic [ref=f1e163]: "2"
+                - listitem [ref=f1e164]:
+                  - generic [ref=f1e165]: Last week
+                  - generic [ref=f1e166]: "2"
+                - listitem [ref=f1e167]:
+                  - generic [ref=f1e168]: Today
+                  - generic [ref=f1e169]: "0"
+            - separator [ref=f1e170]
+            - generic [ref=f1e171]:
+              - heading "Other tags on this version" [level=4] [ref=f1e173]
+              - list [ref=f1e174]:
+                - listitem [ref=f1e175]:
+                  - link "latest" [ref=f1e176] [cursor=pointer]:
+                    - /url: /users/ido1shapira/packages/container/tradingagents%2Fapp/1046550211?tag=latest
+                - listitem [ref=f1e177]:
+                  - link "optimized" [ref=f1e178] [cursor=pointer]:
+                    - /url: /users/ido1shapira/packages/container/tradingagents%2Fapp/1046550211?tag=optimized
+                - listitem [ref=f1e179]:
+                  - link "View all versions" [ref=f1e180] [cursor=pointer]:
+                    - /url: /users/ido1shapira/packages/container/tradingagents%2Fapp/versions
+  - contentinfo [ref=f1e181]:
+    - heading "Footer" [level=2] [ref=f1e182]
+    - generic [ref=f1e183]:
+      - generic [ref=f1e184]:
+        - link "GitHub Homepage" [ref=f1e185] [cursor=pointer]:
+          - /url: https://github.com
+        - generic [ref=f1e188]: © 2026 GitHub, Inc.
+      - navigation "Footer" [ref=f1e189]:
+        - heading "Footer navigation" [level=3] [ref=f1e190]
+        - list "Footer navigation" [ref=f1e191]:
+          - listitem [ref=f1e192]:
+            - link "Terms" [ref=f1e193] [cursor=pointer]:
+              - /url: https://docs.github.com/site-policy/github-terms/github-terms-of-service
+          - listitem [ref=f1e194]:
+            - link "Privacy" [ref=f1e195] [cursor=pointer]:
+              - /url: https://docs.github.com/site-policy/privacy-policies/github-privacy-statement
+          - listitem [ref=f1e196]:
+            - link "Security" [ref=f1e197] [cursor=pointer]:
+              - /url: https://github.com/security
+          - listitem [ref=f1e198]:
+            - link "Status" [ref=f1e199] [cursor=pointer]:
+              - /url: https://www.githubstatus.com/
+          - listitem [ref=f1e200]:
+            - link "Community" [ref=f1e201] [cursor=pointer]:
+              - /url: https://github.community/
+          - listitem [ref=f1e202]:
+            - link "Docs" [ref=f1e203] [cursor=pointer]:
+              - /url: https://docs.github.com/
+          - listitem [ref=f1e204]:
+            - link "Contact" [ref=f1e205] [cursor=pointer]:
+              - /url: https://support.github.com?tags=dotcom-footer
+          - listitem [ref=f1e206]:
+            - button "Manage cookies" [ref=f1e208] [cursor=pointer]
+          - listitem [ref=f1e209]:
+            - button "Do not share my personal information" [ref=f1e211] [cursor=pointer]

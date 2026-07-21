@@ -239,11 +239,11 @@ jobs:
       - name: Build and push image
         run: |
           SHORT_SHA=${GITHUB_SHA::7}
-          REPO_LC=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
-          IMAGE="ghcr.io/${REPO_LC}/app:${SHORT_SHA}"
-          docker build -t "$IMAGE" -t "ghcr.io/${REPO_LC}/app:latest" .
+          OWNER_LC=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          IMAGE="ghcr.io/${OWNER_LC}/tradingagents-ci:${SHORT_SHA}"
+          docker build -t "$IMAGE" -t "ghcr.io/${OWNER_LC}/tradingagents-ci:latest" .
           docker push "$IMAGE"
-          docker push "ghcr.io/${REPO_LC}/app:latest"
+          docker push "ghcr.io/${OWNER_LC}/tradingagents-ci:latest"
           echo "IMAGE=$IMAGE" >> "$GITHUB_ENV"
       - name: Grant deploy SA actAs on Cloud Run SA
         run: >
