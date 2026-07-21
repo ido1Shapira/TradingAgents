@@ -274,6 +274,7 @@ jobs:
             --min-instances=0 \
             --max-instances=2 \
             --cpu-boost \
+            --service-account=tradingagents-cloud-run@trading-agent-9058.iam.gserviceaccount.com \
             --startup-probe="httpGet.path=/api/health,httpGet.port=8000,initialDelaySeconds=10,periodSeconds=10,failureThreshold=15" \
             --liveness-probe="httpGet.path=/api/health,httpGet.port=8000,periodSeconds=30,failureThreshold=3" \
             --quiet
