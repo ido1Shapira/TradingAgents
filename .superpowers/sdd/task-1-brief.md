@@ -1,57 +1,34 @@
-### Task 1: Add editing state to useChatStore
+# Task 1: Add `firebase-admin` dependency
 
 **Files:**
-- Modify: `web/frontend/src/stores/useChatStore.ts`
+- Modify: `pyproject.toml`
 
 **Interfaces:**
-- Consumes: existing `ChatMessage`, `ChatState` types
-- Produces: `editingMessageId: string | null`, `setEditingMessage(id: string | null)`, `deleteMessagesAfter(id: string)`
+- Consumes: nothing
+- Produces: `firebase-admin` available for import after `uv sync`
 
-- [ ] **Step 1: Add editingMessageId to ChatState interface**
+## Steps
 
-Add after `isLoading`:
-```typescript
-editingMessageId: string | null;
-setEditingMessage: (id: string | null) => void;
-deleteMessagesAfter: (id: string) => void;
+- [ ] **Step 1: Add firebase-admin to dependencies**
+
+In `pyproject.toml`, add `"firebase-admin>=7.0.0"` to the `dependencies` list (after `"python-telegram-bot>=21.0"`):
+
+```python
+dependencies = [
+    # ... existing deps ...
+    "python-telegram-bot>=21.0",
+    "firebase-admin>=7.0.0",
+]
 ```
 
-- [ ] **Step 2: Add state and actions to store**
+- [ ] **Step 2: Run uv sync to verify it installs**
 
-Add to initial state in `create<ChatState>`:
-```typescript
-editingMessageId: null,
-```
-
-Add after `clearMessages` handler:
-```typescript
-setEditingMessage: (id) => {
-  set({ editingMessageId: id });
-},
-
-deleteMessagesAfter: (id) => {
-  const state = get();
-  const sessionId = state.activeSessionId;
-  if (!sessionId || !state.sessions[sessionId]) return;
-  const session = state.sessions[sessionId];
-  const idx = session.messages.findIndex((m) => m.id === id);
-  if (idx === -1) return;
-  session.messages = session.messages.slice(0, idx);
-  session.updatedAt = Date.now();
-  set({
-    sessions: { ...state.sessions, [sessionId]: { ...session } },
-    messages: [...session.messages],
-  });
-  persist(get());
-},
-```
+Run: `uv sync`
+Expected: installs firebase-admin and its transitive deps (no errors)
 
 - [ ] **Step 3: Commit**
 
 ```bash
-git add web/frontend/src/stores/useChatStore.ts
-git commit -m "feat: add editingMessageId state and deleteMessagesAfter action to chat store"
+git add pyproject.toml uv.lock
+git commit -m "deps: add firebase-admin for RTDB storage backend"
 ```
-
----
-
