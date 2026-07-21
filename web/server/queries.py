@@ -32,8 +32,6 @@ def _write_watchlist(rows: list[dict]) -> None:
         storage.data_dir() / "watchlist.json",
         {"version": 2, "tickers": rows},
     )
-    from web.server.cloud_persistence import backup_watchlist
-    backup_watchlist(storage.data_dir())
 
 
 def add_ticker(ticker: str, company_name: str, exchange: str, source: str = "user") -> dict:

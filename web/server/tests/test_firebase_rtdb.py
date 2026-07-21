@@ -181,15 +181,35 @@ class TestRtdbPath:
 
     def test_stage_json_maps_directly(self, mock_firebase):
         p = Path("/data/NVDA/2026-07-20/run-slug/stages/market.json")
-        assert frtdb._rtdb_path(p) == "NVDA/2026-07-20/run-slug/stages/market_json"
+        assert frtdb._rtdb_path(p) == "NVDA/2026-07-20/run-slug/stages/market"
 
     def test_illegal_chars_replaced(self, mock_firebase):
-        p = Path("/data/NVDA/2026-07-20/run.slug[0]/run.json")
+        p = Path("/data/NVDA/2026-07-20/run#slug[0]/run.json")
         assert frtdb._rtdb_path(p) == "NVDA/2026-07-20/run_slug_0_/meta"
 
     def test_watchlist_json(self, mock_firebase):
         p = Path("/data/watchlist.json")
-        assert frtdb._rtdb_path(p) == "watchlist_json"
+        assert frtdb._rtdb_path(p) == "_watchlist"
+
+    def test_indicators_json(self, mock_firebase):
+        p = Path("/data/indicators.json")
+        assert frtdb._rtdb_path(p) == "_indicators"
+
+    def test_notifier_json(self, mock_firebase):
+        p = Path("/data/notifier.json")
+        assert frtdb._rtdb_path(p) == "_notifier"
+
+    def test_indicator_state_json(self, mock_firebase):
+        p = Path("/data/indicator_state.json")
+        assert frtdb._rtdb_path(p) == "_indicator_state"
+
+    def test_indicator_schedule_json(self, mock_firebase):
+        p = Path("/data/indicator_schedule.json")
+        assert frtdb._rtdb_path(p) == "_indicator_schedule"
+
+    def test_rejects_path_outside_data_root(self, mock_firebase):
+        with pytest.raises(ValueError, match="outside data_root"):
+            frtdb._rtdb_path(Path("/etc/passwd"))
 
 
 # ── write_json / read_json ─────────────────────────────────────────────
@@ -301,3 +321,29 @@ class TestWriteGuard:
         frtdb.write_json(Path("/data/x.json"), {"a": 1})
         frtdb.write_json(Path("/data/x.json"), {"a": 2})
         assert frtdb._write_count == 2
+
+
+# ── storage.py integration ─────────────────────────────────────────────
+
+
+class TestStorageIntegration:
+    """Integration tests: storage.py → firebase_rtdb routing."""
+
+    def test_write_json_atomic_routes_to_rtdb_when_enabled(self, mock_firebase, monkeypatch, tmp_path):
+        """When Firebase is enabled, storage.write_json_atomic should write to RTDB."""
+        from web.server import storage
+        monkeypatch.setattr(storage, "_remote", frtdb)
+        frtdb._data_root = str(tmp_path)
+        target = tmp_path / "watchlist.json"
+        storage.write_json_atomic(target, {"tickers": ["NVDA"]})
+        assert frtdb.exists(target) is True
+        assert frtdb.read_json(target) == {"tickers": ["NVDA"]}
+
+    def test_write_json_atomic_falls_back_to_local_when_disabled(self, tmp_path, monkeypatch):
+        """When Firebase is not enabled, storage.write_json_atomic should write to local FS."""
+        from web.server import storage
+        monkeypatch.setattr(storage, "_remote", None)
+        target = tmp_path / "x.json"
+        storage.write_json_atomic(target, {"v": 1})
+        assert target.exists()
+        assert storage.read_json(target) == {"v": 1}

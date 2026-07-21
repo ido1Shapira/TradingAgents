@@ -642,17 +642,6 @@ def walk_data_dir() -> Iterable[Path]:
     for td in _remote_iterdir(dd):
         if td.name == "lost+found" or not _remote_path_is_dir(td):
             continue
-        try:
-            if _remote and _remote.is_enabled():
-                try:
-                    _remote.list_prefix(td)
-                except Exception:
-                    log.warning("Remote list_prefix() failed for %s; using local FS", td, exc_info=True)
-                    td.iterdir()
-            else:
-                td.iterdir()
-        except PermissionError:
-            continue
         yield td
 
 # ---- notifier settings (persisted to .env for durability) ----
