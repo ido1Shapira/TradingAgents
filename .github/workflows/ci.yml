@@ -220,7 +220,6 @@ jobs:
     permissions:
       contents: read
       id-token: write
-      packages: write
     steps:
       - uses: actions/checkout@v4
       - name: Authenticate to Google Cloud (WIF)
@@ -230,20 +229,25 @@ jobs:
           service_account: ${{ vars.GCP_SERVICE_ACCOUNT_EMAIL }}
       - name: Set up gcloud CLI
         uses: google-github-actions/setup-gcloud@v2
-      - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GHCR_PAT }}
+      - name: Ensure Artifact Registry repo exists
+        run: >
+          gcloud artifacts repositories describe tradingagents
+          --location=us-central1 --project="${{ vars.GCP_PROJECT_ID }}"
+          --quiet 2>/dev/null
+          || gcloud artifacts repositories create tradingagents
+          --repository-format=docker --location=us-central1
+          --description="TradingAgents Docker images"
+          --project="${{ vars.GCP_PROJECT_ID }}" --quiet
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
       - name: Build and push image
         run: |
           SHORT_SHA=${GITHUB_SHA::7}
-          OWNER_LC=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
-          IMAGE="ghcr.io/${OWNER_LC}/tradingagents-ci:${SHORT_SHA}"
-          docker build -t "$IMAGE" -t "ghcr.io/${OWNER_LC}/tradingagents-ci:latest" .
+          REPO="us-central1-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/tradingagents"
+          IMAGE="${REPO}/app:${SHORT_SHA}"
+          docker build -t "$IMAGE" -t "${REPO}/app:latest" .
           docker push "$IMAGE"
-          docker push "ghcr.io/${OWNER_LC}/tradingagents-ci:latest"
+          docker push "${REPO}/app:latest"
           echo "IMAGE=$IMAGE" >> "$GITHUB_ENV"
       - name: Grant deploy SA actAs on Cloud Run SA
         run: >
@@ -259,6 +263,13 @@ jobs:
           gcloud projects add-iam-policy-binding "${{ vars.GCP_PROJECT_ID }}"
           --member="serviceAccount:${{ vars.GCP_SERVICE_ACCOUNT_EMAIL }}"
           --role="roles/logging.viewer"
+          --quiet
+          || echo "Binding already exists"
+      - name: Grant Cloud Run runtime SA artifact registry reader
+        run: >
+          gcloud projects add-iam-policy-binding "${{ vars.GCP_PROJECT_ID }}"
+          --member="serviceAccount:tradingagents-cloud-run@${{ vars.GCP_PROJECT_ID }}.iam.gserviceaccount.com"
+          --role="roles/artifactregistry.reader"
           --quiet
           || echo "Binding already exists"
       - name: Deploy to Cloud Run
