@@ -108,6 +108,8 @@ def mock_firebase(fake_tree, monkeypatch):
     frtdb._data_root = ""
     frtdb._write_count = 0
     frtdb._write_date = ""
+    frtdb._read_count = 0
+    frtdb._read_date = ""
 
     mock_db_module = MagicMock()
 
@@ -128,6 +130,8 @@ def _reset_globals():
     frtdb._data_root = ""
     frtdb._write_count = 0
     frtdb._write_date = ""
+    frtdb._read_count = 0
+    frtdb._read_date = ""
 
 
 # ── init / is_enabled ──────────────────────────────────────────────────
@@ -321,6 +325,54 @@ class TestWriteGuard:
         frtdb.write_json(Path("/data/x.json"), {"a": 1})
         frtdb.write_json(Path("/data/x.json"), {"a": 2})
         assert frtdb._write_count == 2
+
+
+# ── read guard ────────────────────────────────────────────────────────
+
+
+class TestReadGuard:
+    def test_read_json_raises_when_cap_reached(self, mock_firebase):
+        frtdb._read_count = frtdb._DAILY_READ_CAP
+        frtdb._read_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        with pytest.raises(RuntimeError, match="daily read cap"):
+            frtdb.read_json(Path("/data/x.json"))
+
+    def test_read_jsonl_raises_when_cap_reached(self, mock_firebase):
+        frtdb._read_count = frtdb._DAILY_READ_CAP
+        frtdb._read_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        with pytest.raises(RuntimeError, match="daily read cap"):
+            frtdb.read_jsonl(Path("/data/x.jsonl"))
+
+    def test_exists_raises_when_cap_reached(self, mock_firebase):
+        frtdb._read_count = frtdb._DAILY_READ_CAP
+        frtdb._read_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        with pytest.raises(RuntimeError, match="daily read cap"):
+            frtdb.exists(Path("/data/x.json"))
+
+    def test_is_dir_raises_when_cap_reached(self, mock_firebase):
+        frtdb._read_count = frtdb._DAILY_READ_CAP
+        frtdb._read_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        with pytest.raises(RuntimeError, match="daily read cap"):
+            frtdb.is_dir(Path("/data/x"))
+
+    def test_list_prefix_raises_when_cap_reached(self, mock_firebase):
+        frtdb._read_count = frtdb._DAILY_READ_CAP
+        frtdb._read_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        with pytest.raises(RuntimeError, match="daily read cap"):
+            frtdb.list_prefix(Path("/data/x"))
+
+    def test_read_counter_resets_on_new_day(self, mock_firebase):
+        frtdb._read_count = frtdb._DAILY_READ_CAP
+        frtdb._read_date = "2000-01-01"
+        frtdb.read_json(Path("/data/x.json"))
+        assert frtdb._read_count == 1
+
+    def test_read_counter_increments(self, mock_firebase):
+        frtdb._read_count = 0
+        frtdb._read_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        frtdb.read_json(Path("/data/x.json"))
+        frtdb.exists(Path("/data/x.json"))
+        assert frtdb._read_count == 2
 
 
 # ── storage.py integration ─────────────────────────────────────────────

@@ -42,6 +42,15 @@ _remote = None  # module imported once, cached here
 
 # Cache mapping run_id → run directory path, avoiding O(n) directory walks.
 # Populated lazily by ``_find_run_dir``.
+#
+# Caveat: if ``init_settings()`` is called with a new ``data_dir`` (eg tests
+# reentering with a fresh tmp_path, or a config switch on a running server),
+# the cache's stored Paths are absolute to the OLD ``data_root``.  Path
+# validation in ``firebase_rtdb._rtdb_path`` will reject them with
+# ``ValueError("outside data_root")``, the remote calls fall through to
+# local FS with a WARNING, and ``_find_run_dir`` walks ``data_dir()``
+# afresh to re-populate the cache.  No correctness loss — at most one
+# wasted lookup per cached run_id.
 _run_dir_cache: dict[str, Path] = {}
 _RUN_DIR_CACHE_MAX = 1000
 
@@ -464,7 +473,11 @@ def _trim_run_dir_cache() -> None:
             if culled >= len(_run_dir_cache) - _RUN_DIR_CACHE_MAX // 2:
                 break
             p = _run_dir_cache[rid]
-            if not _remote_path_exists(p):
+            # Use shallow is_dir (RTDB shallow=True) instead of full get():
+            # the cache only ever holds directory paths, so existence is
+            # equivalent to "has children" and avoids fetching the full
+            # subtree (which counts against the 50K/day RTDB read quota).
+            if not _remote_path_is_dir(p):
                 del _run_dir_cache[rid]
                 culled += 1
         if len(_run_dir_cache) > _RUN_DIR_CACHE_MAX:
@@ -479,7 +492,10 @@ def _trim_run_dir_cache() -> None:
 def _find_run_dir(run_id: str) -> Path | None:
     """Locate the run directory for ``run_id``, using and populating the cache."""
     cached = _run_dir_cache.get(run_id)
-    if cached is not None and _remote_path_exists(cached):
+    # Cache only holds directory paths; shallow is_dir is faster than
+    # the full-node fetch that _remote_path_exists would do, and saves
+    # one RTDB read per cached lookup (50K/day quota consideration).
+    if cached is not None and _remote_path_is_dir(cached):
         return cached
     for td in _remote_iterdir(data_dir()):
         if not _remote_path_is_dir(td):
@@ -643,6 +659,16 @@ def walk_data_dir() -> Iterable[Path]:
         if td.name == "lost+found" or not _remote_path_is_dir(td):
             continue
         yield td
+
+
+def iter_subdirs(path: Path) -> list[Path]:
+    """Return the subdirectories of *path* using the remote-aware helpers.
+
+    Used by startup code (e.g. stale-run reaper in ``app.py``) so that
+    runs persisted only to Firebase RTDB (with empty local FS) are still
+    enumerated on cold start.  Returns sorted Paths.
+    """
+    return [sd for sd in _remote_iterdir(path) if _remote_path_is_dir(sd)]
 
 # ---- notifier settings (persisted to .env for durability) ----
 

@@ -314,9 +314,11 @@ async def lifespan(app: FastAPI):
     # ticker in the watchlist.
     logging.getLogger("yfinance").setLevel(logging.CRITICAL)
     # Mark any previously-running runs as failed (process restart recovery).
+    # Uses the remote-aware iterdir so runs stored in Firebase RTDB are
+    # also reaped on cold start (local FS is empty after Cloud Run scale-to-zero).
     for td in storage.walk_data_dir():
         try:
-            subdirs = [sd for sd in td.iterdir() if sd.is_dir()]
+            subdirs = storage.iter_subdirs(td)
         except PermissionError:
             continue
         for sd in subdirs:

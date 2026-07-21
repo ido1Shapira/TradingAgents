@@ -4,6 +4,39 @@ Mirrors ``gcs.py``'s interface so ``storage.py`` can swap backends by
 renaming ``_gcs`` to ``_remote``.  Authenticates via base64-encoded
 service account JSON in ``FIREBASE_SERVICE_ACCOUNT`` and RTDB URL in
 ``FIREBASE_DATABASE_URL``.
+
+Data model invariants
+---------------------
+
+RTDB stores native JSON types (dict, list, str, int, float, bool, None)
+directly as a tree — there is no JSON-serialisation round-trip on write
+or deserialisation on read.  Callers MUST therefore pass JSON-friendly
+values to ``write_json`` / ``append_jsonl``:
+
+  * ``datetime`` objects → convert via ``storage.utc_iso(dt``) first
+  * ``Path`` objects → call ``str(p)`` first
+  * custom dataclasses → call ``.model_dump()`` / ``.dict()`` first
+  * ``set`` → convert to ``list`` first
+
+Local-FS callers go through ``json.dump`` which would raise on these
+types and surface the bug immediately.  Under RTDB the value is stored
+verbatim (or implicitly coerced), so a missing conversion defects data
+silently.  All current callers in ``storage.py`` already pass pre-
+serialised dicts (run.json, watchlist.json, indicators.json, etc.) —
+this invariant is enforced by review, not by code.
+
+Binary blobs (e.g. SQLite checkpoint ``.db`` files at
+``cache/checkpoints/{TICKER}.db``) MUST stay on local FS — RTDB is
+JSON-only.  ``storage.clear_ticker_data`` handles the split.
+
+Free-tier guards
+----------------
+
+Both the daily write cap (20K/day, guarded at 18K) and the daily read
+cap (50K/day, guarded at 45K) are enforced in memory and reset at UTC
+midnight.  When the cap is hit the operation raises ``RuntimeError``;
+``storage.py`` catches it and falls back to local FS for that call.
+Binary SQLite files are written via the local-FS path only.
 """
 
 from __future__ import annotations
@@ -24,6 +57,13 @@ _data_root: str = ""
 _write_count: int = 0
 _write_date: str = ""
 _DAILY_WRITE_CAP: int = 18_000
+
+# Daily read counter — RTDB Spark free tier allows 50K reads/day.
+# Guard at 45K (=90%) and fall through to local FS for the rest of the day,
+# matching the write-guard behaviour. Counter resets at UTC midnight.
+_read_count: int = 0
+_read_date: str = ""
+_DAILY_READ_CAP: int = 45_000
 
 _ILLEGAL_KEY_RE = re.compile(r"[#$\[\]/]")
 
@@ -122,10 +162,32 @@ def _increment_write_count() -> None:
     _write_count += 1
 
 
+def _check_read_budget_pre() -> None:
+    """Raise if daily read cap reached. Does NOT increment."""
+    global _read_count, _read_date
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    if today != _read_date:
+        _read_date = today
+        _read_count = 0
+    if _read_count >= _DAILY_READ_CAP:
+        raise RuntimeError(
+            f"Firebase RTDB daily read cap reached ({_DAILY_READ_CAP}); "
+            "falling back to local FS"
+        )
+
+
+def _increment_read_count() -> None:
+    """Increment the daily read counter after a successful operation."""
+    global _read_count
+    _read_count += 1
+
+
 def read_json(path: Path) -> Any | None:
     """Return parsed JSON at RTDB node, or None if missing."""
+    _check_read_budget_pre()
     ref = _db.reference(_rtdb_path(path))
     snap = ref.get(timeout=10)
+    _increment_read_count()
     if snap is None:
         return None
     return snap
@@ -149,8 +211,10 @@ def append_jsonl(path: Path, obj: Any) -> None:
 
 def read_jsonl(path: Path) -> list[Any]:
     """Return all entries in RTDB list in insertion order."""
+    _check_read_budget_pre()
     ref = _db.reference(_rtdb_path(path))
     snap = ref.get(timeout=10)
+    _increment_read_count()
     if snap is None:
         return []
     if isinstance(snap, list):
@@ -159,23 +223,46 @@ def read_jsonl(path: Path) -> list[Any]:
 
 
 def exists(path: Path) -> bool:
-    """True if RTDB node exists OR has any child keys."""
+    """True if RTDB node has any value (scalar, dict, or list).
+
+    Performs a full (non-shallow) ``get`` because RTDB's shallow mode
+    only returns key names for dict nodes — a scalar leaf would
+    ``shallow=True`` return ``None`` and wrongly report "missing".
+    Use ``is_dir`` if you specifically want "has child keys".
+    """
+    _check_read_budget_pre()
     ref = _db.reference(_rtdb_path(path))
     snap = ref.get(timeout=10)
+    _increment_read_count()
     return snap is not None
 
 
 def is_dir(path: Path) -> bool:
-    """True if RTDB node has any child keys."""
+    """True if RTDB node has any child keys (i.e. is a non-empty dict).
+
+    Uses ``shallow=True`` so only the immediate child key names are
+    fetched (one round-trip), not the full subtree.  Cheaper on the
+    50K/day read budget for dict nodes than ``exists()`` would be
+    for the same node: shallow reads are billed the same but transfer
+    less data.  Note: a scalar-leaf node (string/int/bool stored
+    directly) returns ``False`` here — that matches the "is this a
+    container?" intent of the storage layer's directory semantics.
+    Callers that just want "node present" must use ``exists()``
+    instead.
+    """
+    _check_read_budget_pre()
     ref = _db.reference(_rtdb_path(path))
     snap = ref.get(shallow=True, timeout=10)
+    _increment_read_count()
     return isinstance(snap, dict) and len(snap) > 0
 
 
 def list_prefix(path: Path) -> list[str]:
     """Return sorted immediate child key names under RTDB node."""
+    _check_read_budget_pre()
     ref = _db.reference(_rtdb_path(path))
     snap = ref.get(shallow=True, timeout=10)
+    _increment_read_count()
     if snap is None:
         return []
     if isinstance(snap, dict):
