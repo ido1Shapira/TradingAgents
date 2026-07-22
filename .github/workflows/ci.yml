@@ -288,16 +288,16 @@ jobs:
         run: |
           REVISION="${{ env.REVISION_NAME }}"
           echo "Waiting for revision $REVISION to become Ready..."
-          for i in $(seq 1 15); do
+          for i in $(seq 1 30); do
             STATUS=$(gcloud run revisions describe "$REVISION" \
               --region=us-central1 \
               --project="${{ vars.GCP_PROJECT_ID }}" \
-              --format="value(status.conditions[0].reason)")
-            if [ "$STATUS" == "Ready" ]; then
+              --format="value(status.conditions[0].status)")
+            if [ "$STATUS" == "True" ]; then
               echo "Revision ready"
               exit 0
             fi
-            echo "Status: $STATUS (attempt $i/15)"
+            echo "Status: $STATUS (attempt $i/30)"
             sleep 10
           done
 
