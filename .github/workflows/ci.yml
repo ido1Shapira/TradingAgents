@@ -229,15 +229,6 @@ jobs:
           service_account: ${{ vars.GCP_SERVICE_ACCOUNT_EMAIL }}
       - name: Set up gcloud CLI
         uses: google-github-actions/setup-gcloud@v2
-      - name: Ensure Artifact Registry repo exists
-        run: >
-          gcloud artifacts repositories describe tradingagents
-          --location=us-central1 --project="${{ vars.GCP_PROJECT_ID }}"
-          --quiet 2>/dev/null
-          || gcloud artifacts repositories create tradingagents
-          --repository-format=docker --location=us-central1
-          --description="TradingAgents Docker images"
-          --project="${{ vars.GCP_PROJECT_ID }}" --quiet
       - name: Configure Docker for Artifact Registry
         run: gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
       - name: Build and push image
@@ -263,13 +254,6 @@ jobs:
           gcloud projects add-iam-policy-binding "${{ vars.GCP_PROJECT_ID }}"
           --member="serviceAccount:${{ vars.GCP_SERVICE_ACCOUNT_EMAIL }}"
           --role="roles/logging.viewer"
-          --quiet
-          || echo "Binding already exists"
-      - name: Grant Cloud Run runtime SA artifact registry reader
-        run: >
-          gcloud projects add-iam-policy-binding "${{ vars.GCP_PROJECT_ID }}"
-          --member="serviceAccount:tradingagents-cloud-run@${{ vars.GCP_PROJECT_ID }}.iam.gserviceaccount.com"
-          --role="roles/artifactregistry.reader"
           --quiet
           || echo "Binding already exists"
       - name: Deploy to Cloud Run
