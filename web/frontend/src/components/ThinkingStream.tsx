@@ -19,17 +19,17 @@ export function ThinkingStream({ events, agentName }: ThinkingStreamProps) {
   }, [agentEvents.length]);
 
   if (agentEvents.length === 0) {
-    return <div className="text-xs text-slate-600 italic py-4 text-center">No thinking data yet.</div>;
+    return <div className="text-xs text-slate-400 italic py-4 text-center">No thinking data yet.</div>;
   }
 
   return (
-    <div className="bg-slate-950/60 rounded-lg border border-slate-800/50 max-h-96 overflow-y-auto font-mono text-xs" data-testid="thinking-stream">
+    <div className="bg-brand-50 rounded-lg border border-brand-100 max-h-96 overflow-y-auto font-mono text-xs" data-testid="thinking-stream">
       {agentEvents.map((e, i) => {
         const d = e.data as any;
         const text = d.text_fragment || d.text_preview || "";
         return (
           <div key={e.id ?? i} className="px-3 py-1.5">
-            <span className="text-slate-600 mr-2">{new Date(e.ts).toLocaleTimeString()}</span>
+            <span className="text-slate-400 mr-2">{new Date(e.ts).toLocaleTimeString()}</span>
             {text}
           </div>
         );

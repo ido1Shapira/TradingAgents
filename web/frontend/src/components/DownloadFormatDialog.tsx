@@ -32,11 +32,11 @@ export default function DownloadFormatDialog({ ticker, onClose }: Props) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-      <div className="bg-slate-800 border border-slate-700 rounded-xl shadow-2xl w-full mx-4 max-w-sm">
-        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-700/60">
-          <h2 className="text-sm font-semibold text-slate-200">Download {ticker} Data</h2>
-          <button onClick={onClose} className="text-slate-500 hover:text-slate-300 p-1 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/50">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-400/30 backdrop-blur-sm">
+      <div className="bg-white border border-brand-100 rounded-xl shadow-sm w-full mx-4 max-w-sm">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-brand-100">
+          <h2 className="text-sm font-semibold text-slate-900">Download {ticker} Data</h2>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-700 p-1 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-200">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -45,11 +45,11 @@ export default function DownloadFormatDialog({ ticker, onClose }: Props) {
           {formats.map((f) => (
             <label
               key={f.value}
-              className={`flex items-start gap-3 px-3 py-2.5 rounded-lg cursor-pointer border transition-colors ${
-                selected === f.value
-                  ? "bg-sky-500/10 border-sky-500/40"
-                  : "border-transparent hover:bg-slate-700/40"
-              }`}
+                className={`flex items-start gap-3 px-3 py-2.5 rounded-lg cursor-pointer border transition-colors ${
+                  selected === f.value
+                    ? "bg-brand-50 border-brand-200"
+                    : "border-transparent hover:bg-brand-50"
+                }`}
             >
               <input
                 type="radio"
@@ -57,31 +57,31 @@ export default function DownloadFormatDialog({ ticker, onClose }: Props) {
                 value={f.value}
                 checked={selected === f.value}
                 onChange={() => setSelected(f.value)}
-                className="accent-sky-500 shrink-0 mt-0.5"
+                className="accent-brand-600 shrink-0 mt-0.5"
               />
               <div>
-                <div className="text-sm font-medium text-slate-200">{f.label}</div>
-                <div className="text-xs text-slate-500 mt-0.5">{f.desc}</div>
+                <div className="text-sm font-medium text-slate-900">{f.label}</div>
+                <div className="text-xs text-slate-400 mt-0.5">{f.desc}</div>
               </div>
             </label>
           ))}
         </div>
 
-        <div className="flex items-center justify-between gap-2 px-4 py-3 border-t border-slate-700/60">
+        <div className="flex items-center justify-between gap-2 px-4 py-3 border-t border-brand-100">
           {downloadError ? (
-            <span className="text-xs text-red-400" role="alert">{downloadError}</span>
+            <span className="text-xs text-red-700" role="alert">{downloadError}</span>
           ) : <span />}
           <div className="flex gap-2">
             <button
               onClick={onClose}
-              className="px-3 py-1.5 text-sm bg-slate-700 text-slate-300 rounded-lg hover:bg-slate-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/50"
+              className="px-3 py-1.5 text-sm bg-brand-50 text-slate-700 rounded-lg hover:bg-brand-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-200"
             >
               Cancel
             </button>
             <button
               onClick={handleDownload}
               disabled={loading}
-              className="px-3 py-1.5 text-sm bg-sky-600 text-white rounded-lg hover:bg-sky-500 disabled:opacity-40 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/50"
+              className="px-3 py-1.5 text-sm bg-brand-600 text-white rounded-lg hover:bg-brand-700 disabled:opacity-40 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-200"
             >
               {loading ? "Preparing…" : `Download ${selected.toUpperCase()}`}
             </button>

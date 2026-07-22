@@ -14,17 +14,17 @@ export function LoginPage() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-market-DEFAULT relative overflow-hidden">
+    <div className="flex items-center justify-center min-h-screen bg-market relative overflow-hidden">
       <div className="fixed inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
-        <div className="absolute -top-40 -left-40 w-[600px] h-[600px] rounded-full bg-sky-500/5 blur-[150px] animate-breathing" />
-        <div className="absolute -bottom-40 -right-40 w-[700px] h-[700px] rounded-full bg-emerald-500/5 blur-[180px]" />
-        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[500px] h-[300px] bg-violet-500/3 blur-[120px]" />
+        <div className="absolute -top-40 -left-40 w-[600px] h-[600px] rounded-full bg-brand-50 blur-[150px] animate-breathing" />
+        <div className="absolute -bottom-40 -right-40 w-[700px] h-[700px] rounded-full bg-emerald-50 blur-[180px]" />
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[500px] h-[300px] bg-violet-50/50 blur-[120px]" />
       </div>
       <div className="relative text-center animate-fade-in">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-sky-500/15 to-emerald-500/15 border border-sky-500/20 mb-6 mx-auto shadow-[0_0_20px_rgba(56,189,248,0.1)]">
-          <BarChart3 className="w-8 h-8 text-sky-400" />
+        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-brand-50 to-emerald-50 border border-brand-200 mb-6 mx-auto shadow-sm">
+          <BarChart3 className="w-8 h-8 text-brand-600" />
         </div>
-        <h1 className="text-3xl font-display font-semibold text-slate-100 tracking-tight mb-2">
+        <h1 className="text-3xl font-display font-semibold text-slate-900 tracking-tight mb-2">
           TradingAgents
         </h1>
         <p className="text-sm text-slate-500 mb-8">Multi-Agent LLM Trading Dashboard</p>

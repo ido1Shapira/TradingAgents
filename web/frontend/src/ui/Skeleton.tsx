@@ -8,7 +8,7 @@ interface SkeletonProps {
 function SkeletonBox({ className = "" }: { className: string }) {
   return (
     <div
-      className={`animate-pulse rounded-md bg-slate-700/50 ${className}`}
+      className={`animate-pulse rounded-md bg-brand-100 ${className}`}
       aria-hidden="true"
     />
   );

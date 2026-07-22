@@ -3,22 +3,22 @@ import { Terminal, X, Trash2, Search } from "lucide-react";
 import { useLogStore } from "../store/logs";
 import { useLogStream } from "../hooks/useLogStream";
 
-const LEVEL_COLORS: Record<string, string> = {
-  DEBUG: "text-gray-400",
-  INFO: "text-blue-400",
-  WARNING: "text-amber-400",
-  ERROR: "text-red-400",
+  const LEVEL_COLORS: Record<string, string> = {
+  DEBUG: "text-gray-600",
+  INFO: "text-blue-700",
+  WARNING: "text-amber-700",
+  ERROR: "text-red-700",
 };
 
 const LEVEL_BG: Record<string, string> = {
-  DEBUG: "bg-gray-500/10 hover:bg-gray-500/20",
-  INFO: "bg-blue-500/10 hover:bg-blue-500/20",
-  WARNING: "bg-amber-500/10 hover:bg-amber-500/20",
-  ERROR: "bg-red-500/10 hover:bg-red-500/20",
+  DEBUG: "bg-gray-50 hover:bg-gray-100",
+  INFO: "bg-blue-50 hover:bg-blue-100",
+  WARNING: "bg-amber-50 hover:bg-amber-100",
+  ERROR: "bg-red-50 hover:bg-red-100",
 };
 
 const SOURCE_ACCENT: Record<string, string> = {
-  server: "border-l-2 border-l-sky-500",
+  server: "border-l-2 border-l-brand-500",
   client: "border-l-2 border-l-emerald-500",
 };
 
@@ -77,25 +77,25 @@ export function LogPanel() {
       {/* Toggle button */}
       <button
         onClick={() => setOpen((v) => !v)}
-        className="fixed bottom-4 right-4 z-50 flex items-center gap-2 rounded-full bg-slate-800/90 px-3 py-2 text-sm text-slate-300 shadow-lg hover:bg-slate-700/90 border border-slate-700/50 transition-all duration-200"
+        className="fixed bottom-4 right-4 z-50 flex items-center gap-2 rounded-full bg-white px-3 py-2 text-sm text-slate-700 shadow-sm hover:bg-brand-50 border border-brand-100 transition-all duration-200"
         title={open ? "Close logs" : "Open logs"}
       >
         <Terminal size={16} />
-        {status === "open" && <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.5)]" />}
-        {status === "connecting" && <span className="h-2 w-2 animate-pulse rounded-full bg-amber-400" />}
+        {status === "open" && <span className="h-2 w-2 rounded-full bg-emerald-500 shadow-sm" />}
+        {status === "connecting" && <span className="h-2 w-2 animate-pulse rounded-full bg-amber-500" />}
       </button>
 
       {/* Panel */}
       {open && (
-        <div className="fixed bottom-16 right-4 z-50 flex h-[40vh] w-[600px] max-w-[calc(100vw-2rem)] flex-col rounded-xl bg-slate-900/95 shadow-2xl backdrop-blur-md border border-slate-700/50 animate-slide-up">
+        <div className="fixed bottom-16 right-4 z-50 flex h-[40vh] w-[600px] max-w-[calc(100vw-2rem)] flex-col rounded-xl bg-white shadow-sm backdrop-blur-md border border-brand-100 animate-slide-up">
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-slate-700/50 px-4 py-2.5 shrink-0">
-            <span className="text-sm font-medium text-slate-300">
+          <div className="flex items-center justify-between border-b border-brand-100 px-4 py-2.5 shrink-0">
+            <span className="text-sm font-medium text-slate-700">
               Logs
-              <span className="ml-1.5 text-xs text-slate-500">({entries.length})</span>
+              <span className="ml-1.5 text-xs text-slate-400">({entries.length})</span>
             </span>
             <div className="flex items-center gap-1.5">
-              <div className="flex items-center gap-0.5 bg-slate-800/60 rounded-lg p-0.5">
+              <div className="flex items-center gap-0.5 bg-white rounded-lg p-0.5">
                 {allLevels.map((l) => {
                   const active = levelFilter.has(l);
                   return (
@@ -104,8 +104,8 @@ export function LogPanel() {
                       onClick={() => toggleLevel(l)}
                       className={`text-[10px] font-medium px-1.5 py-0.5 rounded-md transition-all ${
                         active
-                          ? `${LEVEL_COLORS[l]} bg-slate-700/80 shadow-sm`
-                          : "text-slate-600 hover:text-slate-400"
+                          ? `${LEVEL_COLORS[l]} bg-brand-100 shadow-sm`
+                          : "text-slate-400 hover:text-slate-600"
                       }`}
                     >
                       {l}
@@ -114,21 +114,21 @@ export function LogPanel() {
                 })}
               </div>
               <div className="relative">
-                <Search className="absolute left-1.5 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-600 pointer-events-none" />
+                <Search className="absolute left-1.5 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400 pointer-events-none" />
                 <input
                   type="text"
                   placeholder="Search..."
                   value={filter}
                   onChange={(e) => setFilter(e.target.value)}
-                  className="w-28 rounded-lg bg-slate-800 pl-6 pr-2 py-1 text-xs text-slate-300 placeholder-slate-500 border border-slate-700/50 focus:outline-none focus:border-sky-500/40 transition-colors"
+                  className="w-28 rounded-lg bg-white pl-6 pr-2 py-1 text-xs text-slate-700 placeholder-slate-400 border border-brand-100 focus:outline-none focus:border-brand-200 transition-colors"
                 />
               </div>
               <button
                 onClick={handleClear}
                 className={`rounded-lg p-1.5 transition-all ${
                   confirmClear
-                    ? "bg-red-500/20 text-red-400"
-                    : "hover:bg-slate-700/50 text-slate-500 hover:text-slate-300"
+                    ? "bg-red-50 text-red-700"
+                    : "hover:bg-brand-50 text-slate-400 hover:text-slate-700"
                 }`}
                 title={confirmClear ? "Click again to clear" : "Clear logs"}
               >
@@ -136,7 +136,7 @@ export function LogPanel() {
               </button>
               <button
                 onClick={() => setOpen(false)}
-                className="rounded-lg p-1.5 hover:bg-slate-700/50 text-slate-500 hover:text-slate-300 transition-colors"
+                className="rounded-lg p-1.5 hover:bg-brand-50 text-slate-400 hover:text-slate-700 transition-colors"
                 title="Close"
               >
                 <X size={14} />
@@ -147,19 +147,19 @@ export function LogPanel() {
           {/* Log list */}
           <div ref={listRef} className="flex-1 overflow-y-auto font-mono text-xs" onScroll={handleScroll}>
             {filtered.length === 0 && (
-              <div className="flex h-full items-center justify-center text-slate-500 text-sm">
+              <div className="flex h-full items-center justify-center text-slate-400 text-sm">
                 {entries.length === 0 ? "No logs yet" : "No matching logs"}
               </div>
             )}
             {filtered.map((e) => (
               <div
                 key={e.id}
-                className={`flex gap-2 px-3 py-0.5 border-b border-slate-800/30 hover:bg-slate-800/40 transition-colors ${SOURCE_ACCENT[e.source] ?? ""}`}
+                className={`flex gap-2 px-3 py-0.5 border-b border-brand-50 hover:bg-brand-50 transition-colors ${SOURCE_ACCENT[e.source] ?? ""}`}
               >
-                <span className="w-16 shrink-0 text-slate-500">{e.ts?.split("T")[1]?.slice(0, 8) ?? ""}</span>
-                <span className={`w-16 shrink-0 ${LEVEL_COLORS[e.level] ?? "text-slate-400"}`}>{e.level}</span>
-                <span className="w-20 shrink-0 truncate text-slate-500">{e.logger}</span>
-                <span className={`flex-1 break-all ${LEVEL_COLORS[e.level] ?? "text-slate-300"}`}>{e.message}</span>
+                <span className="w-16 shrink-0 text-slate-400">{e.ts?.split("T")[1]?.slice(0, 8) ?? ""}</span>
+                <span className={`w-16 shrink-0 ${LEVEL_COLORS[e.level] ?? "text-slate-600"}`}>{e.level}</span>
+                <span className="w-20 shrink-0 truncate text-slate-400">{e.logger}</span>
+                <span className={`flex-1 break-all ${LEVEL_COLORS[e.level] ?? "text-slate-700"}`}>{e.message}</span>
               </div>
             ))}
             <div ref={bottomRef} />

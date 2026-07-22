@@ -16,8 +16,9 @@ export function AuthGate({ children }: AuthGateProps) {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-market-DEFAULT">
+      <div className="min-h-screen flex flex-col items-center justify-center gap-3 bg-market">
         <Spinner size="lg" />
+        <p className="text-xs text-slate-500 font-medium">Connecting…</p>
       </div>
     );
   }

@@ -53,13 +53,13 @@ export function WatchlistFilter() {
   }, [filterTicker, qc]);
 
   return (
-    <div className="shrink-0 px-4 py-3 border-b border-slate-800">
+    <div className="shrink-0 px-4 py-3 border-b border-brand-100">
       <div className="flex items-center gap-2">
-        <div className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.5)]" />
-        <span className="text-xs font-semibold uppercase tracking-widest text-slate-400">Watchlist</span>
+        <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-sm" />
+        <span className="text-xs font-semibold uppercase tracking-widest text-slate-600">Watchlist</span>
       </div>
       <div className="relative mt-2">
-        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-600 pointer-events-none" />
+        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
         <input
           type="text"
           value={filterTickerRaw}
@@ -70,20 +70,20 @@ export function WatchlistFilter() {
             handleAddFromFilter();
           }}
           placeholder="Search or add ticker…"
-          className="w-full bg-slate-800/60 border border-slate-700/50 rounded-md pl-7 pr-7 py-1.5 text-xs text-slate-300 placeholder-slate-500 outline-none focus:border-slate-600 focus:bg-slate-800 focus:ring-1 focus:ring-sky-500/30 transition-colors"
+          className="w-full bg-white border border-brand-100 rounded-md pl-7 pr-7 py-1.5 text-xs text-slate-700 placeholder-slate-500 outline-none focus:border-brand-300 focus:bg-white focus:ring-1 focus:ring-brand-200 transition-colors"
         />
         {filterTickerRaw && (
           <button
             type="button"
             onClick={() => { setFilterTickerRaw(""); setFilterTicker(""); setAddError(null); }}
-            className="absolute right-1.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
+            className="absolute right-1.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700 transition-colors"
           >
             <X className="w-3.5 h-3.5" />
           </button>
         )}
       </div>
-      {addError && <p className="text-xs text-red-400 mt-2" role="alert">{addError}</p>}
-      {addingTicker && <p className="text-xs text-sky-400 mt-2">Adding {filterTicker}…</p>}
+      {addError && <p className="text-xs text-red-600 mt-2" role="alert">{addError}</p>}
+      {addingTicker && <p className="text-xs text-brand-600 mt-2">Adding {filterTicker}…</p>}
     </div>
   );
 }

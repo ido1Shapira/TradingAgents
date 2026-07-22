@@ -8,7 +8,7 @@ import { useFocusedRunEvents } from "./hooks/useFocusedRunEvents";
 import { useRestoredRunEvents } from "./hooks/useRestoredRunEvents";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { useRunNotifications } from "./hooks/useRunNotifications";
-import { useTheme } from "./hooks/useTheme";
+
 import { LogPanel } from "./components/LogPanel";
 import { ToastContainer } from "./ui";
 import "./lib/console-capture";
@@ -32,7 +32,6 @@ import BatchDownloadDialog from "./components/BatchDownloadDialog";
 import { SettingsPanel } from "./components/SettingsPanel";
 import { PipelineFlow } from "./components/PipelineFlow";
 import { LlmTracePanel } from "./components/LlmTracePanel";
-import { AgentObservatory } from "./components/AgentObservatory";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { AgentChatBubble } from "./components/AgentChatBubble";
 
@@ -88,7 +87,7 @@ export default function App() {
   const { data: configModels } = useQuery<ConfigModels>({ queryKey: ["config-models"], queryFn: fetchConfigModels, staleTime: Infinity, enabled: serverReady });
   const historyOpenByTicker = useUi((s) => s.historyOpenByTicker);
   const [dismissedStaleBanner, setDismissedStaleBanner] = useState<string | null>(null);
-  const [traceView, setTraceView] = useState<"events" | "llm" | "observatory">("events");
+  const [traceView, setTraceView] = useState<"events" | "llm">("events");
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [batchDialogOpen, setBatchDialogOpen] = useState(false);
 
@@ -97,7 +96,7 @@ export default function App() {
   useRestoredRunEvents(focused);
   useKeyboardShortcuts();
   useRunNotifications();
-  const { theme, toggleTheme } = useTheme();
+  
   const mobileSidebarOpen = useUi((s) => s.mobileSidebarOpen);
   const setMobileSidebarOpen = useUi((s) => s.setMobileSidebarOpen);
 
@@ -120,7 +119,7 @@ export default function App() {
     staleTime: Infinity,
   });
 
-  const handleSetTraceView = useCallback((view: "events" | "llm" | "observatory") => {
+  const handleSetTraceView = useCallback((view: "events" | "llm") => {
     setTraceView(view);
     if (view === "llm" && focused && focusedRunId) {
       qc.invalidateQueries({ queryKey: ["run-detail", focused, focusedRunId] });
@@ -186,13 +185,13 @@ export default function App() {
   ) : watchlistLoading ? (
     <LoadingScreen message="Loading watchlist…" />
   ) : (
-    <div className="min-h-screen flex flex-col bg-market-DEFAULT">
+    <div className="min-h-screen flex flex-col bg-market">
       {/* Ambient background gradient */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
-        <div className="absolute -top-40 -left-40 w-[600px] h-[600px] rounded-full bg-sky-500/5 blur-[150px] animate-breathing" />
-        <div className="absolute -bottom-40 -right-40 w-[700px] h-[700px] rounded-full bg-emerald-500/5 blur-[180px] animate-pulse-glow" style={{ animationDuration: '4s' }} />
-        <div className="absolute top-1/4 left-1/3 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-violet-500/3 blur-[150px]" />
-        <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] rounded-full bg-amber-500/3 blur-[120px]" />
+        <div className="absolute -top-40 -left-40 w-[600px] h-[600px] rounded-full bg-brand-500/[0.04] blur-[150px] animate-breathing" />
+        <div className="absolute -bottom-40 -right-40 w-[700px] h-[700px] rounded-full bg-emerald-500/[0.04] blur-[180px] animate-pulse-glow" style={{ animationDuration: '4s' }} />
+        <div className="absolute top-1/4 left-1/3 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-violet-500/[0.03] blur-[150px]" />
+        <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] rounded-full bg-amber-500/[0.03] blur-[120px]" />
       </div>
 
       <TopBar
@@ -205,7 +204,7 @@ export default function App() {
         {/* Mobile sidebar backdrop */}
         {mobileSidebarOpen && (
           <div
-            className="fixed inset-0 z-30 bg-black/60 backdrop-blur-sm md:hidden"
+            className="fixed inset-0 z-30 bg-slate-400/20 backdrop-blur-sm md:hidden"
             onClick={() => setMobileSidebarOpen(false)}
             aria-hidden
           />
@@ -234,10 +233,6 @@ export default function App() {
               {traceView === "events" ? (
                 <ErrorBoundary>
                   <LiveEventStream />
-                </ErrorBoundary>
-              ) : traceView === "observatory" ? (
-                <ErrorBoundary>
-                  <AgentObservatory events={events} />
                 </ErrorBoundary>
               ) : (
                 <div className="glass-panel">
@@ -274,12 +269,10 @@ export default function App() {
         />
       )}
       <BackgroundRunsDrawer focusedTicker={focused ?? "AAPL"} />
-      <SettingsPanel
-        open={settingsOpen}
-        onClose={() => setSettingsOpen(false)}
-        theme={theme}
-        toggleTheme={toggleTheme}
-      />
+<SettingsPanel
+  open={settingsOpen}
+  onClose={() => setSettingsOpen(false)}
+/>
       {batchDialogOpen && (
         <BatchDownloadDialog
           tickers={watchlist.map((w) => w.ticker)}

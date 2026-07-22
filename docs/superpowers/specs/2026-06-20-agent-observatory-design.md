@@ -1,5 +1,9 @@
 # Agent Observatory — Unified Agent Visibility Design
 
+> **Superseded (2026-07-22):** The Agent Observatory UI has been removed. The frontend components `AgentObservatory.tsx`, `ObservatoryDag.tsx`, and the matching test files were deleted, and the `Observatory` tab in `TraceTabs.tsx` was dropped (see `App.tsx`). Backend event-protocol fixes from this spec (debate/risk message emission, `_NODE_STATE_KEY`, `EventType` enum, ticker-agent WebSocket events, `Observer` enrichment) remain in place and are now consumed by the simpler `LiveEventStream` + `LlmTracePanel` views.
+>
+> This document is preserved as a historical record of the design that was implemented and later retired. Refer to `2026-06-28-web-ui-overhaul-design.md` and `2026-06-29-agent-chat-design.md` for the current trace surfaces.
+
 ## Overview
 
 The Agent Observatory provides comprehensive real-time visibility into all agent actions across the TradingAgents system. It unifies the main trading graph pipeline (market analysts → researchers → trader → risk → PM) with the Ticker Accuracy Agent into a single observability layer.

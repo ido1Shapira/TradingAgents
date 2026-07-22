@@ -12,7 +12,7 @@ export function ToolTimeline({ events }: ToolTimelineProps) {
   const toolEvents = events.filter(e => e.type === "tool_call" || e.type === "tool_result");
 
   if (toolEvents.length === 0) {
-    return <div className="text-xs text-slate-600 italic py-4 text-center">No tool calls yet.</div>;
+    return <div className="text-xs text-slate-400 italic py-4 text-center">No tool calls yet.</div>;
   }
 
   return (
@@ -23,11 +23,11 @@ export function ToolTimeline({ events }: ToolTimelineProps) {
         const key = `${e.id ?? i}`;
         return (
           <div key={key}>
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded text-xs border-l-2 cursor-pointer hover:brightness-125 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/50"
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded text-xs border-l-2 cursor-pointer hover:brightness-125 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50"
               onClick={() => setExpandedTool(expandedTool === key ? null : key)}>
-              <span className="text-slate-600 font-mono w-12 shrink-0">{new Date(e.ts).toLocaleTimeString()}</span>
+              <span className="text-slate-400 font-mono w-12 shrink-0">{new Date(e.ts).toLocaleTimeString()}</span>
               <span className="shrink-0">
-                {isCall ? <Play className="w-2.5 h-2.5 text-sky-400" fill="currentColor" /> : <Check className="w-3 h-3 text-emerald-400" />}
+                {isCall ? <Play className="w-2.5 h-2.5 text-brand-600" fill="currentColor" /> : <Check className="w-3 h-3 text-emerald-700" />}
               </span>
               <span className="truncate">{d.tool || "unknown"} {isCall ? "()" : ""}</span>
               {!isCall && d.duration_ms != null && (
@@ -35,7 +35,7 @@ export function ToolTimeline({ events }: ToolTimelineProps) {
               )}
             </div>
             {expandedTool === key && (
-              <div className="mt-1 glass-panel p-2 text-[11px] text-slate-400 whitespace-pre-wrap ml-1 mr-1 rounded-lg">
+              <div className="mt-1 bg-white border border-brand-100 p-2 text-[11px] text-slate-600 whitespace-pre-wrap ml-1 mr-1 rounded-lg shadow-sm">
                 {isCall ? `Args: ${JSON.stringify(d.args)}` : `Result: ${JSON.stringify(d.summary)}`}
               </div>
             )}

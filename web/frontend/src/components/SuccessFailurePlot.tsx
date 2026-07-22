@@ -25,17 +25,17 @@ export function SuccessFailurePlot({ data, xDomain }: SuccessFailurePlotProps) {
 
   if (chartData.length === 0) {
     return (
-      <div className="h-40 flex items-center justify-center text-xs text-slate-400">
+      <div className="h-40 flex items-center justify-center text-xs text-slate-600">
         No scored data for any delta.
       </div>
     );
   }
 
   return (
-    <div className="h-32 md:h-40 border-b border-slate-800" data-testid="success-failure-plot">
+    <div className="h-32 md:h-40 border-b border-brand-100" data-testid="success-failure-plot">
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={chartData} margin={{ top: 8, right: 8, bottom: 4, left: 8 }}>
-          <CartesianGrid stroke="#1e293b" strokeDasharray="3 3" />
+          <CartesianGrid stroke="#e2e8f0" strokeDasharray="3 3" />
           <XAxis
             dataKey="delta"
             type="number"
@@ -44,15 +44,15 @@ export function SuccessFailurePlot({ data, xDomain }: SuccessFailurePlotProps) {
               ? [Math.min(...data.map(p => p.delta)), Math.max(...data.map(p => p.delta))]
               : [0, 1])}
             tickFormatter={fmtDelta}
-            tick={{ fontSize: 10, fill: "#64748b" }}
-            stroke="#334155"
+            tick={{ fontSize: 10, fill: "#94a3b8" }}
+            stroke="#e2e8f0"
             minTickGap={24}
           />
           <YAxis
             domain={[0, "auto"]}
             width={28}
-            tick={{ fontSize: 10, fill: "#64748b" }}
-            stroke="#334155"
+            tick={{ fontSize: 10, fill: "#94a3b8" }}
+            stroke="#e2e8f0"
             allowDecimals={false}
           />
           <Tooltip
@@ -60,16 +60,16 @@ export function SuccessFailurePlot({ data, xDomain }: SuccessFailurePlotProps) {
               if (!active || !payload?.length) return null;
               const p = payload[0].payload as ChartPoint;
               return (
-                <div className="glass-panel px-3 py-2 text-xs">
-                  <div className="font-medium text-slate-100 mb-1">Δ {fmtDelta(p.delta)}</div>
-                  <div className="text-emerald-400">{p.success} succeeded</div>
-                  <div className="text-red-400">{p.failure} failed</div>
+                <div className="bg-white border border-brand-100 px-3 py-2 text-xs shadow-sm">
+                  <div className="font-medium text-slate-900 mb-1">Δ {fmtDelta(p.delta)}</div>
+                  <div className="text-emerald-700">{p.success} succeeded</div>
+                  <div className="text-red-700">{p.failure} failed</div>
                 </div>
               );
             }}
           />
           <Legend
-            wrapperStyle={{ fontSize: 10, color: "#94a3b8" }}
+            wrapperStyle={{ fontSize: 10, color: "#64748b" }}
             iconType="plainline"
           />
           <Line

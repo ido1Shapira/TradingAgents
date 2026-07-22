@@ -347,14 +347,14 @@ export function LargeChatScreen({ onClose }: Props) {
   };
 
   return (
-    <div className="fixed inset-0 z-[100] bg-slate-950/95 flex">
+    <div className="fixed inset-0 z-[100] bg-white flex">
       {/* Sidebar */}
-      <div className={`${sidebarOpen ? "w-72" : "w-0"} transition-all duration-200 flex-shrink-0 border-r border-slate-700/50 bg-slate-900/50 flex flex-col overflow-hidden`}>
-        <div className="flex items-center justify-between px-4 py-4 border-b border-slate-700/50">
-          <span className="text-sm font-semibold text-slate-300">Conversations</span>
+      <div className={`${sidebarOpen ? "w-72" : "w-0"} transition-all duration-200 flex-shrink-0 border-r border-brand-100 bg-white flex flex-col overflow-hidden`}>
+        <div className="flex items-center justify-between px-4 py-4 border-b border-brand-100">
+          <span className="text-sm font-semibold text-slate-900">Conversations</span>
           <button
             onClick={() => setSidebarOpen(false)}
-            className="text-slate-500 hover:text-slate-300 p-1 rounded hover:bg-slate-800 transition-colors"
+            className="text-slate-600 hover:text-slate-900 p-1 rounded hover:bg-brand-50 transition-colors"
             aria-label="Close sidebar"
           >
             <X className="h-4 w-4" />
@@ -363,7 +363,7 @@ export function LargeChatScreen({ onClose }: Props) {
         <div className="p-2">
           <button
             onClick={createSession}
-            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-sky-400 hover:bg-sky-500/10 transition-colors"
+            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-brand-600 hover:bg-brand-50 transition-colors"
           >
             <Plus className="h-4 w-4" />
             New Chat
@@ -375,8 +375,8 @@ export function LargeChatScreen({ onClose }: Props) {
               key={session.id}
               className={`group flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition-colors ${
                 session.id === activeSessionId
-                  ? "bg-sky-500/15 text-sky-300"
-                  : "text-slate-400 hover:bg-slate-800/50 hover:text-slate-300"
+                  ? "bg-brand-50 text-brand-700"
+                  : "text-slate-600 hover:bg-brand-50 hover:text-slate-900"
               }`}
               onClick={() => switchSession(session.id)}
             >
@@ -387,7 +387,7 @@ export function LargeChatScreen({ onClose }: Props) {
               </div>
               <button
                 onClick={(e) => { e.stopPropagation(); deleteSession(session.id); }}
-                className="opacity-0 group-hover:opacity-100 p-1 rounded text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-all"
+                className="opacity-0 group-hover:opacity-100 p-1 rounded text-slate-400 hover:text-red-700 hover:bg-red-50 transition-all"
                 aria-label="Delete conversation"
                 title="Delete conversation"
               >
@@ -396,7 +396,7 @@ export function LargeChatScreen({ onClose }: Props) {
             </div>
           ))}
           {sessionList.length === 0 && (
-            <div className="text-center text-slate-600 text-xs py-8">
+            <div className="text-center text-slate-400 text-xs py-8">
               No conversations yet
             </div>
           )}
@@ -405,22 +405,22 @@ export function LargeChatScreen({ onClose }: Props) {
 
       {/* Main chat area */}
       <div className="flex-1 flex flex-col min-w-0">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-700 bg-slate-900">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-brand-100 bg-white">
           <div className="flex items-center gap-3">
             {!sidebarOpen && (
               <button
                 onClick={() => setSidebarOpen(true)}
-                className="text-slate-400 hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-800 transition-colors"
+                className="text-slate-600 hover:text-slate-900 p-1.5 rounded-lg hover:bg-brand-50 transition-colors"
                 aria-label="Open sidebar"
                 title="Show conversations"
               >
                 <MessageCircle className="h-4 w-4" />
               </button>
             )}
-            <MessageSquare className="h-5 w-5 text-sky-400" />
-            <span className="text-base font-semibold text-slate-200">Trading Assistant</span>
+            <MessageSquare className="h-5 w-5 text-brand-600" />
+            <span className="text-base font-semibold text-slate-900">Trading Assistant</span>
             {activeSessionId && sessions[activeSessionId] && (
-              <span className="text-xs text-slate-500 hidden sm:inline truncate max-w-[200px]">
+              <span className="text-xs text-slate-400 hidden sm:inline truncate max-w-[200px]">
                 — {sessions[activeSessionId].name}
               </span>
             )}
@@ -428,7 +428,7 @@ export function LargeChatScreen({ onClose }: Props) {
           <div className="flex items-center gap-2">
             <button
               onClick={createSession}
-              className="text-slate-400 hover:text-slate-200 p-2 rounded-lg hover:bg-slate-800 transition-colors"
+              className="text-slate-600 hover:text-slate-900 p-2 rounded-lg hover:bg-brand-50 transition-colors"
               aria-label="New chat"
               title="New chat"
             >
@@ -436,7 +436,7 @@ export function LargeChatScreen({ onClose }: Props) {
             </button>
             <button
               onClick={onClose}
-              className="text-slate-400 hover:text-slate-200 p-2 rounded-lg hover:bg-slate-800 transition-colors"
+              className="text-slate-600 hover:text-slate-900 p-2 rounded-lg hover:bg-brand-50 transition-colors"
               aria-label="Close full screen"
               title="Minimize"
             >
@@ -444,7 +444,7 @@ export function LargeChatScreen({ onClose }: Props) {
             </button>
             <button
               onClick={onClose}
-              className="text-slate-400 hover:text-slate-200 p-2 rounded-lg hover:bg-slate-800 transition-colors"
+              className="text-slate-600 hover:text-slate-900 p-2 rounded-lg hover:bg-brand-50 transition-colors"
               aria-label="Close chat"
               title="Close"
             >
@@ -467,16 +467,16 @@ export function LargeChatScreen({ onClose }: Props) {
               <div
                 className={`max-w-[75%] rounded-xl px-4 py-3 text-sm relative ${
                   msg.role === "user"
-                    ? "bg-sky-600/30 text-slate-200 pr-8"
+                    ? "bg-brand-50 text-slate-900 pr-8"
                     : msg.role === "tool"
-                    ? "bg-slate-800 text-slate-400 font-mono text-xs"
-                    : "bg-slate-800/60 text-slate-300"
+                    ? "bg-white border border-brand-100 text-slate-600 font-mono text-xs"
+                    : "bg-white border border-brand-100 text-slate-700"
                 }`}
               >
                 {msg.role === "user" && (
                   <button
                     onClick={(e) => { e.stopPropagation(); setEditingMessage(msg.id); }}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 rounded text-slate-400 hover:text-sky-400 hover:bg-slate-800/50 transition-colors"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 rounded text-slate-600 hover:text-brand-600 hover:bg-brand-50 transition-colors"
                     aria-label="Edit message"
                     title="Edit message"
                   >
@@ -484,16 +484,16 @@ export function LargeChatScreen({ onClose }: Props) {
                   </button>
                 )}
                 {msg.toolCalls && msg.toolCalls.length > 0 && (
-                  <div className="mb-2 text-xs text-sky-400">
+                  <div className="mb-2 text-xs text-brand-600">
                     Calling: {msg.toolCalls.map(tc => tc.name).join(", ")}
                   </div>
                 )}
                 {msg.content}
                 {msg.isStreaming && !msg.content && (
                   <span className="inline-flex gap-1 ml-1">
-                    <span className="w-1.5 h-1.5 bg-sky-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-                    <span className="w-1.5 h-1.5 bg-sky-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-                    <span className="w-1.5 h-1.5 bg-sky-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                    <span className="w-1.5 h-1.5 bg-brand-600 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                    <span className="w-1.5 h-1.5 bg-brand-600 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                    <span className="w-1.5 h-1.5 bg-brand-600 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
                   </span>
                 )}
                 <div className={`text-[10px] mt-2 opacity-50 ${msg.role === "user" ? "text-right" : "text-left"}`}>
@@ -505,14 +505,14 @@ export function LargeChatScreen({ onClose }: Props) {
           <div ref={messagesEndRef} />
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 border-t border-slate-700 bg-slate-900">
+        <form onSubmit={handleSubmit} className="p-6 border-t border-brand-100 bg-white">
           {editingMessageId && (
             <div className="flex items-center justify-between max-w-4xl mx-auto mb-2">
-              <span className="text-xs text-sky-400">Editing message</span>
+              <span className="text-xs text-brand-600">Editing message</span>
               <button
                 type="button"
                 onClick={() => { setEditingMessage(null); setInput(""); }}
-                className="text-xs text-slate-400 hover:text-slate-200"
+                className="text-xs text-slate-600 hover:text-slate-900"
               >
                 Cancel
               </button>
@@ -524,13 +524,13 @@ export function LargeChatScreen({ onClose }: Props) {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder={editingMessageId ? "Edit your message..." : "Ask about your trading data..."}
-              className="flex-1 bg-slate-800 text-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-500/50"
+              className="flex-1 bg-white border border-brand-200 text-slate-900 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-brand-300"
               disabled={isLoading}
             />
             <button
               type="submit"
               disabled={!input.trim() || isLoading}
-              className="p-3 rounded-xl bg-sky-600 text-white hover:bg-sky-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="p-3 rounded-xl bg-brand-600 text-white hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               aria-label={editingMessageId ? "Resend message" : "Send message"}
             >
               {isLoading ? (

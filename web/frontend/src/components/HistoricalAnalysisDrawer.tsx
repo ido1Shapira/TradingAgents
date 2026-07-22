@@ -190,14 +190,14 @@ export function HistoricalAnalysisDrawer({ ticker, open, onClose }: { ticker: st
         className={`drawer-panel inset-y-0 right-0 w-full md:w-[28rem] md:max-w-full border-l flex flex-col ${open ? "translate-x-0" : "translate-x-full"}`}
         data-testid="history-drawer"
       >
-      <div className="flex items-center justify-between px-4 py-3 border-b border-slate-700/50">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-brand-100">
         <div className="flex items-center gap-2">
-          <h3 className="font-display font-semibold text-slate-200">{ticker}</h3>
+          <h3 className="font-display font-semibold text-slate-900">{ticker}</h3>
           <select
             data-testid="range-select"
             value={range}
             onChange={(e) => setRange(e.target.value as HistoryRange)}
-            className="text-xs bg-slate-800 border border-slate-700 rounded-lg px-2 py-1 text-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/30"
+            className="text-xs bg-white border border-brand-100 rounded-lg px-2 py-1 text-slate-600 focus:outline-none focus:ring-2 focus:ring-brand-200"
           >
             <option value="auto">Auto</option>
             <option value="1d">1d</option>
@@ -209,41 +209,41 @@ export function HistoricalAnalysisDrawer({ ticker, open, onClose }: { ticker: st
             <option value="all">All</option>
           </select>
         </div>
-        <button onClick={onClose} className="text-xs text-slate-500 hover:text-slate-300 transition-colors">Close</button>
+        <button onClick={onClose} className="text-xs text-slate-400 hover:text-slate-700 transition-colors">Close</button>
       </div>
 
       <div className="flex-1 min-h-0 flex flex-col overflow-y-auto">
         {query.isLoading ? (
           <div className="flex items-center justify-center flex-1">
             <div className="flex flex-col items-center gap-2">
-              <div className="w-8 h-8 rounded-full border-2 border-sky-500/30 border-t-sky-400 animate-spin" />
-              <p className="text-xs text-slate-500">Loading history…</p>
+              <div className="w-8 h-8 rounded-full border-2 border-brand-200 border-t-brand-600 animate-spin" />
+              <p className="text-xs text-slate-400">Loading history…</p>
             </div>
           </div>
         ) : query.isError ? (
-          <div className="p-4 text-xs text-slate-400 space-y-2">
-            <p>Failed to load price history: <span className="font-mono text-red-400">{(query.error as Error).message}</span></p>
-            <button onClick={() => query.refetch()} className="text-sky-400 hover:text-sky-300 transition-colors">Retry</button>
+          <div className="p-4 text-xs text-slate-600 space-y-2">
+            <p>Failed to load price history: <span className="font-mono text-red-700">{(query.error as Error).message}</span></p>
+            <button onClick={() => query.refetch()} className="text-brand-600 hover:text-brand-700 transition-colors">Retry</button>
           </div>
         ) : bars.length === 0 && runs.length > 0 ? (
-          <div className="p-4 text-xs text-slate-400 space-y-2">
+          <div className="p-4 text-xs text-slate-600 space-y-2">
             <p>No price data for this range.</p>
-            <p className="text-slate-600">Try a different range preset — yfinance 1m data is only available for the last 7 days.</p>
-            <button onClick={() => setRange("1y")} className="text-sky-400 hover:text-sky-300 transition-colors">Use 1y</button>
+            <p className="text-slate-400">Try a different range preset — yfinance 1m data is only available for the last 7 days.</p>
+            <button onClick={() => setRange("1y")} className="text-brand-600 hover:text-brand-700 transition-colors">Use 1y</button>
           </div>
         ) : (
           <>
             {/* Toolbar — Candle, Refresh, and Δ slider grouped together */}
-            <div className="flex flex-col gap-1 border-b border-slate-800 shrink-0">
+            <div className="flex flex-col gap-1 border-b border-brand-100 shrink-0">
               <div className="flex items-center justify-end gap-3 px-3 py-1.5 text-xs">
                 <div className="flex items-center gap-1.5">
-                  <label htmlFor="candle-res-select" className="text-slate-600 text-[10px] font-medium">Candle</label>
+                  <label htmlFor="candle-res-select" className="text-slate-400 text-[10px] font-medium">Candle</label>
                   <select
                     id="candle-res-select"
                     data-testid="candle-res-select"
                     value={candleResolution}
                     onChange={(e) => setCandleResolution(e.target.value as CandleResolution)}
-                    className="bg-slate-800 border border-slate-700 rounded-lg px-2 py-1 text-slate-400 text-xs focus:outline-none focus:ring-2 focus:ring-sky-500/30"
+                    className="bg-white border border-brand-100 rounded-lg px-2 py-1 text-slate-600 text-xs focus:outline-none focus:ring-2 focus:ring-brand-200"
                   >
                     {CANDLE_OPTIONS.map((o) => (
                       <option key={o.value} value={o.value}>{o.label}</option>
@@ -251,13 +251,13 @@ export function HistoricalAnalysisDrawer({ ticker, open, onClose }: { ticker: st
                   </select>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <label htmlFor="refresh-select" className="text-slate-600 text-[10px] font-medium">Refresh</label>
+                  <label htmlFor="refresh-select" className="text-slate-400 text-[10px] font-medium">Refresh</label>
                   <select
                     id="refresh-select"
                     data-testid="refresh-select"
                     value={historyPollIntervalMs}
                     onChange={(e) => setHistoryPollIntervalMs(Number(e.target.value) as HistoryPollInterval)}
-                    className="bg-slate-800 border border-slate-700 rounded-lg px-2 py-1 text-slate-400 text-xs focus:outline-none focus:ring-2 focus:ring-sky-500/30"
+                    className="bg-white border border-brand-100 rounded-lg px-2 py-1 text-slate-600 text-xs focus:outline-none focus:ring-2 focus:ring-brand-200"
                   >
                     {REFRESH_OPTIONS.map((o) => (
                       <option key={o.value} value={o.value}>{o.label}</option>
@@ -297,17 +297,17 @@ export function HistoricalAnalysisDrawer({ ticker, open, onClose }: { ticker: st
                 <div className="absolute top-1 right-2 z-10 flex items-center gap-1">
                   <button
                     onClick={() => setZoomLevel(z => z + 1)}
-                    className="text-xs text-slate-500 hover:text-slate-300 bg-slate-800/80 rounded-lg p-1.5 backdrop-blur-sm border border-slate-700/50 transition-colors"
+                    className="text-xs text-slate-400 hover:text-slate-700 bg-white rounded-lg p-1.5 shadow-sm border border-brand-100 transition-colors"
                     title="Zoom in"
                   ><ZoomIn className="w-3 h-3" /></button>
                   <button
                     onClick={() => setZoomLevel(z => Math.min(z - 1, 0))}
-                    className="text-xs text-slate-500 hover:text-slate-300 bg-slate-800/80 rounded-lg p-1.5 backdrop-blur-sm border border-slate-700/50 transition-colors"
+                    className="text-xs text-slate-400 hover:text-slate-700 bg-white rounded-lg p-1.5 shadow-sm border border-brand-100 transition-colors"
                     title="Zoom out"
                   ><ZoomOut className="w-3 h-3" /></button>
                   <button
                     onClick={() => setZoomLevel(0)}
-                    className="text-xs text-slate-500 hover:text-slate-300 bg-slate-800/80 rounded-lg p-1.5 backdrop-blur-sm border border-slate-700/50 transition-colors"
+                    className="text-xs text-slate-400 hover:text-slate-700 bg-white rounded-lg p-1.5 shadow-sm border border-brand-100 transition-colors"
                     title="Reset zoom"
                   ><RotateCcw className="w-3 h-3" /></button>
                 </div>
@@ -319,9 +319,9 @@ export function HistoricalAnalysisDrawer({ ticker, open, onClose }: { ticker: st
             {accuracyCurve.length > 0 && <SuccessFailurePlot data={accuracyCurve} xDomain={accuracyXDomain} />}
 
             {/* Run list */}
-            <div className="border-t border-slate-800">
+            <div className="border-t border-brand-100">
               {runs.length === 0 ? (
-                <div className="p-4 text-xs text-slate-600 text-center py-8">No runs for {ticker}.</div>
+                <div className="p-4 text-xs text-slate-400 text-center py-8">No runs for {ticker}.</div>
               ) : (
                 runs.map((run) => (
                   <RunListItem

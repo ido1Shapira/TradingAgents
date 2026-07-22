@@ -13,12 +13,12 @@ export function EmptyState({ icon, title, description, action, className = "" }:
   return (
     <div className={`flex flex-col items-center justify-center py-12 px-4 text-center animate-fade-in ${className}`}>
       {icon && (
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-slate-800/60 border border-slate-700/50 mb-4">
+        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white border border-brand-100 shadow-sm mb-4">
           {icon}
         </div>
       )}
-      <p className="text-base font-medium text-slate-400">{title}</p>
-      {description && <p className="text-sm text-slate-600 mt-1 max-w-sm">{description}</p>}
+      <p className="text-base font-medium text-slate-700">{title}</p>
+      {description && <p className="text-sm text-slate-500 mt-1 max-w-sm">{description}</p>}
       {action && (
         <Button variant="primary" size="sm" className="mt-4" onClick={action.onClick}>
           {action.label}

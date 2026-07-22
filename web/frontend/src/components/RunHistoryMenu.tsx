@@ -108,31 +108,31 @@ export function RunHistoryMenu({ ticker, runs, selectedRunId, onSelect, disabled
       <button
         disabled={disabled}
         onClick={() => setOpen((o) => !o)}
-        className="px-2 py-1.5 text-sm bg-slate-800 border border-slate-700 rounded-lg text-slate-300
-                   hover:bg-slate-700 hover:border-slate-600 focus:outline-none focus:ring-2 focus:ring-sky-500/30
+        className="px-2 py-1.5 text-sm bg-white border border-brand-100 rounded-lg text-slate-700
+                   hover:bg-brand-50 hover:border-brand-200 focus:outline-none focus:ring-2 focus:ring-brand-200
                    disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center gap-1.5"
       >
-        <History className="w-3.5 h-3.5 text-slate-500" />
+        <History className="w-3.5 h-3.5 text-slate-400" />
         <span className="max-w-[200px] truncate">{currentLabel}</span>
-        <ChevronDown className="w-3 h-3 text-slate-500 shrink-0" />
+        <ChevronDown className="w-3 h-3 text-slate-400 shrink-0" />
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-1 z-50 min-w-[280px] sm:min-w-[360px] max-w-[90vw] sm:max-w-[480px] bg-slate-800 border border-slate-700 rounded-xl shadow-2xl overflow-hidden">
-          <div className="flex items-center justify-between px-3 py-2 border-b border-slate-700/60">
-            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+        <div className="absolute right-0 top-full mt-1 z-50 min-w-[280px] sm:min-w-[360px] max-w-[90vw] sm:max-w-[480px] bg-white border border-brand-100 rounded-xl shadow-sm overflow-hidden">
+          <div className="flex items-center justify-between px-3 py-2 border-b border-brand-100">
+            <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
               Run history ({runs.length})
             </span>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setFormatDialogOpen(true)}
                 title="Download all data for this ticker"
-                className="p-1 rounded text-slate-400 hover:text-sky-400 hover:bg-slate-700/50 transition-colors"
+                className="p-1 rounded text-slate-600 hover:text-brand-600 hover:bg-brand-50 transition-colors"
                 aria-label="Download ticker data"
               >
                 <Download className="w-4 h-4" />
               </button>
-              <button onClick={closeAndReset} aria-label="Close" className="p-1 rounded text-slate-500 hover:text-slate-300 hover:bg-slate-700/50 transition-colors">
+              <button onClick={closeAndReset} aria-label="Close" className="p-1 rounded text-slate-400 hover:text-slate-700 hover:bg-brand-50 transition-colors">
                 <X className="w-4 h-4" />
               </button>
             </div>
@@ -141,7 +141,7 @@ export function RunHistoryMenu({ ticker, runs, selectedRunId, onSelect, disabled
           <div className="max-h-[300px] overflow-y-auto">
             <label
               className={`flex items-center gap-2 px-3 py-2 cursor-pointer transition-colors text-sm ${
-                selectedRunId === null ? "bg-sky-500/10 text-sky-300" : "text-slate-300 hover:bg-slate-700/50"
+                selectedRunId === null ? "bg-brand-50 text-brand-700" : "text-slate-700 hover:bg-brand-50"
               }`}
             >
               <input
@@ -149,10 +149,10 @@ export function RunHistoryMenu({ ticker, runs, selectedRunId, onSelect, disabled
                 name={`run-radio-${ticker}`}
                 checked={selectedRunId === null}
                 onChange={() => { onSelect(null); closeAndReset(); }}
-                className="accent-sky-500 shrink-0"
+                className="accent-brand-600 shrink-0"
               />
               <span className="font-medium">Latest (live)</span>
-              <span className="ml-auto text-[10px] text-slate-500">Current view</span>
+              <span className="ml-auto text-[10px] text-slate-400">Current view</span>
             </label>
 
             {runs.map((r) => {
@@ -161,7 +161,7 @@ export function RunHistoryMenu({ ticker, runs, selectedRunId, onSelect, disabled
                 <div
                   key={r.id}
                   className={`group flex items-center gap-1.5 px-3 py-1.5 transition-colors text-sm ${
-                    isSelected ? "bg-sky-500/10" : "hover:bg-slate-700/50"
+                    isSelected ? "bg-brand-50" : "hover:bg-brand-50"
                   }`}
                 >
                   <input
@@ -169,26 +169,26 @@ export function RunHistoryMenu({ ticker, runs, selectedRunId, onSelect, disabled
                     checked={checked.has(r.id)}
                     onChange={() => toggleChecked(r.id)}
                     onClick={(e) => e.stopPropagation()}
-                    className="accent-sky-500 shrink-0"
+                    className="accent-brand-600 shrink-0"
                   />
                   <input
                     type="radio"
                     name={`run-radio-${ticker}`}
                     checked={isSelected}
                     onChange={() => { onSelect(r.id); closeAndReset(); }}
-                    className="accent-sky-500 shrink-0"
+                    className="accent-brand-600 shrink-0"
                   />
                   <span
                     onClick={() => { onSelect(r.id); closeAndReset(); }}
-                    className="flex-1 min-w-0 cursor-pointer truncate text-slate-300 py-0.5"
+                    className="flex-1 min-w-0 cursor-pointer truncate text-slate-700 py-0.5"
                     title={runLabel(r)}
                   >
                     {runLabel(r)}
                     {r.status === "running" && (
-                      <span className="ml-1.5 inline-block w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse align-middle" />
+                      <span className="ml-1.5 inline-block w-1.5 h-1.5 rounded-full bg-brand-600 animate-pulse align-middle" />
                     )}
                     {r.status === "failed" && (
-                      <span className="ml-1.5 text-[10px] text-red-400 font-medium">failed</span>
+                      <span className="ml-1.5 text-[10px] text-red-700 font-medium">failed</span>
                     )}
                   </span>
 
@@ -196,7 +196,7 @@ export function RunHistoryMenu({ ticker, runs, selectedRunId, onSelect, disabled
                     <button
                       disabled={resume.isPending}
                       onClick={(e) => { e.stopPropagation(); resume.mutate(r.id); }}
-                      className="shrink-0 sm:opacity-0 sm:group-hover:opacity-100 text-sky-400 hover:text-sky-300 
+                      className="shrink-0 sm:opacity-0 sm:group-hover:opacity-100 text-brand-600 hover:text-brand-700 
                                   disabled:opacity-30 transition-all p-1 rounded"
                       title="Resume this run"
                     >
@@ -207,7 +207,7 @@ export function RunHistoryMenu({ ticker, runs, selectedRunId, onSelect, disabled
                   <button
                     disabled={delOne.isPending}
                     onClick={(e) => { e.stopPropagation(); delOne.mutate(r.id); }}
-                    className="shrink-0 sm:opacity-0 sm:group-hover:opacity-100 text-slate-500 hover:text-red-400 
+                    className="shrink-0 sm:opacity-0 sm:group-hover:opacity-100 text-slate-400 hover:text-red-700 
                                 disabled:opacity-30 transition-all p-1 rounded"
                     title="Delete this run"
                   >
@@ -219,8 +219,8 @@ export function RunHistoryMenu({ ticker, runs, selectedRunId, onSelect, disabled
           </div>
 
           {checkedCount > 0 && (
-            <div className="flex items-center justify-between px-3 py-2 border-t border-slate-700/60 bg-slate-900/50">
-              <span className="text-xs text-slate-400">{checkedCount} selected</span>
+            <div className="flex items-center justify-between px-3 py-2 border-t border-brand-100 bg-brand-50">
+              <span className="text-xs text-slate-600">{checkedCount} selected</span>
               <button
                 disabled={delBulk.isPending}
                 onClick={() => delBulk.mutate(Array.from(checked))}

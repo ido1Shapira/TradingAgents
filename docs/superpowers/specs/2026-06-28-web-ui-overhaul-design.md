@@ -21,8 +21,8 @@ Complete refactoring of the web frontend to improve code structure, visual polis
 │ Sidebar    │ Main Content                               │
 │ (collaps.) │  TickerHeader (sticky)                     │
 │ Watchlist  │  PipelineFlow                              │
-│ Groups     │  TraceTabs [Events | Observatory | LLM]   │
-│ Tickers    │  LiveEventStream / AgentObservatory / LLM  │
+│ Groups     │  TraceTabs [Events | LLM]                 │
+│ Tickers    │  LiveEventStream / LLM                     │
 │ Indicators │  ReportPanel                               │
 │            │  DecisionPanel                             │
 └────────────┴────────────────────────────────────────────┘
@@ -83,7 +83,7 @@ Complete refactoring of the web frontend to improve code structure, visual polis
 
 ## 5. Small Fixes
 
-- `AgentObservatory` onClose prop type mismatch
+- ~~`AgentObservatory` onClose prop type mismatch~~ (component removed 2026-07-22 — see `2026-06-20-agent-observatory-design.md`)
 - Standardize all icons to lucide-react
 - Keyboard navigation in watchlist
 - Aria labels on interactive elements

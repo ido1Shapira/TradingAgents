@@ -26,7 +26,10 @@ export const useAuthStore = create<AuthState>()(
       check: async () => {
         set({ loading: true });
         try {
-          const res = await fetch('/api/auth/me');
+          const controller = new AbortController();
+          const timeout = setTimeout(() => controller.abort(), 5000);
+          const res = await fetch('/api/auth/me', { signal: controller.signal });
+          clearTimeout(timeout);
           if (res.ok) {
             const user = await res.json();
             set({ user, loading: false });
