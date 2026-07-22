@@ -3,7 +3,7 @@ export function Spinner({ size = "md", className = "" }: { size?: "sm" | "md" | 
   return (
     <div className={`relative ${dim} ${className}`} role="status" aria-label="Loading">
       <div className="absolute inset-0 rounded-full bg-brand-500/10 blur-sm" />
-      <div className={`${dim} rounded-full border-2 border-slate-200 border-t-brand-600 animate-spin`} />
+      <div className={`${dim} rounded-full border-2 border-brand-100 border-t-brand-600 animate-spin`} />
     </div>
   );
 }

@@ -8,14 +8,14 @@ const colorForType: Record<string, string> = {
   analyst_started: "bg-brand-50 text-brand-600 border-l-brand-500",
   analyst_thinking: "bg-brand-50/60 text-brand-600/80 border-l-brand-500/50",
   analyst_completed: "bg-brand-50 text-brand-600 border-l-brand-500",
-  tool_call: "bg-slate-100 text-slate-600 border-l-slate-400",
-  tool_result: "bg-slate-50 text-slate-600 border-l-slate-400",
+  tool_call: "bg-brand-50 text-slate-600 border-l-slate-400",
+  tool_result: "bg-brand-50 text-slate-600 border-l-slate-400",
   debate_message: "bg-amber-50 text-amber-700 border-l-amber-500",
   risk_message: "bg-amber-50 text-amber-700 border-l-amber-500",
   decision: "bg-emerald-50 text-emerald-700 border-l-emerald-500",
   run_failed: "bg-red-50 text-red-700 border-l-red-500",
   run_finished: "bg-emerald-50 text-emerald-700/80 border-l-emerald-500",
-  server_notice: "bg-slate-100 text-slate-600 border-l-slate-400",
+  server_notice: "bg-brand-50 text-slate-600 border-l-slate-400",
 };
 
 type EventData = Record<string, unknown>;
@@ -133,7 +133,7 @@ export function LiveEventStream() {
 
   return (
     <div className="glass-panel" data-testid="live-event-stream">
-      <div className="flex items-center justify-between px-3 py-2 border-b border-slate-200">
+      <div className="flex items-center justify-between px-3 py-2 border-b border-brand-100">
         <span className="section-header flex items-center gap-2">
           <span className="w-1.5 h-1.5 rounded-full bg-brand-500 shadow-sm animate-pulse" />
           Event Stream
@@ -145,8 +145,8 @@ export function LiveEventStream() {
         <div className="space-y-2 px-3 py-6">
           {Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="flex items-center gap-2 animate-pulse">
-              <div className="w-1.5 h-1.5 rounded-full bg-slate-200" />
-              <div className="h-3 bg-slate-100 rounded w-full" style={{ width: `${60 + Math.random() * 30}%` }} />
+              <div className="w-1.5 h-1.5 rounded-full bg-brand-100" />
+              <div className="h-3 bg-brand-50 rounded w-full" style={{ width: `${60 + Math.random() * 30}%` }} />
             </div>
           ))}
         </div>
@@ -170,7 +170,7 @@ export function LiveEventStream() {
       })}
       </div>
       {stats.hasRun && (
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 px-3 py-1.5 border-t border-slate-200 bg-slate-50 text-[10px] font-mono text-slate-500">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 px-3 py-1.5 border-t border-brand-100 bg-brand-50 text-[10px] font-mono text-slate-500">
           <span className="flex items-center gap-1">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
             <span className="text-emerald-700 font-semibold">{stats.agentsDone}</span>
@@ -178,13 +178,13 @@ export function LiveEventStream() {
             <span className="text-slate-600">{stats.agentsTotal}</span>
             <span className="text-slate-400">agents</span>
           </span>
-          <span className="w-px h-3 bg-slate-200" />
+          <span className="w-px h-3 bg-brand-100" />
           <span className="text-slate-400">LLM</span>
           <span className="text-brand-600">{stats.llmCalls}</span>
-          <span className="w-px h-3 bg-slate-200" />
+          <span className="w-px h-3 bg-brand-100" />
           <span className="text-slate-400">tools</span>
           <span className="text-amber-700">{stats.toolCalls}</span>
-          <span className="w-px h-3 bg-slate-200" />
+          <span className="w-px h-3 bg-brand-100" />
           <span className="text-slate-400">elapsed</span>
           <span className="text-slate-700">{stats.elapsed}</span>
         </div>
@@ -209,31 +209,31 @@ function Bubble({ event, expanded, onToggle }: { event: WsEvent; expanded: boole
   if (expanded) {
     if (reportText) {
       expandContent = (
-        <pre className="mt-2 whitespace-pre-wrap text-xs text-slate-700 bg-slate-50 rounded-lg p-3 border border-slate-200 max-h-96 overflow-y-auto">
+        <pre className="mt-2 whitespace-pre-wrap text-xs text-slate-700 bg-brand-50 rounded-lg p-3 border border-brand-100 max-h-96 overflow-y-auto">
           {reportText}
         </pre>
       );
     } else if (fullText) {
       expandContent = (
-        <pre className="mt-2 whitespace-pre-wrap text-xs text-slate-700 bg-slate-50 rounded-lg p-3 border border-slate-200 max-h-96 overflow-y-auto">
+        <pre className="mt-2 whitespace-pre-wrap text-xs text-slate-700 bg-brand-50 rounded-lg p-3 border border-brand-100 max-h-96 overflow-y-auto">
           {fullText}
         </pre>
       );
     } else if (event.type === "tool_call" && toolArgs) {
       expandContent = (
-        <div className="mt-2 text-xs text-slate-700 bg-slate-50 rounded-lg p-3 border border-slate-200 max-h-96 overflow-y-auto font-mono whitespace-pre-wrap">
+        <div className="mt-2 text-xs text-slate-700 bg-brand-50 rounded-lg p-3 border border-brand-100 max-h-96 overflow-y-auto font-mono whitespace-pre-wrap">
           {typeof toolArgs === "string" ? toolArgs : JSON.stringify(toolArgs, null, 2)}
         </div>
       );
     } else if (fullSummary) {
       expandContent = (
-        <div className="mt-2 text-xs text-slate-600 bg-slate-50 rounded-lg p-2 border border-slate-200">
+        <div className="mt-2 text-xs text-slate-600 bg-brand-50 rounded-lg p-2 border border-brand-100">
           {fullSummary}
         </div>
       );
     } else if (fullMessage) {
       expandContent = (
-        <div className="mt-2 text-xs text-slate-600 bg-slate-50 rounded-lg p-2 border border-slate-200">
+        <div className="mt-2 text-xs text-slate-600 bg-brand-50 rounded-lg p-2 border border-brand-100">
           {fullMessage}
         </div>
       );
@@ -244,7 +244,7 @@ function Bubble({ event, expanded, onToggle }: { event: WsEvent; expanded: boole
     <div
       data-testid={`event-${event.id ?? ""}`}
       className={`text-xs px-3 py-1.5 rounded-md border-l-2 ${
-        colorForType[event.type] ?? "bg-slate-100 text-slate-600 border-l-slate-400"
+        colorForType[event.type] ?? "bg-brand-50 text-slate-600 border-l-slate-400"
       } ${canExpand ? "cursor-pointer select-none hover:brightness-125" : ""} transition-all`}
       onClick={canExpand ? onToggle : undefined}
     >

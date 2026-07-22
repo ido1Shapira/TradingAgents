@@ -124,7 +124,7 @@ function ToolCallCard({ meta }: { meta: ToolCallMeta }) {
   return (
     <div className={`rounded-lg border overflow-hidden mb-2 transition-all ${isSuccess ? "border-emerald-200 bg-emerald-50" : "border-red-200 bg-red-50"}`}>
       <div
-        className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-slate-100"
+        className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-brand-50"
         onClick={() => setExpanded(!expanded)}
       >
         <ChevronRight className={`h-3 w-3 transition-transform ${expanded ? "rotate-90" : ""} ${isSuccess ? "text-emerald-700" : "text-red-700"}`} />
@@ -144,11 +144,11 @@ function ToolCallCard({ meta }: { meta: ToolCallMeta }) {
       </div>
 
       {expanded && (
-        <div className="px-3 py-2 border-t border-slate-200 text-xs font-mono">
+        <div className="px-3 py-2 border-t border-brand-100 text-xs font-mono">
           {isSuccess && result.data && (
             <div className="mb-2">
               <div className="text-slate-600 mb-1">Result Preview:</div>
-              <pre className="text-emerald-700 bg-slate-50 p-2 rounded overflow-x-auto max-h-32">
+              <pre className="text-emerald-700 bg-brand-50 p-2 rounded overflow-x-auto max-h-32">
                 {JSON.stringify(result.data, null, 2).slice(0, 500)}
                 {JSON.stringify(result.data).length > 500 && "..."}
               </pre>
@@ -200,7 +200,7 @@ function MessageBubble({ msg }: { msg: Message }) {
     } : undefined;
 
     return (
-      <div className="bg-white rounded-lg px-3 py-2 text-sm border border-slate-200 max-h-[300px] overflow-y-auto">
+      <div className="bg-white rounded-lg px-3 py-2 text-sm border border-brand-100 max-h-[300px] overflow-y-auto">
         {msg.toolCalls && msg.toolCalls.length > 0 && (
           <div className="mb-2 text-xs text-brand-600 flex items-center gap-2">
             <ArrowRight className="h-3 w-3" />
@@ -227,13 +227,13 @@ function MessageBubble({ msg }: { msg: Message }) {
       className={`max-w-[85%] max-h-[300px] overflow-y-auto rounded-lg px-3 py-2 text-sm relative ${
         isUser
           ? "bg-brand-50 text-slate-900 pr-8"
-          : "bg-white border border-slate-200 text-slate-700"
+          : "bg-white border border-brand-100 text-slate-700"
       }`}
     >
       {isUser && (
         <button
           onClick={(e) => { e.stopPropagation(); setEditingMessage(msg.id); }}
-          className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 rounded text-slate-600 hover:text-brand-600 hover:bg-slate-100 transition-colors"
+          className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 rounded text-slate-600 hover:text-brand-600 hover:bg-brand-50 transition-colors"
           aria-label="Edit message"
           title="Edit message"
         >
@@ -255,7 +255,7 @@ function MessageBubble({ msg }: { msg: Message }) {
             <span>Thinking ({msg.thinking.length} chars)</span>
           </button>
           {showThinking && (
-            <div className="mt-1 pl-4 text-slate-400 border-l border-slate-200 whitespace-pre-wrap max-h-[100px] overflow-y-auto">
+            <div className="mt-1 pl-4 text-slate-400 border-l border-brand-100 whitespace-pre-wrap max-h-[100px] overflow-y-auto">
               {msg.thinking}
             </div>
           )}
@@ -720,8 +720,8 @@ export function AgentChatBubble() {
       </button>
 
       {isOpen && (
-        <div className="absolute bottom-16 left-0 w-[420px] h-[550px] bg-white rounded-lg shadow-sm border border-slate-200 flex flex-col overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200">
+        <div className="absolute bottom-16 left-0 w-[420px] h-[550px] bg-white rounded-lg shadow-sm border border-brand-100 flex flex-col overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-brand-100">
             <div className="flex items-center gap-2">
               <MessageSquare className="h-4 w-4 text-brand-600" />
               <span className="text-sm font-semibold text-slate-900">Trading Assistant</span>
@@ -761,11 +761,11 @@ export function AgentChatBubble() {
           </div>
 
           {showSessions && (
-            <div className="max-h-40 overflow-y-auto border-b border-slate-200">
+            <div className="max-h-40 overflow-y-auto border-b border-brand-100">
               {Object.values(sessions).sort((a, b) => b.updatedAt - a.updatedAt).map((session) => (
                 <div
                   key={session.id}
-                  className={`flex items-center justify-between px-3 py-2 text-xs cursor-pointer hover:bg-slate-50 ${
+                  className={`flex items-center justify-between px-3 py-2 text-xs cursor-pointer hover:bg-brand-50 ${
                     session.id === activeSessionId ? "bg-brand-50 text-brand-700" : "text-slate-600"
                   }`}
                   onClick={() => { switchSession(session.id); setShowSessions(false); }}
@@ -800,7 +800,7 @@ export function AgentChatBubble() {
             <div ref={messagesEndRef} />
           </div>
 
-          <form onSubmit={handleSubmit} className="p-3 border-t border-slate-200">
+          <form onSubmit={handleSubmit} className="p-3 border-t border-brand-100">
             {editingMessageId && (
               <div className="flex items-center justify-between px-1 mb-2">
                 <span className="text-xs text-brand-600">Editing message</span>
@@ -819,7 +819,7 @@ export function AgentChatBubble() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder={editingMessageId ? "Edit your message..." : "Ask about your trading data..."}
-                className="flex-1 bg-white border border-slate-300 text-slate-900 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-brand-300"
+                className="flex-1 bg-white border border-brand-200 text-slate-900 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-brand-300"
                 disabled={isLoading}
               />
               <button

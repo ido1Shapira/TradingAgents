@@ -349,7 +349,7 @@ export function TickerChatBar({ ticker, price, run }: Props) {
     <section className="glass-panel mb-4 overflow-hidden">
       {messages.length > 0 && (
         <>
-          <div className="flex items-center justify-between px-3 py-2 border-b border-slate-200">
+          <div className="flex items-center justify-between px-3 py-2 border-b border-brand-100">
             <span className="text-xs text-slate-400">Chat History</span>
             <button
               onClick={clearMessages}
@@ -358,13 +358,13 @@ export function TickerChatBar({ ticker, price, run }: Props) {
               <Plus className="h-3 w-3" /> New Chat
             </button>
           </div>
-          <div className="max-h-80 overflow-y-auto border-b border-slate-200 px-3 py-3">
+          <div className="max-h-80 overflow-y-auto border-b border-brand-100 px-3 py-3">
           {messages.map((msg) => (
             <div key={msg.id} className={`mb-2 flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
               <div className={`max-w-[85%] rounded-lg px-3 py-2 text-sm leading-relaxed ${
                 msg.role === "user"
                   ? "bg-brand-50 text-slate-900"
-                  : "bg-white border border-slate-200 text-slate-700"
+                  : "bg-white border border-brand-100 text-slate-700"
               }`}>
                 {msg.content}
                 {msg.isStreaming && <span className="animate-pulse ml-1">|</span>}
@@ -376,7 +376,7 @@ export function TickerChatBar({ ticker, price, run }: Props) {
           ))}
           {isAsking && (
             <div className="flex justify-start">
-              <div className="flex items-center gap-2 rounded-lg bg-white border border-slate-200 px-3 py-2 text-sm text-slate-600">
+              <div className="flex items-center gap-2 rounded-lg bg-white border border-brand-100 px-3 py-2 text-sm text-slate-600">
                 <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
                 Thinking...
               </div>
@@ -387,7 +387,7 @@ export function TickerChatBar({ ticker, price, run }: Props) {
         </>
       )}
       <form onSubmit={ask} className="flex flex-col gap-2 p-3 sm:flex-row sm:items-center">
-        <div className="flex min-w-0 flex-1 items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+        <div className="flex min-w-0 flex-1 items-center gap-2 rounded-lg border border-brand-100 bg-brand-50 px-3 py-2">
           <MessageSquare className="h-4 w-4 shrink-0 text-brand-600" aria-hidden="true" />
           <input
             value={question}
@@ -418,7 +418,7 @@ export function TickerChatBar({ ticker, price, run }: Props) {
         </button>
       </form>
       {error && (
-        <div className="border-t border-slate-200 px-3 py-3">
+        <div className="border-t border-brand-100 px-3 py-3">
           <p className="text-sm text-red-700">{error}</p>
         </div>
       )}

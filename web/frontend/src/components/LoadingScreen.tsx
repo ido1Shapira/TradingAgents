@@ -9,7 +9,7 @@ export function LoadingScreen({ message = "Loading…", submessage }: LoadingScr
       <div className="text-center animate-fade-in">
         <div className="relative w-12 h-12 mx-auto mb-4">
           <div className="absolute inset-0 rounded-full bg-brand-500/10 blur-md animate-pulse" />
-          <div className="w-12 h-12 rounded-full border-2 border-slate-200 border-t-brand-600 animate-spin" />
+          <div className="w-12 h-12 rounded-full border-2 border-brand-100 border-t-brand-600 animate-spin" />
         </div>
         <p className="text-sm text-slate-600 font-medium">{message}</p>
         {submessage && <p className="text-xs text-slate-400 mt-1.5">{submessage}</p>}

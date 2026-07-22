@@ -77,7 +77,7 @@ export function LogPanel() {
       {/* Toggle button */}
       <button
         onClick={() => setOpen((v) => !v)}
-        className="fixed bottom-4 right-4 z-50 flex items-center gap-2 rounded-full bg-white px-3 py-2 text-sm text-slate-700 shadow-sm hover:bg-slate-50 border border-slate-200 transition-all duration-200"
+        className="fixed bottom-4 right-4 z-50 flex items-center gap-2 rounded-full bg-white px-3 py-2 text-sm text-slate-700 shadow-sm hover:bg-brand-50 border border-brand-100 transition-all duration-200"
         title={open ? "Close logs" : "Open logs"}
       >
         <Terminal size={16} />
@@ -87,9 +87,9 @@ export function LogPanel() {
 
       {/* Panel */}
       {open && (
-        <div className="fixed bottom-16 right-4 z-50 flex h-[40vh] w-[600px] max-w-[calc(100vw-2rem)] flex-col rounded-xl bg-white shadow-sm backdrop-blur-md border border-slate-200 animate-slide-up">
+        <div className="fixed bottom-16 right-4 z-50 flex h-[40vh] w-[600px] max-w-[calc(100vw-2rem)] flex-col rounded-xl bg-white shadow-sm backdrop-blur-md border border-brand-100 animate-slide-up">
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-slate-200 px-4 py-2.5 shrink-0">
+          <div className="flex items-center justify-between border-b border-brand-100 px-4 py-2.5 shrink-0">
             <span className="text-sm font-medium text-slate-700">
               Logs
               <span className="ml-1.5 text-xs text-slate-400">({entries.length})</span>
@@ -104,7 +104,7 @@ export function LogPanel() {
                       onClick={() => toggleLevel(l)}
                       className={`text-[10px] font-medium px-1.5 py-0.5 rounded-md transition-all ${
                         active
-                          ? `${LEVEL_COLORS[l]} bg-slate-200 shadow-sm`
+                          ? `${LEVEL_COLORS[l]} bg-brand-100 shadow-sm`
                           : "text-slate-400 hover:text-slate-600"
                       }`}
                     >
@@ -120,7 +120,7 @@ export function LogPanel() {
                   placeholder="Search..."
                   value={filter}
                   onChange={(e) => setFilter(e.target.value)}
-                  className="w-28 rounded-lg bg-white pl-6 pr-2 py-1 text-xs text-slate-700 placeholder-slate-400 border border-slate-200 focus:outline-none focus:border-brand-200 transition-colors"
+                  className="w-28 rounded-lg bg-white pl-6 pr-2 py-1 text-xs text-slate-700 placeholder-slate-400 border border-brand-100 focus:outline-none focus:border-brand-200 transition-colors"
                 />
               </div>
               <button
@@ -128,7 +128,7 @@ export function LogPanel() {
                 className={`rounded-lg p-1.5 transition-all ${
                   confirmClear
                     ? "bg-red-50 text-red-700"
-                    : "hover:bg-slate-100 text-slate-400 hover:text-slate-700"
+                    : "hover:bg-brand-50 text-slate-400 hover:text-slate-700"
                 }`}
                 title={confirmClear ? "Click again to clear" : "Clear logs"}
               >
@@ -136,7 +136,7 @@ export function LogPanel() {
               </button>
               <button
                 onClick={() => setOpen(false)}
-                className="rounded-lg p-1.5 hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition-colors"
+                className="rounded-lg p-1.5 hover:bg-brand-50 text-slate-400 hover:text-slate-700 transition-colors"
                 title="Close"
               >
                 <X size={14} />
@@ -154,7 +154,7 @@ export function LogPanel() {
             {filtered.map((e) => (
               <div
                 key={e.id}
-                className={`flex gap-2 px-3 py-0.5 border-b border-slate-100 hover:bg-slate-50 transition-colors ${SOURCE_ACCENT[e.source] ?? ""}`}
+                className={`flex gap-2 px-3 py-0.5 border-b border-brand-50 hover:bg-brand-50 transition-colors ${SOURCE_ACCENT[e.source] ?? ""}`}
               >
                 <span className="w-16 shrink-0 text-slate-400">{e.ts?.split("T")[1]?.slice(0, 8) ?? ""}</span>
                 <span className={`w-16 shrink-0 ${LEVEL_COLORS[e.level] ?? "text-slate-600"}`}>{e.level}</span>

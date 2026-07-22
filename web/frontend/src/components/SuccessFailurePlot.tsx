@@ -32,7 +32,7 @@ export function SuccessFailurePlot({ data, xDomain }: SuccessFailurePlotProps) {
   }
 
   return (
-    <div className="h-32 md:h-40 border-b border-slate-200" data-testid="success-failure-plot">
+    <div className="h-32 md:h-40 border-b border-brand-100" data-testid="success-failure-plot">
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={chartData} margin={{ top: 8, right: 8, bottom: 4, left: 8 }}>
           <CartesianGrid stroke="#e2e8f0" strokeDasharray="3 3" />
@@ -60,7 +60,7 @@ export function SuccessFailurePlot({ data, xDomain }: SuccessFailurePlotProps) {
               if (!active || !payload?.length) return null;
               const p = payload[0].payload as ChartPoint;
               return (
-                <div className="bg-white border border-slate-200 px-3 py-2 text-xs shadow-sm">
+                <div className="bg-white border border-brand-100 px-3 py-2 text-xs shadow-sm">
                   <div className="font-medium text-slate-900 mb-1">Δ {fmtDelta(p.delta)}</div>
                   <div className="text-emerald-700">{p.success} succeeded</div>
                   <div className="text-red-700">{p.failure} failed</div>

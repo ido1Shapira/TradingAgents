@@ -120,7 +120,7 @@ function AgentRow({
     ) : status === "in_progress" ? (
       <span className="block w-2 h-2 rounded-full shrink-0 animate-pulse" style={{ backgroundColor: teamColor, boxShadow: `0 0 6px ${teamColor}60` }} />
     ) : (
-      <span className="block w-2 h-2 rounded-full shrink-0 bg-slate-300" />
+      <span className="block w-2 h-2 rounded-full shrink-0 bg-brand-200" />
     );
 
   const [showTooltip, setShowTooltip] = useState(false);
@@ -128,7 +128,7 @@ function AgentRow({
 
   return (
     <div
-      className={`relative flex items-center gap-1.5 min-w-0 ${onClick ? "cursor-pointer hover:bg-slate-100 rounded px-1 -mx-1 transition-colors" : ""}`}
+      className={`relative flex items-center gap-1.5 min-w-0 ${onClick ? "cursor-pointer hover:bg-brand-50 rounded px-1 -mx-1 transition-colors" : ""}`}
       onClick={onClick}
       role={onClick ? "button" : undefined}
       tabIndex={onClick ? 0 : undefined}
@@ -146,7 +146,7 @@ function AgentRow({
       </span>
       {hasHoverContent && showTooltip && (
         <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 z-50 pointer-events-none">
-          <div className="bg-white text-slate-700 text-[10px] leading-relaxed rounded-lg px-3 py-2 shadow-sm border border-slate-200 whitespace-nowrap max-w-[240px] truncate">
+          <div className="bg-white text-slate-700 text-[10px] leading-relaxed rounded-lg px-3 py-2 shadow-sm border border-brand-100 whitespace-nowrap max-w-[240px] truncate">
             {thinkingPreview}
           </div>
           <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-white" />
@@ -250,7 +250,7 @@ export function TeamCard({
           />
         ))}
       </div>
-      <div className="h-0.5 rounded-b-xl overflow-hidden bg-slate-200">
+      <div className="h-0.5 rounded-b-xl overflow-hidden bg-brand-100">
         <div
           className="h-full rounded-b-xl transition-all duration-500 ease-out"
           style={{

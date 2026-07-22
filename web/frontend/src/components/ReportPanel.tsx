@@ -35,7 +35,7 @@ export function ReportPanel() {
               <button
                 type="button"
                 onClick={() => setOpen(isOpen ? null : stage)}
-                className="w-full text-left px-4 py-2.5 hover:bg-slate-100 text-sm font-medium text-slate-700 flex items-center justify-between transition-colors"
+                className="w-full text-left px-4 py-2.5 hover:bg-brand-50 text-sm font-medium text-slate-700 flex items-center justify-between transition-colors"
                 aria-expanded={isOpen}
                 aria-controls={`report-${stage}`}
               >
@@ -46,7 +46,7 @@ export function ReportPanel() {
               </button>
               {isOpen && (
                 <div id={`report-${stage}`} role="region" aria-label={stageLabels[stage] ?? stage}>
-                  <pre className="text-xs text-slate-600 p-4 whitespace-pre-wrap max-h-96 overflow-y-auto border-t border-slate-200 leading-relaxed">
+                  <pre className="text-xs text-slate-600 p-4 whitespace-pre-wrap max-h-96 overflow-y-auto border-t border-brand-100 leading-relaxed">
                     {text}
                   </pre>
                 </div>

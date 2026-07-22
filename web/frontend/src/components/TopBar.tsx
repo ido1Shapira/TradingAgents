@@ -18,7 +18,7 @@ export function TopBar({ currentModelSummary, onOpenSettings, onOpenBatchDownloa
   const setSidebarCollapsed = useUi((s) => s.setSidebarCollapsed);
 
   return (
-    <header className="sticky top-0 z-20 border-b border-slate-200 bg-white backdrop-blur-md">
+    <header className="sticky top-0 z-20 border-b border-brand-100 bg-white backdrop-blur-md">
       <div className="flex items-center justify-between px-3 md:px-5 h-12">
         <div className="flex items-center gap-2 min-w-0">
           <button
@@ -37,7 +37,7 @@ export function TopBar({ currentModelSummary, onOpenSettings, onOpenBatchDownloa
           </button>
           <h1 className="text-sm md:text-base font-display font-semibold text-slate-900 tracking-tight flex items-center gap-2">
             TradingAgents
-            <span className="hidden sm:inline-flex px-2 py-0.5 text-[8px] font-mono font-semibold rounded-md bg-gradient-to-r from-brand-500/10 via-white to-emerald-500/10 text-slate-900 border border-slate-200 shadow-sm">
+            <span className="hidden sm:inline-flex px-2 py-0.5 text-[8px] font-mono font-semibold rounded-md bg-gradient-to-r from-brand-500/10 via-white to-emerald-500/10 text-slate-900 border border-brand-100 shadow-sm">
               v{VERSION}
             </span>
           </h1>

@@ -56,7 +56,7 @@ export function DecisionTrace({ events }: { events: WsEvent[] }) {
               const key = `${n.stage}-${n.agent}`;
               setExpanded(expanded === key ? null : key);
             }}
-            className="w-full flex items-center gap-2 px-3 py-2 text-xs text-left hover:bg-slate-50 transition-colors border-l-2 border-slate-200 hover:border-brand-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50 focus-visible:ring-inset">
+            className="w-full flex items-center gap-2 px-3 py-2 text-xs text-left hover:bg-brand-50 transition-colors border-l-2 border-brand-100 hover:border-brand-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50 focus-visible:ring-inset">
             <n.Icon className="w-3.5 h-3.5 shrink-0 text-brand-600" />
             <div className="min-w-0 flex-1">
               <div className="text-slate-700 font-medium truncate">{n.agent}</div>
@@ -65,11 +65,11 @@ export function DecisionTrace({ events }: { events: WsEvent[] }) {
             {expanded === `${n.stage}-${n.agent}` ? <ChevronUp className="w-3 h-3 text-slate-400" /> : <ChevronDown className="w-3 h-3 text-slate-400" />}
           </button>
           {expanded === `${n.stage}-${n.agent}` && n.fullText && (
-            <pre className="ml-6 mr-2 mb-2 p-3 bg-slate-50 rounded-lg text-xs text-slate-700 whitespace-pre-wrap font-mono border border-slate-200 max-h-64 overflow-y-auto">
+            <pre className="ml-6 mr-2 mb-2 p-3 bg-brand-50 rounded-lg text-xs text-slate-700 whitespace-pre-wrap font-mono border border-brand-100 max-h-64 overflow-y-auto">
               {n.fullText}
             </pre>
           )}
-          {i < nodes.length - 1 && <div className="ml-3 w-px h-4 bg-slate-200 mx-auto" />}
+          {i < nodes.length - 1 && <div className="ml-3 w-px h-4 bg-brand-100 mx-auto" />}
         </div>
       ))}
       {decisionEvent && (

@@ -190,14 +190,14 @@ export function HistoricalAnalysisDrawer({ ticker, open, onClose }: { ticker: st
         className={`drawer-panel inset-y-0 right-0 w-full md:w-[28rem] md:max-w-full border-l flex flex-col ${open ? "translate-x-0" : "translate-x-full"}`}
         data-testid="history-drawer"
       >
-      <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-brand-100">
         <div className="flex items-center gap-2">
           <h3 className="font-display font-semibold text-slate-900">{ticker}</h3>
           <select
             data-testid="range-select"
             value={range}
             onChange={(e) => setRange(e.target.value as HistoryRange)}
-            className="text-xs bg-white border border-slate-200 rounded-lg px-2 py-1 text-slate-600 focus:outline-none focus:ring-2 focus:ring-brand-200"
+            className="text-xs bg-white border border-brand-100 rounded-lg px-2 py-1 text-slate-600 focus:outline-none focus:ring-2 focus:ring-brand-200"
           >
             <option value="auto">Auto</option>
             <option value="1d">1d</option>
@@ -234,7 +234,7 @@ export function HistoricalAnalysisDrawer({ ticker, open, onClose }: { ticker: st
         ) : (
           <>
             {/* Toolbar — Candle, Refresh, and Δ slider grouped together */}
-            <div className="flex flex-col gap-1 border-b border-slate-200 shrink-0">
+            <div className="flex flex-col gap-1 border-b border-brand-100 shrink-0">
               <div className="flex items-center justify-end gap-3 px-3 py-1.5 text-xs">
                 <div className="flex items-center gap-1.5">
                   <label htmlFor="candle-res-select" className="text-slate-400 text-[10px] font-medium">Candle</label>
@@ -243,7 +243,7 @@ export function HistoricalAnalysisDrawer({ ticker, open, onClose }: { ticker: st
                     data-testid="candle-res-select"
                     value={candleResolution}
                     onChange={(e) => setCandleResolution(e.target.value as CandleResolution)}
-                    className="bg-white border border-slate-200 rounded-lg px-2 py-1 text-slate-600 text-xs focus:outline-none focus:ring-2 focus:ring-brand-200"
+                    className="bg-white border border-brand-100 rounded-lg px-2 py-1 text-slate-600 text-xs focus:outline-none focus:ring-2 focus:ring-brand-200"
                   >
                     {CANDLE_OPTIONS.map((o) => (
                       <option key={o.value} value={o.value}>{o.label}</option>
@@ -257,7 +257,7 @@ export function HistoricalAnalysisDrawer({ ticker, open, onClose }: { ticker: st
                     data-testid="refresh-select"
                     value={historyPollIntervalMs}
                     onChange={(e) => setHistoryPollIntervalMs(Number(e.target.value) as HistoryPollInterval)}
-                    className="bg-white border border-slate-200 rounded-lg px-2 py-1 text-slate-600 text-xs focus:outline-none focus:ring-2 focus:ring-brand-200"
+                    className="bg-white border border-brand-100 rounded-lg px-2 py-1 text-slate-600 text-xs focus:outline-none focus:ring-2 focus:ring-brand-200"
                   >
                     {REFRESH_OPTIONS.map((o) => (
                       <option key={o.value} value={o.value}>{o.label}</option>
@@ -297,17 +297,17 @@ export function HistoricalAnalysisDrawer({ ticker, open, onClose }: { ticker: st
                 <div className="absolute top-1 right-2 z-10 flex items-center gap-1">
                   <button
                     onClick={() => setZoomLevel(z => z + 1)}
-                    className="text-xs text-slate-400 hover:text-slate-700 bg-white rounded-lg p-1.5 shadow-sm border border-slate-200 transition-colors"
+                    className="text-xs text-slate-400 hover:text-slate-700 bg-white rounded-lg p-1.5 shadow-sm border border-brand-100 transition-colors"
                     title="Zoom in"
                   ><ZoomIn className="w-3 h-3" /></button>
                   <button
                     onClick={() => setZoomLevel(z => Math.min(z - 1, 0))}
-                    className="text-xs text-slate-400 hover:text-slate-700 bg-white rounded-lg p-1.5 shadow-sm border border-slate-200 transition-colors"
+                    className="text-xs text-slate-400 hover:text-slate-700 bg-white rounded-lg p-1.5 shadow-sm border border-brand-100 transition-colors"
                     title="Zoom out"
                   ><ZoomOut className="w-3 h-3" /></button>
                   <button
                     onClick={() => setZoomLevel(0)}
-                    className="text-xs text-slate-400 hover:text-slate-700 bg-white rounded-lg p-1.5 shadow-sm border border-slate-200 transition-colors"
+                    className="text-xs text-slate-400 hover:text-slate-700 bg-white rounded-lg p-1.5 shadow-sm border border-brand-100 transition-colors"
                     title="Reset zoom"
                   ><RotateCcw className="w-3 h-3" /></button>
                 </div>
@@ -319,7 +319,7 @@ export function HistoricalAnalysisDrawer({ ticker, open, onClose }: { ticker: st
             {accuracyCurve.length > 0 && <SuccessFailurePlot data={accuracyCurve} xDomain={accuracyXDomain} />}
 
             {/* Run list */}
-            <div className="border-t border-slate-200">
+            <div className="border-t border-brand-100">
               {runs.length === 0 ? (
                 <div className="p-4 text-xs text-slate-400 text-center py-8">No runs for {ticker}.</div>
               ) : (

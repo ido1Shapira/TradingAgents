@@ -14,7 +14,7 @@ export function DecisionPanel({ action, target, confidence, rationale, degraded 
   const isBuy = action === "BUY";
   const isSell = action === "SELL";
   const actionColor = isBuy ? "text-emerald-700" : isSell ? "text-red-700" : "text-slate-600";
-  const actionBg = isBuy ? "bg-emerald-50 border-emerald-200" : isSell ? "bg-red-50 border-red-200" : "bg-slate-100 border-slate-200";
+  const actionBg = isBuy ? "bg-emerald-50 border-emerald-200" : isSell ? "bg-red-50 border-red-200" : "bg-brand-50 border-brand-100";
   const accentBorder = isBuy ? "border-l-emerald-500" : isSell ? "border-l-red-500" : "border-l-slate-500";
   const pct = Math.max(0, Math.min(1, confidence)) * 100;
   return (

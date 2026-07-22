@@ -385,7 +385,7 @@ export function WatchlistRail() {
         className={`
           fixed md:static inset-y-0 left-0 z-40
           w-full max-w-72 md:w-64
-          border-r border-slate-200 bg-white md:bg-white/50 backdrop-blur-sm
+          border-r border-brand-100 bg-white md:bg-white/50 backdrop-blur-sm
           flex flex-col h-screen overflow-hidden
           transition-all duration-300 ease-out
           ${mobileSidebarOpen ? "translate-x-0" : "-translate-x-full"}
@@ -393,26 +393,26 @@ export function WatchlistRail() {
           ${sidebarCollapsed ? "md:w-0 md:min-w-0 md:border-r-0 md:overflow-hidden" : "md:w-64"}
         `}
       >
-        <div className="md:hidden shrink-0 flex items-center justify-between px-4 py-2 border-b border-slate-200 safe-area-top">
+        <div className="md:hidden shrink-0 flex items-center justify-between px-4 py-2 border-b border-brand-100 safe-area-top">
           <span className="text-xs font-semibold uppercase tracking-widest text-slate-600">
             {railMode === "watchlist" ? "Watchlist" : "Indicators"}
           </span>
           <button
             onClick={() => setMobileSidebarOpen(false)}
-            className="p-1 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-slate-700 transition-colors"
+            className="p-1 hover:bg-brand-50 rounded-lg text-slate-500 hover:text-slate-700 transition-colors"
             aria-label="Close watchlist"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
-        <div className="shrink-0 grid grid-cols-2 gap-1 border-b border-slate-200 px-2 py-2">
+        <div className="shrink-0 grid grid-cols-2 gap-1 border-b border-brand-100 px-2 py-2">
           <button
             type="button"
             onClick={() => setRailMode("watchlist")}
             className={`rounded-lg px-2 py-1.5 text-xs font-semibold transition-colors ${
               railMode === "watchlist"
                 ? "bg-brand-50 text-brand-700 border border-brand-200"
-                : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
+                : "text-slate-500 hover:text-slate-700 hover:bg-brand-50"
             }`}
           >
             Watchlist
@@ -423,7 +423,7 @@ export function WatchlistRail() {
             className={`rounded-lg px-2 py-1.5 text-xs font-semibold transition-colors ${
               railMode === "indicators"
                 ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
+                : "text-slate-500 hover:text-slate-700 hover:bg-brand-50"
             }`}
           >
             Indicators
@@ -433,7 +433,7 @@ export function WatchlistRail() {
           <IndicatorRailView />
         ) : (
           <>
-        <div className="shrink-0 px-4 py-3 border-b border-slate-200">
+        <div className="shrink-0 px-4 py-3 border-b border-brand-100">
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-sm" />
             <span className="text-xs font-semibold uppercase tracking-widest text-slate-600">Watchlist</span>
@@ -460,7 +460,7 @@ export function WatchlistRail() {
                 }
               }}
               placeholder="Search ticker…"
-              className="w-full bg-white border border-slate-200 rounded-md pl-7 pr-7 py-1.5 text-xs text-slate-700 placeholder-slate-500 outline-none focus:border-slate-400 focus:bg-white transition-colors"
+              className="w-full bg-white border border-brand-100 rounded-md pl-7 pr-7 py-1.5 text-xs text-slate-700 placeholder-slate-500 outline-none focus:border-brand-300 focus:bg-white transition-colors"
             />
             {filterTicker && (
               <button
@@ -476,7 +476,7 @@ export function WatchlistRail() {
         <div className="flex-1 overflow-y-auto px-2 py-2 space-y-0.5">
           {/* Create group inline input */}
           {creatingGroup && (
-            <div className="flex items-center gap-2 px-2 py-1.5 bg-white rounded-lg border border-slate-200">
+            <div className="flex items-center gap-2 px-2 py-1.5 bg-white rounded-lg border border-brand-100">
               <input
                 autoFocus
                 type="text"
@@ -487,7 +487,7 @@ export function WatchlistRail() {
                   if (e.key === "Escape") { setCreatingGroup(false); setNewGroupName(""); }
                 }}
                 placeholder="Group name"
-                className="flex-1 bg-white border border-slate-200 rounded px-1.5 py-1 text-xs text-slate-900 focus:outline-none focus:border-brand-500 placeholder-slate-500"
+                className="flex-1 bg-white border border-brand-100 rounded px-1.5 py-1 text-xs text-slate-900 focus:outline-none focus:border-brand-500 placeholder-slate-500"
               />
               <button type="button" disabled={!newGroupName.trim()} onClick={handleCreateGroup} className="text-[10px] text-brand-600 hover:text-brand-700 font-medium disabled:opacity-30">Create</button>
               <button type="button" onClick={() => { setCreatingGroup(false); setNewGroupName(""); }} className="text-[10px] text-slate-500 hover:text-slate-700">Cancel</button>
@@ -554,7 +554,7 @@ export function WatchlistRail() {
                           if (e.key === "Enter") handleRename();
                           if (e.key === "Escape") setEditingGroup(null);
                         }}
-                        className="flex-1 bg-white border border-slate-200 rounded px-1.5 py-0.5 text-[10px] text-slate-900 focus:outline-none focus:border-brand-500"
+                        className="flex-1 bg-white border border-brand-100 rounded px-1.5 py-0.5 text-[10px] text-slate-900 focus:outline-none focus:border-brand-500"
                       />
                       <button type="button" disabled={renameMutation.isPending} onClick={handleRename} className="text-[10px] text-brand-600 hover:text-brand-700 font-medium disabled:opacity-30">Save</button>
                       <button type="button" onClick={() => setEditingGroup(null)} className="text-[10px] text-slate-500 hover:text-slate-700">Cancel</button>
@@ -642,7 +642,7 @@ export function WatchlistRail() {
           )}
 
           {/* Agent Tickers section */}
-          <div className="border-t border-slate-200 pt-2 mt-2">
+          <div className="border-t border-brand-100 pt-2 mt-2">
             <div className="flex items-center gap-1.5 px-1 py-1.5">
               <span className="w-2 h-2 rounded-full bg-amber-500 shadow-sm" />
               <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Agent Tickers</span>
@@ -656,7 +656,7 @@ export function WatchlistRail() {
           </div>
 
           {/* Price Alerts Section */}
-          <div className="border-t border-slate-200 pt-2 mt-2">
+          <div className="border-t border-brand-100 pt-2 mt-2">
             <div className="flex items-center justify-between px-1 py-1.5">
               <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
                 Price Alerts
@@ -674,19 +674,19 @@ export function WatchlistRail() {
 
             {/* Alert Form */}
             {showAlertForm && (
-              <div className="px-2 mb-2 p-2 bg-white rounded-lg border border-slate-200">
+              <div className="px-2 mb-2 p-2 bg-white rounded-lg border border-brand-100">
                 <div className="flex gap-1 mb-2">
                   <input
                     type="text"
                     placeholder="Ticker"
                     value={alertTicker}
                     onChange={(e) => setAlertTicker(e.target.value.toUpperCase())}
-                    className="flex-1 bg-white border border-slate-200 rounded px-2 py-1 text-xs text-slate-900 placeholder-slate-500 focus:outline-none focus:border-brand-500"
+                    className="flex-1 bg-white border border-brand-100 rounded px-2 py-1 text-xs text-slate-900 placeholder-slate-500 focus:outline-none focus:border-brand-500"
                   />
                   <select
                     value={alertComparator}
                     onChange={(e) => setAlertComparator(e.target.value as typeof alertComparator)}
-                    className="bg-white border border-slate-200 rounded px-2 py-1 text-xs text-slate-900 focus:outline-none focus:border-brand-500"
+                    className="bg-white border border-brand-100 rounded px-2 py-1 text-xs text-slate-900 focus:outline-none focus:border-brand-500"
                   >
                     <option value="above">Above</option>
                     <option value="below">Below</option>
@@ -700,7 +700,7 @@ export function WatchlistRail() {
                     placeholder="Price"
                     value={alertThreshold}
                     onChange={(e) => setAlertThreshold(e.target.value)}
-                    className="flex-1 bg-white border border-slate-200 rounded px-2 py-1 text-xs text-slate-900 placeholder-slate-500 focus:outline-none focus:border-brand-500"
+                    className="flex-1 bg-white border border-brand-100 rounded px-2 py-1 text-xs text-slate-900 placeholder-slate-500 focus:outline-none focus:border-brand-500"
                   />
                   <button
                     onClick={async () => {
@@ -741,7 +741,7 @@ export function WatchlistRail() {
               {tickerAlerts.map((alert: Indicator) => (
                 <div
                   key={alert.id}
-                  className="flex items-center justify-between px-2 py-1 rounded hover:bg-slate-50 group"
+                  className="flex items-center justify-between px-2 py-1 rounded hover:bg-brand-50 group"
                 >
                   <div className="flex items-center gap-2">
                     <div

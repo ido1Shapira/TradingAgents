@@ -383,7 +383,7 @@ export function HistoryChart(props: HistoryChartProps) {
             className={`px-3 py-1 text-xs font-semibold rounded-l-lg border transition-all ${
               showMA
                 ? "bg-violet-50 text-violet-700 border-violet-200 z-10"
-                : "text-slate-500 border-slate-200 hover:text-slate-700"
+                : "text-slate-500 border-brand-100 hover:text-slate-700"
             }`}
           >
             MA
@@ -393,7 +393,7 @@ export function HistoryChart(props: HistoryChartProps) {
             className={`px-3 py-1 text-xs font-semibold border border-l-0 transition-all ${
               showBB
                 ? "bg-fuchsia-50 text-fuchsia-700 border-fuchsia-200 z-10"
-                : "text-slate-500 border-slate-200 hover:text-slate-700"
+                : "text-slate-500 border-brand-100 hover:text-slate-700"
             }`}
           >
             BB
@@ -403,7 +403,7 @@ export function HistoryChart(props: HistoryChartProps) {
             className={`px-3 py-1 text-xs font-semibold rounded-r-lg border border-l-0 transition-all ${
               showRSI
                 ? "bg-amber-50 text-amber-700 border-amber-200 z-10"
-                : "text-slate-500 border-slate-200 hover:text-slate-700"
+                : "text-slate-500 border-brand-100 hover:text-slate-700"
             }`}
           >
             RSI
@@ -464,7 +464,7 @@ export function HistoryChart(props: HistoryChartProps) {
                   const p = payload[0].payload as ChartRow;
                   return (
                     <div
-                      className="bg-white border border-slate-200 px-3 py-2 text-xs shadow-sm"
+                      className="bg-white border border-brand-100 px-3 py-2 text-xs shadow-sm"
                       data-testid="history-tooltip"
                     >
                       <div className="text-slate-500 font-mono text-[10px]">{fmtTime(p.t, scale)}</div>
@@ -538,7 +538,7 @@ export function HistoryChart(props: HistoryChartProps) {
           </ResponsiveContainer>
         </div>
         {/* Volume chart */}
-        <div className="h-14 shrink-0 border-t border-slate-200">
+        <div className="h-14 shrink-0 border-t border-brand-100">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartData} margin={{ top: 4, right: 8, bottom: 8, left: 8 }}>
               <CartesianGrid stroke="#e2e8f0" strokeDasharray="3 3" vertical={false} />
@@ -560,7 +560,7 @@ export function HistoryChart(props: HistoryChartProps) {
                   const p = payload[0].payload as ChartRow;
                   return (
                     <div
-                      className="bg-white border border-slate-200 px-3 py-2 text-xs shadow-sm"
+                      className="bg-white border border-brand-100 px-3 py-2 text-xs shadow-sm"
                       data-testid="volume-tooltip"
                     >
                       <div className="text-slate-500 font-mono text-[10px]">{fmtTime(p.t, scale)}</div>
@@ -579,7 +579,7 @@ export function HistoryChart(props: HistoryChartProps) {
         </div>
         {/* RSI sub-chart */}
         {showRSI && (
-          <div className="h-[60px] shrink-0 border-t border-slate-200">
+          <div className="h-[60px] shrink-0 border-t border-brand-100">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={rsiChartData} margin={{ top: 4, right: 8, bottom: 4, left: 8 }}>
                 <CartesianGrid stroke="#e2e8f0" strokeDasharray="3 3" vertical={false} />
@@ -600,7 +600,7 @@ export function HistoryChart(props: HistoryChartProps) {
                     if (!active || !payload?.length) return null;
                     const d = payload[0].payload as { t: number; rsi: number | null };
                     return (
-                      <div className="bg-white border border-slate-200 px-3 py-2 text-xs shadow-sm" data-testid="rsi-tooltip">
+                      <div className="bg-white border border-brand-100 px-3 py-2 text-xs shadow-sm" data-testid="rsi-tooltip">
                         <div className="text-slate-500 font-mono text-[10px]">{fmtTime(d.t, scale)}</div>
                         <div className="data-text font-semibold text-amber-700 text-sm mt-0.5">RSI {d.rsi != null ? d.rsi.toFixed(1) : '\u2014'}</div>
                       </div>

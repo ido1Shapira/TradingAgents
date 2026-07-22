@@ -22,7 +22,7 @@ export function HistoryControls({
   const deltaToPos = (ms: number): number =>
     ((Math.log(ms) - logMin) / (logMax - logMin)) * 1000;
 
-  const inputClass = "appearance-none bg-slate-200 rounded-full h-1.5 cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-brand-500 [&::-webkit-slider-thumb]:shadow-sm [&::-webkit-slider-thumb]:cursor-pointer [&::-moz-range-thumb]:w-3 [&::-moz-range-thumb]:h-3 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-brand-500 [&::-moz-range-thumb]:border-0";
+  const inputClass = "appearance-none bg-brand-100 rounded-full h-1.5 cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-brand-500 [&::-webkit-slider-thumb]:shadow-sm [&::-webkit-slider-thumb]:cursor-pointer [&::-moz-range-thumb]:w-3 [&::-moz-range-thumb]:h-3 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-brand-500 [&::-moz-range-thumb]:border-0";
 
   if (compact) {
     return (
@@ -58,7 +58,7 @@ export function HistoryControls({
   }
 
   return (
-    <div className="border-b border-slate-200 px-3 py-2 text-xs space-y-2">
+    <div className="border-b border-brand-100 px-3 py-2 text-xs space-y-2">
       <div className="flex items-center gap-2">
         <label htmlFor="delta-slider" className="w-12 text-slate-400">Δ</label>
         <input

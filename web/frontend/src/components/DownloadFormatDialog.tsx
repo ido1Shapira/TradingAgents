@@ -33,8 +33,8 @@ export default function DownloadFormatDialog({ ticker, onClose }: Props) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-400/30 backdrop-blur-sm">
-      <div className="bg-white border border-slate-200 rounded-xl shadow-sm w-full mx-4 max-w-sm">
-        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200">
+      <div className="bg-white border border-brand-100 rounded-xl shadow-sm w-full mx-4 max-w-sm">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-brand-100">
           <h2 className="text-sm font-semibold text-slate-900">Download {ticker} Data</h2>
           <button onClick={onClose} className="text-slate-400 hover:text-slate-700 p-1 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-200">
             <X className="w-4 h-4" />
@@ -48,7 +48,7 @@ export default function DownloadFormatDialog({ ticker, onClose }: Props) {
                 className={`flex items-start gap-3 px-3 py-2.5 rounded-lg cursor-pointer border transition-colors ${
                   selected === f.value
                     ? "bg-brand-50 border-brand-200"
-                    : "border-transparent hover:bg-slate-100"
+                    : "border-transparent hover:bg-brand-50"
                 }`}
             >
               <input
@@ -67,14 +67,14 @@ export default function DownloadFormatDialog({ ticker, onClose }: Props) {
           ))}
         </div>
 
-        <div className="flex items-center justify-between gap-2 px-4 py-3 border-t border-slate-200">
+        <div className="flex items-center justify-between gap-2 px-4 py-3 border-t border-brand-100">
           {downloadError ? (
             <span className="text-xs text-red-700" role="alert">{downloadError}</span>
           ) : <span />}
           <div className="flex gap-2">
             <button
               onClick={onClose}
-              className="px-3 py-1.5 text-sm bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-200"
+              className="px-3 py-1.5 text-sm bg-brand-50 text-slate-700 rounded-lg hover:bg-brand-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-200"
             >
               Cancel
             </button>

@@ -41,7 +41,7 @@ export function AddTickerCommand() {
     return (
       <button
         onClick={() => setOpen(true)}
-        className="w-full text-left px-4 py-2.5 text-sm text-slate-500 hover:text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-2"
+        className="w-full text-left px-4 py-2.5 text-sm text-slate-500 hover:text-slate-700 hover:bg-brand-50 transition-colors flex items-center gap-2"
       >
         <Plus className="w-4 h-4" />
         Add ticker
@@ -50,7 +50,7 @@ export function AddTickerCommand() {
   }
 
   return (
-    <div className="p-3 border-t border-slate-200">
+    <div className="p-3 border-t border-brand-100">
       <div className="relative">
         <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
         <input
@@ -62,7 +62,7 @@ export function AddTickerCommand() {
             if (e.key === "Escape") setOpen(false);
           }}
           placeholder="Ticker symbol (e.g. NVDA)"
-          className="w-full pl-8 pr-3 py-1.5 text-sm bg-white border border-slate-300 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-300 focus:border-brand-300 transition-all"
+          className="w-full pl-8 pr-3 py-1.5 text-sm bg-white border border-brand-200 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-300 focus:border-brand-300 transition-all"
         />
       </div>
       {error && <p className="text-xs text-red-700 mt-1.5 ml-1" role="alert">{error}</p>}

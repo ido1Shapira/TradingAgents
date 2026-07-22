@@ -15,7 +15,7 @@ const SIDE_STYLES: Record<string, { bg: string; border: string; text: string }> 
   "Bear Researcher": { bg: "bg-red-50", border: "border-red-200", text: "text-red-700" },
   "Aggressive Analyst": { bg: "bg-orange-50", border: "border-orange-200", text: "text-orange-700" },
   "Conservative Analyst": { bg: "bg-blue-50", border: "border-blue-200", text: "text-blue-700" },
-  "Neutral Analyst": { bg: "bg-slate-100", border: "border-slate-200", text: "text-slate-700" },
+  "Neutral Analyst": { bg: "bg-brand-50", border: "border-brand-100", text: "text-slate-700" },
 };
 
 function SideIcon({ side }: { side: string }) {

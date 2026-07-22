@@ -14,7 +14,7 @@ export function Toggle({ checked, onChange, label, disabled }: ToggleProps) {
         disabled={disabled}
         onClick={() => onChange(!checked)}
         className={`relative w-10 h-5 rounded-full transition-colors ${
-          checked ? "bg-brand-600" : "bg-slate-300"
+          checked ? "bg-brand-600" : "bg-brand-200"
         } ${disabled ? "opacity-40 cursor-not-allowed" : ""}`}
         role="switch"
         aria-checked={checked}

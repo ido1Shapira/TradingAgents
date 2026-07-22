@@ -53,7 +53,7 @@ export function WatchlistFilter() {
   }, [filterTicker, qc]);
 
   return (
-    <div className="shrink-0 px-4 py-3 border-b border-slate-200">
+    <div className="shrink-0 px-4 py-3 border-b border-brand-100">
       <div className="flex items-center gap-2">
         <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-sm" />
         <span className="text-xs font-semibold uppercase tracking-widest text-slate-600">Watchlist</span>
@@ -70,7 +70,7 @@ export function WatchlistFilter() {
             handleAddFromFilter();
           }}
           placeholder="Search or add ticker…"
-          className="w-full bg-white border border-slate-200 rounded-md pl-7 pr-7 py-1.5 text-xs text-slate-700 placeholder-slate-500 outline-none focus:border-slate-400 focus:bg-white focus:ring-1 focus:ring-brand-200 transition-colors"
+          className="w-full bg-white border border-brand-100 rounded-md pl-7 pr-7 py-1.5 text-xs text-slate-700 placeholder-slate-500 outline-none focus:border-brand-300 focus:bg-white focus:ring-1 focus:ring-brand-200 transition-colors"
         />
         {filterTickerRaw && (
           <button

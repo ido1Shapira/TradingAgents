@@ -114,7 +114,7 @@ export function LlmTracePanel({ calls }: Props) {
             type="checkbox"
             checked={showPrompts}
             onChange={() => setShowPrompts((v) => !v)}
-            className="w-3 h-3 rounded border-slate-300 bg-white text-brand-600 focus:ring-0"
+            className="w-3 h-3 rounded border-brand-200 bg-white text-brand-600 focus:ring-0"
           />
           Show prompts
         </label>
@@ -123,7 +123,7 @@ export function LlmTracePanel({ calls }: Props) {
             type="checkbox"
             checked={showResponses}
             onChange={() => setShowResponses((v) => !v)}
-            className="w-3 h-3 rounded border-slate-300 bg-white text-brand-600 focus:ring-0"
+            className="w-3 h-3 rounded border-brand-200 bg-white text-brand-600 focus:ring-0"
           />
           Show responses
         </label>
@@ -139,12 +139,12 @@ export function LlmTracePanel({ calls }: Props) {
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Search prompts, responses, agents..."
-          className="flex-1 px-3 py-1.5 text-xs font-mono bg-white border border-slate-200 rounded-lg text-slate-700 placeholder-slate-400 focus:outline-none focus:border-slate-300"
+          className="flex-1 px-3 py-1.5 text-xs font-mono bg-white border border-brand-100 rounded-lg text-slate-700 placeholder-slate-400 focus:outline-none focus:border-brand-200"
         />
         <select
           value={agentFilter}
           onChange={(e) => setAgentFilter(e.target.value)}
-          className="px-3 py-1.5 text-xs font-mono bg-white border border-slate-200 rounded-lg text-slate-700 focus:outline-none focus:border-slate-300"
+          className="px-3 py-1.5 text-xs font-mono bg-white border border-brand-100 rounded-lg text-slate-700 focus:outline-none focus:border-brand-200"
         >
           <option value="">All agents</option>
           {[...new Set(calls.map((c) => c.node_name || "unknown"))].map((name) => (
@@ -184,10 +184,10 @@ export function LlmTracePanel({ calls }: Props) {
             const totalDuration = nodeCalls.reduce((s, c) => s + (c.duration_ms || 0), 0);
 
             return (
-              <div key={node} className="rounded-lg border border-slate-200 bg-white overflow-hidden">
+              <div key={node} className="rounded-lg border border-brand-100 bg-white overflow-hidden">
                 {/* Node header */}
                 <div
-                  className="flex items-center gap-3 px-3 py-2 cursor-pointer select-none hover:bg-slate-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-200"
+                  className="flex items-center gap-3 px-3 py-2 cursor-pointer select-none hover:bg-brand-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-200"
                   style={{ borderLeft: `3px solid ${color}` }}
                   onClick={() => setExpandedId(expandedId === node ? null : node)}
                 >
@@ -197,16 +197,16 @@ export function LlmTracePanel({ calls }: Props) {
                   <span className="text-xs font-semibold text-slate-900 min-w-[140px]">{node}</span>
                   <div className="flex items-center gap-3 text-[10px] font-mono text-slate-400">
                     <span>{nodeCalls.length} calls</span>
-                    <span className="w-px h-3 bg-slate-200" />
+                    <span className="w-px h-3 bg-brand-100" />
                     <span>{formatDuration(totalDuration)}</span>
-                    <span className="w-px h-3 bg-slate-200" />
+                    <span className="w-px h-3 bg-brand-100" />
                     <span className="text-slate-600">{totalTokens} tokens</span>
                   </div>
                 </div>
 
                 {/* Expanded call details */}
                 {expandedId === node && (
-                  <div className="border-t border-slate-200">
+                  <div className="border-t border-brand-100">
                     {nodeCalls.map((call, i) => (
                       <CallCard
                         key={call.id}
@@ -293,21 +293,21 @@ function CallCard({
   const responseTruncated = responseLines > 30;
 
   return (
-    <div className="border-b border-slate-100 last:border-b-0">
+    <div className="border-b border-brand-50 last:border-b-0">
       {/* Call metadata bar */}
-      <div className="flex items-center gap-3 px-4 py-1.5 bg-slate-50 text-[10px] font-mono text-slate-400">
+      <div className="flex items-center gap-3 px-4 py-1.5 bg-brand-50 text-[10px] font-mono text-slate-400">
         <span className="text-slate-400">#{index + 1}/{total}</span>
-        <span className="w-px h-2.5 bg-slate-200" />
+        <span className="w-px h-2.5 bg-brand-100" />
         <span className="text-slate-600">{call.model}</span>
         {call.duration_ms > 0 && (
           <>
-            <span className="w-px h-2.5 bg-slate-200" />
+            <span className="w-px h-2.5 bg-brand-100" />
             <span>{formatDuration(call.duration_ms)}</span>
           </>
         )}
         {call.total_tokens > 0 && (
           <>
-            <span className="w-px h-2.5 bg-slate-200" />
+            <span className="w-px h-2.5 bg-brand-100" />
             <span>
               <span className="text-brand-600/60">in:</span> {call.input_tokens}
               {" "}
@@ -319,7 +319,7 @@ function CallCard({
 
       {/* Prompt */}
       {showPrompt && call.prompt_text && (
-        <div className="px-4 py-2 border-t border-slate-100">
+        <div className="px-4 py-2 border-t border-brand-50">
           <div className="flex items-center justify-between mb-1">
             <span className="text-[10px] font-semibold uppercase tracking-wider text-brand-600/60">
               Prompt
@@ -348,7 +348,7 @@ function CallCard({
 
       {/* Response */}
       {showResponse && call.response_text && (
-        <div className="px-4 py-2 border-t border-slate-100">
+        <div className="px-4 py-2 border-t border-brand-50">
           <div className="flex items-center justify-between mb-1">
             <span className="text-[10px] font-semibold uppercase tracking-wider text-emerald-700/60">
               Response
@@ -377,7 +377,7 @@ function CallCard({
 
       {/* Tool calls */}
       {hasToolCalls && (
-        <div className="px-4 py-2 border-t border-slate-100">
+        <div className="px-4 py-2 border-t border-brand-50">
           <span className="text-[10px] font-semibold uppercase tracking-wider text-amber-700/60 block mb-1">
             Tool calls
           </span>

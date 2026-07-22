@@ -100,7 +100,7 @@ export function TickerRow({ ticker, companyName, lastDecision, sparkline, status
           ? "bg-brand-50 ring-1 ring-brand-200"
           : isDragOver
             ? "bg-brand-50/50"
-            : "hover:bg-slate-50"
+            : "hover:bg-brand-50"
       } ${dragHandleProps?.draggable ? "opacity-100" : ""} ${isDragOver ? "shadow-[inset_0_2px_0_0_rgba(37,99,235,0.2)]" : ""}`}
     >
       {/* Drag handle */}

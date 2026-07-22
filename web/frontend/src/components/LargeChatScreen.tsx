@@ -349,12 +349,12 @@ export function LargeChatScreen({ onClose }: Props) {
   return (
     <div className="fixed inset-0 z-[100] bg-white flex">
       {/* Sidebar */}
-      <div className={`${sidebarOpen ? "w-72" : "w-0"} transition-all duration-200 flex-shrink-0 border-r border-slate-200 bg-white flex flex-col overflow-hidden`}>
-        <div className="flex items-center justify-between px-4 py-4 border-b border-slate-200">
+      <div className={`${sidebarOpen ? "w-72" : "w-0"} transition-all duration-200 flex-shrink-0 border-r border-brand-100 bg-white flex flex-col overflow-hidden`}>
+        <div className="flex items-center justify-between px-4 py-4 border-b border-brand-100">
           <span className="text-sm font-semibold text-slate-900">Conversations</span>
           <button
             onClick={() => setSidebarOpen(false)}
-            className="text-slate-600 hover:text-slate-900 p-1 rounded hover:bg-slate-50 transition-colors"
+            className="text-slate-600 hover:text-slate-900 p-1 rounded hover:bg-brand-50 transition-colors"
             aria-label="Close sidebar"
           >
             <X className="h-4 w-4" />
@@ -376,7 +376,7 @@ export function LargeChatScreen({ onClose }: Props) {
               className={`group flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition-colors ${
                 session.id === activeSessionId
                   ? "bg-brand-50 text-brand-700"
-                  : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                  : "text-slate-600 hover:bg-brand-50 hover:text-slate-900"
               }`}
               onClick={() => switchSession(session.id)}
             >
@@ -405,12 +405,12 @@ export function LargeChatScreen({ onClose }: Props) {
 
       {/* Main chat area */}
       <div className="flex-1 flex flex-col min-w-0">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-white">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-brand-100 bg-white">
           <div className="flex items-center gap-3">
             {!sidebarOpen && (
               <button
                 onClick={() => setSidebarOpen(true)}
-                className="text-slate-600 hover:text-slate-900 p-1.5 rounded-lg hover:bg-slate-50 transition-colors"
+                className="text-slate-600 hover:text-slate-900 p-1.5 rounded-lg hover:bg-brand-50 transition-colors"
                 aria-label="Open sidebar"
                 title="Show conversations"
               >
@@ -428,7 +428,7 @@ export function LargeChatScreen({ onClose }: Props) {
           <div className="flex items-center gap-2">
             <button
               onClick={createSession}
-              className="text-slate-600 hover:text-slate-900 p-2 rounded-lg hover:bg-slate-50 transition-colors"
+              className="text-slate-600 hover:text-slate-900 p-2 rounded-lg hover:bg-brand-50 transition-colors"
               aria-label="New chat"
               title="New chat"
             >
@@ -436,7 +436,7 @@ export function LargeChatScreen({ onClose }: Props) {
             </button>
             <button
               onClick={onClose}
-              className="text-slate-600 hover:text-slate-900 p-2 rounded-lg hover:bg-slate-50 transition-colors"
+              className="text-slate-600 hover:text-slate-900 p-2 rounded-lg hover:bg-brand-50 transition-colors"
               aria-label="Close full screen"
               title="Minimize"
             >
@@ -444,7 +444,7 @@ export function LargeChatScreen({ onClose }: Props) {
             </button>
             <button
               onClick={onClose}
-              className="text-slate-600 hover:text-slate-900 p-2 rounded-lg hover:bg-slate-50 transition-colors"
+              className="text-slate-600 hover:text-slate-900 p-2 rounded-lg hover:bg-brand-50 transition-colors"
               aria-label="Close chat"
               title="Close"
             >
@@ -469,14 +469,14 @@ export function LargeChatScreen({ onClose }: Props) {
                   msg.role === "user"
                     ? "bg-brand-50 text-slate-900 pr-8"
                     : msg.role === "tool"
-                    ? "bg-white border border-slate-200 text-slate-600 font-mono text-xs"
-                    : "bg-white border border-slate-200 text-slate-700"
+                    ? "bg-white border border-brand-100 text-slate-600 font-mono text-xs"
+                    : "bg-white border border-brand-100 text-slate-700"
                 }`}
               >
                 {msg.role === "user" && (
                   <button
                     onClick={(e) => { e.stopPropagation(); setEditingMessage(msg.id); }}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 rounded text-slate-600 hover:text-brand-600 hover:bg-slate-100 transition-colors"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 rounded text-slate-600 hover:text-brand-600 hover:bg-brand-50 transition-colors"
                     aria-label="Edit message"
                     title="Edit message"
                   >
@@ -505,7 +505,7 @@ export function LargeChatScreen({ onClose }: Props) {
           <div ref={messagesEndRef} />
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 border-t border-slate-200 bg-white">
+        <form onSubmit={handleSubmit} className="p-6 border-t border-brand-100 bg-white">
           {editingMessageId && (
             <div className="flex items-center justify-between max-w-4xl mx-auto mb-2">
               <span className="text-xs text-brand-600">Editing message</span>
@@ -524,7 +524,7 @@ export function LargeChatScreen({ onClose }: Props) {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder={editingMessageId ? "Edit your message..." : "Ask about your trading data..."}
-              className="flex-1 bg-white border border-slate-300 text-slate-900 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-brand-300"
+              className="flex-1 bg-white border border-brand-200 text-slate-900 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-brand-300"
               disabled={isLoading}
             />
             <button

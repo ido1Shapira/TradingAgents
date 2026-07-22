@@ -118,7 +118,7 @@ export function SettingsPanel({ open, onClose, theme, toggleTheme }: Props) {
           aria-label="Settings"
         >
           {/* Header */}
-          <header className="flex items-center justify-between border-b border-slate-200 px-5 py-3">
+          <header className="flex items-center justify-between border-b border-brand-100 px-5 py-3">
             <div className="flex items-center gap-2">
               <Settings className="w-4 h-4 text-brand-600" />
               <h2 className="font-semibold text-slate-900 text-sm">Settings</h2>
@@ -126,7 +126,7 @@ export function SettingsPanel({ open, onClose, theme, toggleTheme }: Props) {
             <button
               onClick={onClose}
               aria-label="Close"
-              className="p-1 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-slate-700 transition-colors"
+              className="p-1 hover:bg-brand-50 rounded-lg text-slate-500 hover:text-slate-700 transition-colors"
             >
               <X className="w-4 h-4" />
             </button>
@@ -157,7 +157,7 @@ export function SettingsPanel({ open, onClose, theme, toggleTheme }: Props) {
                       <button
                         onClick={toggleTheme}
                         className={`relative w-10 h-5 rounded-full transition-colors ${
-                          theme === "dark" ? "bg-brand-600" : "bg-slate-300"
+                          theme === "dark" ? "bg-brand-600" : "bg-brand-200"
                         }`}
                         role="switch"
                         aria-checked={theme === "dark"}
@@ -210,7 +210,7 @@ export function SettingsPanel({ open, onClose, theme, toggleTheme }: Props) {
                     <button
                       onClick={handleResetLlmDefaults}
                       disabled={mutation.isPending}
-                      className="w-full mt-1 text-[11px] font-medium text-slate-500 hover:text-brand-600 border border-slate-200 hover:border-brand-200 rounded-lg px-3 py-1.5 transition-colors disabled:opacity-40"
+                      className="w-full mt-1 text-[11px] font-medium text-slate-500 hover:text-brand-600 border border-brand-100 hover:border-brand-200 rounded-lg px-3 py-1.5 transition-colors disabled:opacity-40"
                     >
                       Reset to Defaults
                     </button>
@@ -288,7 +288,7 @@ export function SettingsPanel({ open, onClose, theme, toggleTheme }: Props) {
                   <div className="glass-panel p-3 space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-slate-700">Version</span>
-                      <span className="text-sm font-mono text-slate-600 bg-white px-2 py-0.5 rounded border border-slate-200">
+                      <span className="text-sm font-mono text-slate-600 bg-white px-2 py-0.5 rounded border border-brand-100">
                         v{appVersion || "..."}
                       </span>
                     </div>
@@ -308,7 +308,7 @@ export function SettingsPanel({ open, onClose, theme, toggleTheme }: Props) {
           </div>
 
           {/* Footer */}
-          <footer className="border-t border-slate-200 px-5 py-3 flex items-center justify-between">
+          <footer className="border-t border-brand-100 px-5 py-3 flex items-center justify-between">
             <span className="text-xs text-slate-400">
               {saved && (
                 <span className="inline-flex items-center gap-1 text-emerald-600">
@@ -363,7 +363,7 @@ function ConfigInput({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-brand-200 font-mono tabular-nums transition-colors"
+        className="bg-white border border-brand-100 rounded-lg px-2 py-1.5 text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-brand-200 font-mono tabular-nums transition-colors"
       />
     </label>
   );
@@ -386,7 +386,7 @@ function ConfigSelect({
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-brand-200 transition-colors"
+        className="bg-white border border-brand-100 rounded-lg px-2 py-1.5 text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-brand-200 transition-colors"
       >
         {options.map((opt) => (
           <option key={opt} value={opt}>{opt}</option>
@@ -412,7 +412,7 @@ function ConfigToggle({
       <button
         onClick={() => onChange(checked ? "false" : "true")}
         className={`relative w-10 h-5 rounded-full transition-colors ${
-          checked ? "bg-brand-600" : "bg-slate-300"
+          checked ? "bg-brand-600" : "bg-brand-200"
         }`}
         role="switch"
         aria-checked={checked}

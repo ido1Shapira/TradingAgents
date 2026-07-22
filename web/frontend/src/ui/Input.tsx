@@ -21,7 +21,7 @@ export function Input({ label, error, icon, className = "", ...rest }: InputProp
             placeholder-slate-400 outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500/30
             transition-colors font-mono tabular-nums
             ${icon ? "pl-8" : ""}
-            ${error ? "border-red-300" : "border-slate-300"}
+            ${error ? "border-red-300" : "border-brand-200"}
             ${className}`}
           {...rest}
         />

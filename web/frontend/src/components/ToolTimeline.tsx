@@ -35,7 +35,7 @@ export function ToolTimeline({ events }: ToolTimelineProps) {
               )}
             </div>
             {expandedTool === key && (
-              <div className="mt-1 bg-white border border-slate-200 p-2 text-[11px] text-slate-600 whitespace-pre-wrap ml-1 mr-1 rounded-lg shadow-sm">
+              <div className="mt-1 bg-white border border-brand-100 p-2 text-[11px] text-slate-600 whitespace-pre-wrap ml-1 mr-1 rounded-lg shadow-sm">
                 {isCall ? `Args: ${JSON.stringify(d.args)}` : `Result: ${JSON.stringify(d.summary)}`}
               </div>
             )}

@@ -31,7 +31,7 @@ export function AccuracyPlot({ data, xDomain }: AccuracyPlotProps) {
   }
 
   return (
-    <div className="h-36 md:h-48 border-b border-slate-200" data-testid="accuracy-plot">
+    <div className="h-36 md:h-48 border-b border-brand-100" data-testid="accuracy-plot">
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={chartData} margin={{ top: 8, right: 8, bottom: 4, left: 8 }}>
           <CartesianGrid stroke="#e2e8f0" strokeDasharray="3 3" />
@@ -61,7 +61,7 @@ export function AccuracyPlot({ data, xDomain }: AccuracyPlotProps) {
               const orig = data.find(d => d.delta === p.delta);
               if (!orig) return null;
               return (
-                <div className="bg-white border border-slate-200 px-3 py-2 text-xs shadow-sm">
+                <div className="bg-white border border-brand-100 px-3 py-2 text-xs shadow-sm">
                   <div className="font-medium text-slate-900 mb-1">Δ {fmtDelta(orig.delta)}</div>
                   <div className="text-emerald-700">Accuracy {fmtPct(orig.rightPct! * 100)}</div>
                   <div className="text-slate-500 mt-0.5">{orig.right} right · {orig.wrong} wrong · {orig.unknown} unknown</div>

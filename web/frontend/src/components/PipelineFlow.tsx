@@ -242,7 +242,7 @@ function StageDetailPanel({
   return (
     <div
       data-testid={`stage-${stageKey}-details`}
-      className="mt-3 rounded-xl border border-slate-200 bg-white p-4 text-sm animate-fade-in"
+      className="mt-3 rounded-xl border border-brand-100 bg-white p-4 text-sm animate-fade-in"
       style={{ borderLeftColor: ac.base, borderLeftWidth: 2 }}
     >
       <div className="flex items-center justify-between mb-3">
@@ -255,7 +255,7 @@ function StageDetailPanel({
             <div className="text-[10px] text-slate-500 font-medium capitalize">{stageDerived.status}</div>
           </div>
           {stageDerived.node && (
-            <span className="ml-2 text-[10px] font-mono text-slate-500 bg-white px-2 py-0.5 rounded border border-slate-200">
+            <span className="ml-2 text-[10px] font-mono text-slate-500 bg-white px-2 py-0.5 rounded border border-brand-100">
               {stageDerived.node}
             </span>
           )}
@@ -265,7 +265,7 @@ function StageDetailPanel({
 
       {isRunning ? (
         stageDerived.thinkingLog.length > 0 ? (
-          <pre className="text-xs leading-relaxed text-slate-700 bg-slate-50 rounded-lg p-3 max-h-64 overflow-y-auto whitespace-pre-wrap font-mono border border-slate-200">
+          <pre className="text-xs leading-relaxed text-slate-700 bg-brand-50 rounded-lg p-3 max-h-64 overflow-y-auto whitespace-pre-wrap font-mono border border-brand-100">
             {stageDerived.thinkingLog.join("\n")}
             <span className="inline-block w-1.5 h-3 ml-0.5 align-middle rounded-sm animate-pulse" style={{ backgroundColor: ac.base }} />
           </pre>
@@ -279,7 +279,7 @@ function StageDetailPanel({
         <div className="space-y-2">
           {stageDerived.excerpt && <div className="text-xs text-slate-600 leading-relaxed">{stageDerived.excerpt}</div>}
           {stageDerived.fullText && (
-          <pre className="text-xs leading-relaxed text-slate-700 bg-slate-50 rounded-lg p-3 max-h-64 overflow-y-auto whitespace-pre-wrap font-mono border border-slate-200">
+          <pre className="text-xs leading-relaxed text-slate-700 bg-brand-50 rounded-lg p-3 max-h-64 overflow-y-auto whitespace-pre-wrap font-mono border border-brand-100">
               {stageDerived.fullText}
             </pre>
           )}
@@ -294,7 +294,7 @@ function StageDetailPanel({
         </div>
       ) : (
         <div className="flex items-center gap-2 text-xs text-slate-400 italic">
-          <span className="w-1.5 h-1.5 rounded-full bg-slate-200" />
+          <span className="w-1.5 h-1.5 rounded-full bg-brand-100" />
           Waiting for {stageConfig.label} to start…
         </div>
       )}
@@ -361,7 +361,7 @@ export function PipelineFlow({ events }: { events: WsEvent[] }) {
             />
             {i < teamStatuses.length - 1 && (
               <div className="flex items-center shrink-0 px-1">
-                <div aria-hidden="true" className="w-1.5 h-1.5 rounded-full bg-slate-300" />
+                <div aria-hidden="true" className="w-1.5 h-1.5 rounded-full bg-brand-200" />
               </div>
             )}
           </div>

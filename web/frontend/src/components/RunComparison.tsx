@@ -73,7 +73,7 @@ function MiniPipeline({ events }: { events: RunDetail["events"] }) {
             className={`inline-flex items-center justify-center rounded text-[9px] font-semibold px-1.5 py-0.5 transition-colors ${
               isDone
                 ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                : "bg-white text-slate-400 border border-slate-200"
+                : "bg-white text-slate-400 border border-brand-100"
             }`}
             title={s.key}
           >
@@ -134,7 +134,7 @@ function RunPanel({ runId }: { runId: string }) {
     ? "text-emerald-700 bg-emerald-50 border-emerald-200"
     : isSell
       ? "text-red-700 bg-red-50 border-red-200"
-      : "text-slate-600 bg-slate-100 border-slate-200";
+      : "text-slate-600 bg-brand-50 border-brand-100";
   const confidence = detail.decision_confidence ?? 0;
   const pct = Math.max(0, Math.min(1, confidence)) * 100;
 
@@ -165,7 +165,7 @@ function RunPanel({ runId }: { runId: string }) {
             {pct.toFixed(0)}%
           </span>
         </div>
-        <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
+        <div className="h-1.5 rounded-full bg-brand-50 overflow-hidden">
           <div
             className={`h-full rounded-full transition-all ${
               isBuy
@@ -273,7 +273,7 @@ export function RunComparison({ runs, onClose }: Props) {
   return (
     <div className="glass-panel">
       {/* ── toolbar: selectors + close ── */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-brand-100">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
@@ -282,7 +282,7 @@ export function RunComparison({ runs, onClose }: Props) {
             <select
               value={leftId}
               onChange={(e) => setLeftId(e.target.value)}
-              className="text-xs bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-200 max-w-[180px]"
+              className="text-xs bg-white border border-brand-100 rounded-lg px-2 py-1.5 text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-200 max-w-[180px]"
             >
               {sorted.map((r) => (
                 <option key={r.id} value={r.id}>
@@ -298,7 +298,7 @@ export function RunComparison({ runs, onClose }: Props) {
             <select
               value={rightId}
               onChange={(e) => setRightId(e.target.value)}
-              className="text-xs bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-200 max-w-[180px]"
+              className="text-xs bg-white border border-brand-100 rounded-lg px-2 py-1.5 text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-200 max-w-[180px]"
             >
               {sorted.map((r) => (
                 <option key={r.id} value={r.id}>
@@ -318,7 +318,7 @@ export function RunComparison({ runs, onClose }: Props) {
 
       {/* ── side-by-side panels ── */}
       <div className="grid grid-cols-2 gap-0">
-        <div className="p-4 border-r border-slate-200">
+        <div className="p-4 border-r border-brand-100">
           {leftId && <RunPanel runId={leftId} />}
         </div>
         <div className="p-4">

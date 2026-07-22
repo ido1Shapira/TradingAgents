@@ -32,7 +32,6 @@ import BatchDownloadDialog from "./components/BatchDownloadDialog";
 import { SettingsPanel } from "./components/SettingsPanel";
 import { PipelineFlow } from "./components/PipelineFlow";
 import { LlmTracePanel } from "./components/LlmTracePanel";
-import { AgentObservatory } from "./components/AgentObservatory";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { AgentChatBubble } from "./components/AgentChatBubble";
 
@@ -88,7 +87,7 @@ export default function App() {
   const { data: configModels } = useQuery<ConfigModels>({ queryKey: ["config-models"], queryFn: fetchConfigModels, staleTime: Infinity, enabled: serverReady });
   const historyOpenByTicker = useUi((s) => s.historyOpenByTicker);
   const [dismissedStaleBanner, setDismissedStaleBanner] = useState<string | null>(null);
-  const [traceView, setTraceView] = useState<"events" | "llm" | "observatory">("events");
+  const [traceView, setTraceView] = useState<"events" | "llm">("events");
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [batchDialogOpen, setBatchDialogOpen] = useState(false);
 
@@ -120,7 +119,7 @@ export default function App() {
     staleTime: Infinity,
   });
 
-  const handleSetTraceView = useCallback((view: "events" | "llm" | "observatory") => {
+  const handleSetTraceView = useCallback((view: "events" | "llm") => {
     setTraceView(view);
     if (view === "llm" && focused && focusedRunId) {
       qc.invalidateQueries({ queryKey: ["run-detail", focused, focusedRunId] });
@@ -234,10 +233,6 @@ export default function App() {
               {traceView === "events" ? (
                 <ErrorBoundary>
                   <LiveEventStream />
-                </ErrorBoundary>
-              ) : traceView === "observatory" ? (
-                <ErrorBoundary>
-                  <AgentObservatory events={events} />
                 </ErrorBoundary>
               ) : (
                 <div className="glass-panel">

@@ -42,7 +42,7 @@ export function RunListItem({ run, verdict, selected, scale, onClick }: RunListI
       onClick={onClick}
       aria-label={`Run from ${run.started_at ? new Date(run.started_at).toLocaleString() : 'unknown time'} - ${verdict.status}`}
       data-testid={`run-row-${run.id}`}
-      className={`w-full text-left px-3 py-2.5 border-b border-slate-200 hover:bg-slate-50 transition-colors ${
+      className={`w-full text-left px-3 py-2.5 border-b border-brand-100 hover:bg-brand-50 transition-colors ${
         selected ? "bg-brand-50 border-l-2 border-l-brand-500" : "border-l-2 border-l-transparent"
       }`}
     >

@@ -1,11 +1,9 @@
-import { Telescope } from "lucide-react";
-
 interface TraceTabsProps {
-  value: "events" | "llm" | "observatory";
-  onChange: (view: "events" | "llm" | "observatory") => void;
+  value: "events" | "llm";
+  onChange: (view: "events" | "llm") => void;
 }
 
-type TabKey = "events" | "llm" | "observatory";
+type TabKey = "events" | "llm";
 
 const ACCENT_MAP: Record<TabKey, { activeClass: string; dotClass: string }> = {
   events: {
@@ -16,16 +14,11 @@ const ACCENT_MAP: Record<TabKey, { activeClass: string; dotClass: string }> = {
     activeClass: "bg-emerald-50 text-emerald-700 border-emerald-200 z-10",
     dotClass: "bg-emerald-500",
   },
-  observatory: {
-    activeClass: "bg-violet-50 text-violet-700 border-violet-200 z-10",
-    dotClass: "bg-violet-500",
-  },
 };
 
 export function TraceTabs({ value, onChange }: TraceTabsProps) {
-  const tabs: Array<{ key: TabKey; label: string; shortLabel: string; icon?: JSX.Element }> = [
+  const tabs: Array<{ key: TabKey; label: string; shortLabel: string }> = [
     { key: "events", label: "Event Stream", shortLabel: "Events" },
-    { key: "observatory", label: "Observatory", shortLabel: "Obs", icon: <Telescope className="w-3.5 h-3.5" /> },
     { key: "llm", label: "LLM Trace", shortLabel: "LLM" },
   ];
 
@@ -45,15 +38,11 @@ export function TraceTabs({ value, onChange }: TraceTabsProps) {
             } ${isLast ? "rounded-r-lg" : ""} ${
               isActive
                 ? accent.activeClass
-                : "text-slate-500 border-slate-200 hover:text-slate-700 hover:bg-slate-50"
+                : "text-slate-500 border-brand-100 hover:text-slate-700 hover:bg-brand-50"
             }`}
           >
             <span className="flex items-center gap-1.5">
-              {tab.icon ? (
-                tab.icon
-              ) : (
-                <span className={`w-1.5 h-1.5 rounded-full ${isActive ? accent.dotClass : "bg-slate-400"}`} />
-              )}
+              <span className={`w-1.5 h-1.5 rounded-full ${isActive ? accent.dotClass : "bg-slate-400"}`} />
               <span className="hidden sm:inline">{tab.label}</span>
               <span className="sm:hidden">{tab.shortLabel}</span>
             </span>

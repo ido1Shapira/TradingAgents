@@ -23,7 +23,7 @@ export function ThinkingStream({ events, agentName }: ThinkingStreamProps) {
   }
 
   return (
-    <div className="bg-slate-50 rounded-lg border border-slate-200 max-h-96 overflow-y-auto font-mono text-xs" data-testid="thinking-stream">
+    <div className="bg-brand-50 rounded-lg border border-brand-100 max-h-96 overflow-y-auto font-mono text-xs" data-testid="thinking-stream">
       {agentEvents.map((e, i) => {
         const d = e.data as any;
         const text = d.text_fragment || d.text_preview || "";

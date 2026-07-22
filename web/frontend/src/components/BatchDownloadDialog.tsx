@@ -80,16 +80,16 @@ export default function BatchDownloadDialog({ tickers, onClose }: Props) {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-400/30 backdrop-blur-sm">
       <div
         ref={modalRef}
-        className="bg-white border border-slate-200 rounded-xl shadow-sm max-w-md w-full mx-4 max-h-[80vh] flex flex-col"
+        className="bg-white border border-brand-100 rounded-xl shadow-sm max-w-md w-full mx-4 max-h-[80vh] flex flex-col"
       >
-        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-brand-100">
           <h2 className="text-sm font-semibold text-slate-900">Download Ticker Data</h2>
           <button onClick={onClose} className="text-slate-400 hover:text-slate-700 p-1 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-200">
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        <div className="px-4 py-2 border-b border-slate-200">
+        <div className="px-4 py-2 border-b border-brand-100">
           <label className="flex items-center gap-2 cursor-pointer">
             <input
               type="checkbox"
@@ -111,7 +111,7 @@ export default function BatchDownloadDialog({ tickers, onClose }: Props) {
           {tickers.map((ticker) => (
             <label
               key={ticker}
-              className="flex items-center gap-2 px-2 py-1.5 rounded-md cursor-pointer hover:bg-slate-100 transition-colors"
+              className="flex items-center gap-2 px-2 py-1.5 rounded-md cursor-pointer hover:bg-brand-50 transition-colors"
             >
               <input
                 type="checkbox"
@@ -124,7 +124,7 @@ export default function BatchDownloadDialog({ tickers, onClose }: Props) {
           ))}
         </div>
 
-        <div className="px-4 py-2 border-t border-slate-200">
+        <div className="px-4 py-2 border-t border-brand-100">
           <div className="text-xs text-slate-400 mb-1.5 font-medium">Format</div>
           <div className="flex gap-3">
             {formats.map((f) => (
@@ -133,7 +133,7 @@ export default function BatchDownloadDialog({ tickers, onClose }: Props) {
                 className={`flex items-center gap-1.5 px-2 py-1 rounded-md cursor-pointer border text-xs transition-colors ${
                   format === f.value
                     ? "bg-brand-50 border-brand-200 text-brand-700"
-                    : "border-transparent text-slate-600 hover:bg-slate-100"
+                    : "border-transparent text-slate-600 hover:bg-brand-50"
                 }`}
               >
                 <input
@@ -150,7 +150,7 @@ export default function BatchDownloadDialog({ tickers, onClose }: Props) {
           </div>
         </div>
 
-        <div className="flex items-center justify-between px-4 py-3 border-t border-slate-200">
+        <div className="flex items-center justify-between px-4 py-3 border-t border-brand-100">
           <div className="flex items-center gap-3">
             {downloadError && <span className="text-xs text-red-700" role="alert">{downloadError}</span>}
             <span className="text-xs text-slate-400">{selected.size} selected</span>
@@ -158,7 +158,7 @@ export default function BatchDownloadDialog({ tickers, onClose }: Props) {
           <div className="flex gap-2">
             <button
               onClick={onClose}
-              className="px-3 py-1.5 text-sm bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-200"
+              className="px-3 py-1.5 text-sm bg-brand-50 text-slate-700 rounded-lg hover:bg-brand-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-200"
             >
               Cancel
             </button>

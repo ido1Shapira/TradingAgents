@@ -39,12 +39,12 @@ export function Drawer({ open, onClose, title, children, side = "right", width }
         aria-label={title}
       >
         {title && (
-          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-brand-100">
             <h3 className="font-semibold text-slate-900 text-sm">{title}</h3>
             <button
               onClick={onClose}
               aria-label="Close"
-              className="p-1 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-600 transition-colors"
+              className="p-1 hover:bg-brand-50 rounded-lg text-slate-400 hover:text-slate-600 transition-colors"
             >
               <X className="w-4 h-4" />
             </button>

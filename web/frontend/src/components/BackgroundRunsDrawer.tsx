@@ -47,7 +47,7 @@ export function BackgroundRunsDrawer({ focusedTicker }: { focusedTicker: string 
         role="dialog"
         aria-label="Background past runs"
       >
-        <header className="flex items-center justify-between border-b border-slate-200 px-5 py-3">
+        <header className="flex items-center justify-between border-b border-brand-100 px-5 py-3">
           <div className="flex items-center gap-2">
             <Clock className="w-4 h-4 text-brand-600" />
             <h2 className="font-semibold text-slate-900 text-sm">Background Past Runs</h2>
@@ -55,7 +55,7 @@ export function BackgroundRunsDrawer({ focusedTicker }: { focusedTicker: string 
           <button
             onClick={() => setOpen(false)}
             aria-label="Close"
-            className="p-1 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-200"
+            className="p-1 hover:bg-brand-50 rounded-lg text-slate-400 hover:text-slate-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-200"
           >
             <X className="w-4 h-4" />
           </button>
@@ -139,7 +139,7 @@ function JobCard({ job, onChanged }: { job: BackgroundRunState; onChanged: () =>
         </button>
       </div>
       {job.current_index > 0 && (
-        <div className="mt-3 border-t border-slate-200 pt-2" data-testid="iteration-feed">
+        <div className="mt-3 border-t border-brand-100 pt-2" data-testid="iteration-feed">
           <div className="text-[10px] font-medium text-slate-400 mb-1">Recent iterations</div>
           <ul className="text-xs space-y-0.5 max-h-32 overflow-y-auto">
             {Array.from({ length: Math.min(5, job.current_index) }).map((_, i) => {
@@ -162,7 +162,7 @@ function StatusPill({ status }: { status: BackgroundRunState["status"] }) {
     running: "bg-brand-50 text-brand-600 border-brand-200",
     paused: "bg-amber-50 text-amber-700 border-amber-200",
     done: "bg-emerald-50 text-emerald-700 border-emerald-200",
-    cancelled: "bg-slate-100 text-slate-600 border-slate-200",
+    cancelled: "bg-brand-50 text-slate-600 border-brand-100",
     error: "bg-red-50 text-red-700 border-red-200",
   }[status];
   return (
@@ -270,7 +270,7 @@ function NewJobForm({ tickers, defaultTicker }: { tickers: string[]; defaultTick
               setSelected(e.target.value);
               setError(null);
             }}
-            className="bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-brand-200"
+            className="bg-white border border-brand-100 rounded-lg px-2 py-1.5 text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-brand-200"
             aria-label="Ticker"
           >
             {tickers.map((t) => (
@@ -283,7 +283,7 @@ function NewJobForm({ tickers, defaultTicker }: { tickers: string[]; defaultTick
               value={customTicker}
               onChange={(e) => setCustomTicker(e.target.value.toUpperCase())}
               placeholder="Type ticker…"
-              className="mt-1 bg-white border border-slate-300 rounded-lg px-2 py-1.5 text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-brand-300"
+              className="mt-1 bg-white border border-brand-200 rounded-lg px-2 py-1.5 text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-brand-300"
               aria-label="Custom ticker input"
               autoFocus
             />
@@ -295,7 +295,7 @@ function NewJobForm({ tickers, defaultTicker }: { tickers: string[]; defaultTick
             type="date"
             value={dateFrom}
             onChange={(e) => setDateFrom(e.target.value)}
-            className="bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-brand-200"
+            className="bg-white border border-brand-100 rounded-lg px-2 py-1.5 text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-brand-200"
           />
         </label>
         <label className="flex flex-col gap-0.5">
@@ -304,7 +304,7 @@ function NewJobForm({ tickers, defaultTicker }: { tickers: string[]; defaultTick
             type="date"
             value={dateTo}
             onChange={(e) => setDateTo(e.target.value)}
-            className="bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-brand-200"
+            className="bg-white border border-brand-100 rounded-lg px-2 py-1.5 text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-brand-200"
           />
         </label>
         <label className="flex flex-col gap-0.5">
@@ -312,7 +312,7 @@ function NewJobForm({ tickers, defaultTicker }: { tickers: string[]; defaultTick
           <select
             value={every}
             onChange={(e) => setEvery(e.target.value as BackgroundEvery)}
-            className="bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-brand-200"
+            className="bg-white border border-brand-100 rounded-lg px-2 py-1.5 text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-brand-200"
           >
             {EVERY_OPTIONS.map((o) => (
               <option key={o} value={o}>{o}</option>
@@ -324,7 +324,7 @@ function NewJobForm({ tickers, defaultTicker }: { tickers: string[]; defaultTick
           <select
             value={parallel}
             onChange={(e) => setParallel(Number(e.target.value))}
-            className="bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-brand-200"
+            className="bg-white border border-brand-100 rounded-lg px-2 py-1.5 text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-brand-200"
           >
             {PARALLEL_OPTIONS.map((n) => (
               <option key={n} value={n}>{n}</option>

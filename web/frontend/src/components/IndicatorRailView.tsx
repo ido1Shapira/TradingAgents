@@ -432,7 +432,7 @@ export function IndicatorRailView() {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="shrink-0 px-4 py-3 border-b border-slate-200">
+      <div className="shrink-0 px-4 py-3 border-b border-brand-100">
         <div className="flex items-center gap-2">
           <Activity className="h-3.5 w-3.5 text-emerald-700" aria-hidden="true" />
           <span className="text-xs font-semibold uppercase tracking-widest text-slate-600">Indicators</span>
@@ -452,7 +452,7 @@ export function IndicatorRailView() {
         <div className="mt-2 flex flex-wrap items-center gap-1.5">
           <span className="text-xs text-slate-400">Schedule:</span>
           <select
-            className="bg-white text-xs text-slate-900 border border-slate-300 rounded px-1.5 py-1 cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-300"
+            className="bg-white text-xs text-slate-900 border border-brand-200 rounded px-1.5 py-1 cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-300"
             value={scheduleQuery.data?.interval_ms ?? 0}
             onChange={(e) => scheduleMutation.mutate(Number(e.target.value))}
           >
@@ -484,7 +484,7 @@ export function IndicatorRailView() {
         </div>
 
         {showNotifierSettings && (
-          <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-3 space-y-2">
+          <div className="mt-3 rounded-lg border border-brand-100 bg-brand-50 p-3 space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold text-slate-900">Telegram Notifications</span>
               <button
@@ -518,7 +518,7 @@ export function IndicatorRailView() {
                 onChange={(e) => setNotifierForm((f) => ({ ...f, bot_token: e.target.value }))}
                 onBlur={() => notifierMutation.mutate({ bot_token: notifierForm.bot_token || null })}
                 placeholder="123456:ABC-..."
-                className="w-full rounded bg-white border border-slate-300 px-2 py-1 text-xs text-slate-900 outline-none focus:border-slate-400"
+                className="w-full rounded bg-white border border-brand-200 px-2 py-1 text-xs text-slate-900 outline-none focus:border-brand-300"
               />
             </div>
 
@@ -532,7 +532,7 @@ export function IndicatorRailView() {
                 onChange={(e) => setNotifierForm((f) => ({ ...f, chat_id: e.target.value }))}
                 onBlur={() => notifierMutation.mutate({ chat_id: notifierForm.chat_id || null })}
                 placeholder="123456789"
-                className="w-full rounded bg-white border border-slate-300 px-2 py-1 text-xs text-slate-900 outline-none focus:border-slate-400"
+                className="w-full rounded bg-white border border-brand-200 px-2 py-1 text-xs text-slate-900 outline-none focus:border-brand-300"
               />
             </div>
 
@@ -540,7 +540,7 @@ export function IndicatorRailView() {
               type="button"
               disabled={testMutation.isPending}
               onClick={() => testMutation.mutate()}
-              className="w-full rounded bg-white border border-slate-200 hover:bg-slate-50 px-2 py-1 text-xs text-slate-700 transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-300"
+              className="w-full rounded bg-white border border-brand-100 hover:bg-brand-50 px-2 py-1 text-xs text-slate-700 transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-300"
             >
               {testMutation.isPending ? "Sending..." : "Send Test Message"}
             </button>
@@ -559,10 +559,10 @@ export function IndicatorRailView() {
         {indicators.map((indicator) => {
           const result = checksById.get(indicator.id);
           return (
-            <div key={indicator.id} className="rounded-lg border border-slate-200 bg-white p-2.5">
+            <div key={indicator.id} className="rounded-lg border border-brand-100 bg-white p-2.5">
               <div className="flex items-start gap-2">
                 <span className={`mt-1 h-2 w-2 shrink-0 rounded-full ${
-                  result?.triggered ? "bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.3)]" : result ? "bg-slate-400" : "bg-slate-300"
+                  result?.triggered ? "bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.3)]" : result ? "bg-slate-400" : "bg-brand-200"
                 }`} />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-baseline gap-1.5">
@@ -603,7 +603,7 @@ export function IndicatorRailView() {
                           setEditingId(indicator.id);
                           setEditValue(indicator.threshold.toString());
                         }}
-                        className="cursor-pointer rounded border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-xs text-slate-700 hover:border-slate-400"
+                        className="cursor-pointer rounded border border-brand-100 bg-brand-50 px-1.5 py-0.5 text-xs text-slate-700 hover:border-brand-300"
                       >
                         {indicator.comparator} {formatThreshold(indicator)}
                       </span>
@@ -632,15 +632,15 @@ export function IndicatorRailView() {
       </div>
 
       {messages.length > 0 && (
-        <div className="shrink-0 max-h-48 overflow-y-auto border-t border-slate-200 px-2 py-2 space-y-1.5">
+        <div className="shrink-0 max-h-48 overflow-y-auto border-t border-brand-100 px-2 py-2 space-y-1.5">
           {messages.map((msg) => (
             <div key={msg.id} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
               <div className={`max-w-[85%] rounded-lg px-2 py-1.5 text-[11px] leading-snug ${
                 msg.role === "user"
                   ? "bg-brand-50 text-slate-900"
                   : msg.role === "tool"
-                  ? "bg-white border border-slate-200 text-slate-600 font-mono"
-                  : "bg-white border border-slate-200 text-slate-600"
+                  ? "bg-white border border-brand-100 text-slate-600 font-mono"
+                  : "bg-white border border-brand-100 text-slate-600"
               }`}>
                 {msg.toolCalls && msg.toolCalls.length > 0 && (
                   <div className="text-[10px] text-brand-600 mb-1">
@@ -673,13 +673,13 @@ export function IndicatorRailView() {
         </div>
       )}
 
-      <form onSubmit={ask} className="shrink-0 border-t border-slate-200 p-2">
+      <form onSubmit={ask} className="shrink-0 border-t border-brand-100 p-2">
         {messages.length === 0 && (
-          <p className="mb-2 rounded-lg bg-slate-50 px-2 py-1.5 text-[11px] leading-snug text-slate-600">
+          <p className="mb-2 rounded-lg bg-brand-50 px-2 py-1.5 text-[11px] leading-snug text-slate-600">
             Ask me to add or remove an indicator.
           </p>
         )}
-        <div className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1.5">
+        <div className="flex items-center gap-1.5 rounded-lg border border-brand-100 bg-brand-50 px-2 py-1.5">
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
