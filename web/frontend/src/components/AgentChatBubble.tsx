@@ -122,33 +122,33 @@ function ToolCallCard({ meta }: { meta: ToolCallMeta }) {
   const isSuccess = result.success;
 
   return (
-    <div className={`rounded-lg border overflow-hidden mb-2 transition-all ${isSuccess ? "border-emerald-500/30 bg-emerald-500/5" : "border-red-500/30 bg-red-500/5"}`}>
+    <div className={`rounded-lg border overflow-hidden mb-2 transition-all ${isSuccess ? "border-emerald-200 bg-emerald-50" : "border-red-200 bg-red-50"}`}>
       <div
-        className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-slate-700/30"
+        className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-slate-100"
         onClick={() => setExpanded(!expanded)}
       >
-        <ChevronRight className={`h-3 w-3 transition-transform ${expanded ? "rotate-90" : ""} ${isSuccess ? "text-emerald-400" : "text-red-400"}`} />
+        <ChevronRight className={`h-3 w-3 transition-transform ${expanded ? "rotate-90" : ""} ${isSuccess ? "text-emerald-700" : "text-red-700"}`} />
         {isSuccess ? (
-          <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+          <CheckCircle2 className="h-4 w-4 text-emerald-700" />
         ) : (
-          <XCircle className="h-4 w-4 text-red-400" />
+          <XCircle className="h-4 w-4 text-red-700" />
         )}
-        <span className={`font-semibold text-sm ${isSuccess ? "text-emerald-300" : "text-red-300"}`}>
+        <span className={`font-semibold text-sm ${isSuccess ? "text-emerald-700" : "text-red-700"}`}>
           {toolName}
         </span>
         {Object.keys(args).length > 0 && (
-          <span className="text-xs text-slate-400">
+          <span className="text-xs text-slate-600">
             ({Object.entries(args).map(([k, v]) => `${k}=${JSON.stringify(v)}`).join(", ")})
           </span>
         )}
       </div>
 
       {expanded && (
-        <div className="px-3 py-2 border-t border-slate-700/50 text-xs font-mono">
+        <div className="px-3 py-2 border-t border-slate-200 text-xs font-mono">
           {isSuccess && result.data && (
             <div className="mb-2">
-              <div className="text-slate-400 mb-1">Result Preview:</div>
-              <pre className="text-emerald-300 bg-slate-900/50 p-2 rounded overflow-x-auto max-h-32">
+              <div className="text-slate-600 mb-1">Result Preview:</div>
+              <pre className="text-emerald-700 bg-slate-50 p-2 rounded overflow-x-auto max-h-32">
                 {JSON.stringify(result.data, null, 2).slice(0, 500)}
                 {JSON.stringify(result.data).length > 500 && "..."}
               </pre>
@@ -157,10 +157,10 @@ function ToolCallCard({ meta }: { meta: ToolCallMeta }) {
 
           {!isSuccess && result.error && (
             <div className="mb-2">
-              <div className="text-red-400 mb-1 flex items-center gap-1">
+              <div className="text-red-700 mb-1 flex items-center gap-1">
                 <AlertCircle className="h-3 w-3" /> Error:
               </div>
-              <div className="text-red-300 bg-red-900/20 p-2 rounded">
+              <div className="text-red-700 bg-red-50 p-2 rounded">
                 {result.error}
               </div>
             </div>
@@ -200,9 +200,9 @@ function MessageBubble({ msg }: { msg: Message }) {
     } : undefined;
 
     return (
-      <div className="bg-slate-800/80 rounded-lg px-3 py-2 text-sm border border-slate-700 max-h-[300px] overflow-y-auto">
+      <div className="bg-white rounded-lg px-3 py-2 text-sm border border-slate-200 max-h-[300px] overflow-y-auto">
         {msg.toolCalls && msg.toolCalls.length > 0 && (
-          <div className="mb-2 text-xs text-sky-400 flex items-center gap-2">
+          <div className="mb-2 text-xs text-brand-600 flex items-center gap-2">
             <ArrowRight className="h-3 w-3" />
             <span>Calling: {msg.toolCalls.map(tc => tc.name).join(", ")}</span>
           </div>
@@ -210,12 +210,12 @@ function MessageBubble({ msg }: { msg: Message }) {
         {toolMeta ? (
           <ToolCallCard meta={toolMeta} />
         ) : (
-          <div className="text-slate-400 font-mono text-xs whitespace-pre-wrap break-all">
+          <div className="text-slate-600 font-mono text-xs whitespace-pre-wrap break-all">
             {msg.content.slice(0, 300)}
             {msg.content.length > 300 && "..."}
           </div>
         )}
-        <div className="text-[10px] text-slate-500 mt-1">
+        <div className="text-[10px] text-slate-400 mt-1">
           {formatDateTime(msg.timestamp)}
         </div>
       </div>
@@ -226,14 +226,14 @@ function MessageBubble({ msg }: { msg: Message }) {
       <div
       className={`max-w-[85%] max-h-[300px] overflow-y-auto rounded-lg px-3 py-2 text-sm relative ${
         isUser
-          ? "bg-sky-600/30 text-slate-200 pr-8"
-          : "bg-slate-800/60 text-slate-300"
+          ? "bg-brand-50 text-slate-900 pr-8"
+          : "bg-white border border-slate-200 text-slate-700"
       }`}
     >
       {isUser && (
         <button
           onClick={(e) => { e.stopPropagation(); setEditingMessage(msg.id); }}
-          className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 rounded text-slate-400 hover:text-sky-400 hover:bg-slate-800/50 transition-colors"
+          className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 rounded text-slate-600 hover:text-brand-600 hover:bg-slate-100 transition-colors"
           aria-label="Edit message"
           title="Edit message"
         >
@@ -241,7 +241,7 @@ function MessageBubble({ msg }: { msg: Message }) {
         </button>
       )}
       {msg.toolCalls && msg.toolCalls.length > 0 && (
-        <div className="mb-2 text-xs text-sky-400">
+        <div className="mb-2 text-xs text-brand-600">
           <span className="font-semibold">Calling:</span> {msg.toolCalls.map(tc => tc.name).join(", ")}
         </div>
       )}
@@ -249,13 +249,13 @@ function MessageBubble({ msg }: { msg: Message }) {
         <div className="mb-2 text-xs">
           <button
             onClick={() => setShowThinking(!showThinking)}
-            className="flex items-center gap-1 text-slate-400 hover:text-slate-300"
+            className="flex items-center gap-1 text-slate-600 hover:text-slate-700"
           >
             <ChevronRight className={`h-3 w-3 transition-transform ${showThinking ? "rotate-90" : ""}`} />
             <span>Thinking ({msg.thinking.length} chars)</span>
           </button>
           {showThinking && (
-            <div className="mt-1 pl-4 text-slate-500 border-l border-slate-700 whitespace-pre-wrap max-h-[100px] overflow-y-auto">
+            <div className="mt-1 pl-4 text-slate-400 border-l border-slate-200 whitespace-pre-wrap max-h-[100px] overflow-y-auto">
               {msg.thinking}
             </div>
           )}
@@ -277,9 +277,9 @@ function MessageBubble({ msg }: { msg: Message }) {
       )}
       {msg.isStreaming && !msg.content && (
         <span className="inline-flex gap-1 ml-1">
-          <span className="w-1.5 h-1.5 bg-sky-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-          <span className="w-1.5 h-1.5 bg-sky-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-          <span className="w-1.5 h-1.5 bg-sky-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+          <span className="w-1.5 h-1.5 bg-brand-600 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+          <span className="w-1.5 h-1.5 bg-brand-600 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+          <span className="w-1.5 h-1.5 bg-brand-600 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
         </span>
       )}
       <div className={`text-[10px] mt-1 opacity-50 ${isUser ? "text-right" : "text-left"}`}>
@@ -713,23 +713,23 @@ export function AgentChatBubble() {
     <div className="fixed bottom-4 left-4 z-50">
       <button
         onClick={toggleChat}
-        className="h-14 w-14 rounded-full bg-sky-600 text-white shadow-lg hover:bg-sky-700 transition-colors flex items-center justify-center"
+        className="h-14 w-14 rounded-full bg-brand-600 text-white shadow-sm hover:bg-brand-700 transition-colors flex items-center justify-center"
         aria-label={isOpen ? "Close chat" : "Open chat"}
       >
         {isOpen ? <X className="h-6 w-6" /> : <MessageSquare className="h-6 w-6" />}
       </button>
 
       {isOpen && (
-        <div className="absolute bottom-16 left-0 w-[420px] h-[550px] bg-slate-900 rounded-lg shadow-2xl border border-slate-700 flex flex-col overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-700">
+        <div className="absolute bottom-16 left-0 w-[420px] h-[550px] bg-white rounded-lg shadow-sm border border-slate-200 flex flex-col overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200">
             <div className="flex items-center gap-2">
-              <MessageSquare className="h-4 w-4 text-sky-400" />
-              <span className="text-sm font-semibold text-slate-200">Trading Assistant</span>
+              <MessageSquare className="h-4 w-4 text-brand-600" />
+              <span className="text-sm font-semibold text-slate-900">Trading Assistant</span>
             </div>
             <div className="flex items-center gap-2">
               <button
                 onClick={openLargeScreen}
-                className="text-slate-400 hover:text-slate-200"
+                className="text-slate-600 hover:text-slate-900"
                 aria-label="Open full screen"
                 title="Open full screen"
               >
@@ -737,7 +737,7 @@ export function AgentChatBubble() {
               </button>
               <button
                 onClick={(e) => { e.stopPropagation(); setShowSessions(!showSessions); }}
-                className={`text-slate-400 hover:text-slate-200 ${showSessions ? "text-sky-400" : ""}`}
+                className={`text-slate-600 hover:text-slate-900 ${showSessions ? "text-brand-600" : ""}`}
                 aria-label="Session history"
                 title="Session history"
               >
@@ -745,14 +745,14 @@ export function AgentChatBubble() {
               </button>
               <button
                 onClick={(e) => { e.stopPropagation(); clearMessages(); }}
-                className="text-slate-400 hover:text-slate-200"
+                className="text-slate-600 hover:text-slate-900"
                 aria-label="New chat"
               >
                 <Plus className="h-4 w-4" />
               </button>
               <button
                 onClick={toggleChat}
-                className="text-slate-400 hover:text-slate-200"
+                className="text-slate-600 hover:text-slate-900"
                 aria-label="Close chat"
               >
                 <ChevronDown className="h-4 w-4" />
@@ -761,19 +761,19 @@ export function AgentChatBubble() {
           </div>
 
           {showSessions && (
-            <div className="max-h-40 overflow-y-auto border-b border-slate-700">
+            <div className="max-h-40 overflow-y-auto border-b border-slate-200">
               {Object.values(sessions).sort((a, b) => b.updatedAt - a.updatedAt).map((session) => (
                 <div
                   key={session.id}
-                  className={`flex items-center justify-between px-3 py-2 text-xs cursor-pointer hover:bg-slate-800/50 ${
-                    session.id === activeSessionId ? "bg-sky-600/20 text-sky-300" : "text-slate-400"
+                  className={`flex items-center justify-between px-3 py-2 text-xs cursor-pointer hover:bg-slate-50 ${
+                    session.id === activeSessionId ? "bg-brand-50 text-brand-700" : "text-slate-600"
                   }`}
                   onClick={() => { switchSession(session.id); setShowSessions(false); }}
                 >
                   <span className="truncate flex-1">{session.name}</span>
                   <button
                     onClick={(e) => { e.stopPropagation(); deleteSession(session.id); }}
-                    className="ml-2 text-slate-500 hover:text-red-400 shrink-0"
+                    className="ml-2 text-slate-400 hover:text-red-700 shrink-0"
                     aria-label="Delete session"
                   >
                     <Trash2 className="h-3 w-3" />
@@ -785,7 +785,7 @@ export function AgentChatBubble() {
 
           <div className="flex-1 overflow-y-auto p-4 space-y-3">
             {messages.length === 0 && (
-              <div className="text-center text-slate-500 text-sm py-8">
+              <div className="text-center text-slate-400 text-sm py-8">
                 Ask me anything about your trading data.
               </div>
             )}
@@ -800,14 +800,14 @@ export function AgentChatBubble() {
             <div ref={messagesEndRef} />
           </div>
 
-          <form onSubmit={handleSubmit} className="p-3 border-t border-slate-700">
+          <form onSubmit={handleSubmit} className="p-3 border-t border-slate-200">
             {editingMessageId && (
               <div className="flex items-center justify-between px-1 mb-2">
-                <span className="text-xs text-sky-400">Editing message</span>
+                <span className="text-xs text-brand-600">Editing message</span>
                 <button
                   type="button"
                   onClick={() => { setEditingMessage(null); setInput(""); }}
-                  className="text-xs text-slate-400 hover:text-slate-200"
+                  className="text-xs text-slate-600 hover:text-slate-900"
                 >
                   Cancel
                 </button>
@@ -819,13 +819,13 @@ export function AgentChatBubble() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder={editingMessageId ? "Edit your message..." : "Ask about your trading data..."}
-                className="flex-1 bg-slate-800 text-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-sky-500/50"
+                className="flex-1 bg-white border border-slate-300 text-slate-900 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-brand-300"
                 disabled={isLoading}
               />
               <button
                 type="submit"
                 disabled={!input.trim() || isLoading}
-                className="p-2 rounded-lg bg-sky-600 text-white hover:bg-sky-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="p-2 rounded-lg bg-brand-600 text-white hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 aria-label="Send message"
               >
                 {isLoading ? (

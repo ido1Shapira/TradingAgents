@@ -21,19 +21,19 @@ export function Modal({ open, onClose, title, children, footer }: ModalProps) {
           role="dialog"
           aria-label={title}
         >
-          <header className="flex items-center justify-between border-b border-slate-700/50 px-5 py-3">
-            <h2 className="font-semibold text-slate-200 text-sm">{title}</h2>
+          <header className="flex items-center justify-between border-b border-slate-200 px-5 py-3">
+            <h2 className="font-semibold text-slate-900 text-sm">{title}</h2>
             <button
               onClick={onClose}
               aria-label="Close"
-              className="p-1 hover:bg-slate-700/50 rounded-lg text-slate-500 hover:text-slate-300 transition-colors"
+              className="p-1 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-600 transition-colors"
             >
               <X className="w-4 h-4" />
             </button>
           </header>
           <div className="p-5 max-h-[70vh] overflow-y-auto">{children}</div>
           {footer && (
-            <footer className="border-t border-slate-700/50 px-5 py-3 flex items-center justify-between">
+            <footer className="border-t border-slate-200 px-5 py-3 flex items-center justify-between">
               {footer}
             </footer>
           )}

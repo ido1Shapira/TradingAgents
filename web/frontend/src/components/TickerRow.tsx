@@ -26,11 +26,11 @@ interface Props {
 }
 
 const dotColor: Record<Props["status"], string> = {
-  idle: "bg-slate-600",
-  queued: "bg-amber-500 shadow-[0_0_6px_rgba(245,158,11,0.4)]",
-  running: "bg-sky-400 animate-pulse shadow-[0_0_8px_rgba(56,189,248,0.5)]",
-  done: "bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.4)]",
-  errored: "bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.4)]",
+  idle: "bg-slate-400",
+  queued: "bg-amber-500 shadow-sm",
+  running: "bg-brand-500 animate-pulse shadow-sm",
+  done: "bg-emerald-500 shadow-sm",
+  errored: "bg-red-500 shadow-sm",
 };
 
 const GROUP_COLORS = ["#38bdf8", "#fb923c", "#a78bfa", "#34d399", "#f472b6", "#fbbf24", "#f87171", "#2dd4bf"];
@@ -97,11 +97,11 @@ export function TickerRow({ ticker, companyName, lastDecision, sparkline, status
       }}
       className={`relative group w-full text-left px-3 py-2.5 rounded-xl flex items-center gap-2 transition-colors duration-150 cursor-pointer ${
         isFocused
-          ? "bg-sky-500/10 ring-1 ring-sky-500/30 shadow-[0_0_12px_rgba(56,189,248,0.08)]"
+          ? "bg-brand-50 ring-1 ring-brand-200"
           : isDragOver
-            ? "bg-sky-500/5"
-            : "hover:bg-slate-800/60"
-      } ${dragHandleProps?.draggable ? "opacity-100" : ""} ${isDragOver ? "shadow-[inset_0_2px_0_0_rgba(56,189,248,0.4)]" : ""}`}
+            ? "bg-brand-50/50"
+            : "hover:bg-slate-50"
+      } ${dragHandleProps?.draggable ? "opacity-100" : ""} ${isDragOver ? "shadow-[inset_0_2px_0_0_rgba(37,99,235,0.2)]" : ""}`}
     >
       {/* Drag handle */}
       <span
@@ -114,22 +114,22 @@ export function TickerRow({ ticker, companyName, lastDecision, sparkline, status
       <span className={`h-2 w-2 rounded-full shrink-0 ${dotColor[status]}`} />
       <div className="flex-1 min-w-0">
         <div className="flex items-baseline gap-1.5">
-          <span className="text-sm font-semibold text-slate-100">{ticker}</span>
+          <span className="text-sm font-semibold text-slate-900">{ticker}</span>
           {stale ? (
             <span
               data-testid={`ticker-row-${ticker}-unavailable`}
-              className="text-[10px] uppercase tracking-wider font-medium text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded-md px-1.5 py-0.5"
+              className="text-[10px] uppercase tracking-wider font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-1.5 py-0.5"
             >
               unavailable
             </span>
           ) : price != null && !isNaN(price) ? (
-            <span className="text-xs data-text text-slate-400">
+            <span className="text-xs data-text text-slate-600">
               ${price.toFixed(2)}
             </span>
           ) : null}
         </div>
         <div className="flex items-baseline gap-1.5">
-          <span className="text-xs text-slate-600 truncate">
+          <span className="text-xs text-slate-400 truncate">
             {stale ? "Price data unavailable" : companyName || lastDecision || "—"}
           </span>
           {!stale && showChange ? (
@@ -142,7 +142,7 @@ export function TickerRow({ ticker, companyName, lastDecision, sparkline, status
         </div>
       </div>
       <svg width="40" height="20" className="opacity-40 shrink-0" aria-hidden="true">
-        {sparkPath && <path d={sparkPath} stroke={isFocused ? "#38bdf8" : "#475569"} strokeWidth="1.5" fill="none" />}
+        {sparkPath && <path d={sparkPath} stroke={isFocused ? "#2563eb" : "#94a3b8"} strokeWidth="1.5" fill="none" />}
       </svg>
       {!pending ? (
         <>
@@ -153,7 +153,7 @@ export function TickerRow({ ticker, companyName, lastDecision, sparkline, status
                 e.stopPropagation();
                 onAddAlert(ticker);
               }}
-              className="md:opacity-0 md:group-hover:opacity-100 text-slate-500 hover:text-sky-400 p-2 shrink-0 transition-opacity rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/50"
+              className="md:opacity-0 md:group-hover:opacity-100 text-slate-500 hover:text-brand-600 p-2 shrink-0 transition-opacity rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-200"
               title="Add price alert"
             >
               <Bell className="w-3 h-3" />
@@ -163,7 +163,7 @@ export function TickerRow({ ticker, companyName, lastDecision, sparkline, status
             type="button"
             onClick={(e) => { e.stopPropagation(); setPending(true); }}
             aria-label={`Remove ${ticker} from watchlist`}
-            className="md:opacity-0 md:group-hover:opacity-100 text-slate-500 hover:text-red-400 p-2 shrink-0 transition-opacity rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500/50"
+            className="md:opacity-0 md:group-hover:opacity-100 text-slate-500 hover:text-red-600 p-2 shrink-0 transition-opacity rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-200"
           >
             <X className="w-3 h-3" />
           </button>
@@ -173,12 +173,12 @@ export function TickerRow({ ticker, companyName, lastDecision, sparkline, status
           <button
             type="button"
             onClick={async (e) => { e.stopPropagation(); await onRemove?.(ticker); }}
-            className="text-red-400 hover:text-red-300 hover:underline"
+            className="text-red-600 hover:text-red-700 hover:underline"
           >Remove</button>
           <button
             type="button"
             onClick={(e) => { e.stopPropagation(); setPending(false); }}
-            className="text-slate-500 hover:text-slate-400 hover:underline"
+            className="text-slate-500 hover:text-slate-600 hover:underline"
           >Cancel</button>
         </span>
       )}

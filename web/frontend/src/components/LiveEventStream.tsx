@@ -5,17 +5,17 @@ import { formatDuration } from "../lib/format";
 import type { WsEvent } from "../lib/events";
 
 const colorForType: Record<string, string> = {
-  analyst_started: "bg-sky-500/10 text-sky-300 border-l-sky-500",
-  analyst_thinking: "bg-sky-500/5 text-sky-300/80 border-l-sky-500/50",
-  analyst_completed: "bg-sky-500/8 text-sky-200 border-l-sky-400",
-  tool_call: "bg-slate-700/30 text-slate-400 border-l-slate-600",
-  tool_result: "bg-slate-700/20 text-slate-400 border-l-slate-600",
-  debate_message: "bg-amber-500/10 text-amber-300 border-l-amber-500",
-  risk_message: "bg-amber-500/10 text-amber-300 border-l-amber-500",
-  decision: "bg-emerald-500/10 text-emerald-300 border-l-emerald-500",
-  run_failed: "bg-red-500/10 text-red-300 border-l-red-500",
-  run_finished: "bg-emerald-500/8 text-emerald-300/80 border-l-emerald-400",
-  server_notice: "bg-slate-700/30 text-slate-400 border-l-slate-600",
+  analyst_started: "bg-brand-50 text-brand-600 border-l-brand-500",
+  analyst_thinking: "bg-brand-50/60 text-brand-600/80 border-l-brand-500/50",
+  analyst_completed: "bg-brand-50 text-brand-600 border-l-brand-500",
+  tool_call: "bg-slate-100 text-slate-600 border-l-slate-400",
+  tool_result: "bg-slate-50 text-slate-600 border-l-slate-400",
+  debate_message: "bg-amber-50 text-amber-700 border-l-amber-500",
+  risk_message: "bg-amber-50 text-amber-700 border-l-amber-500",
+  decision: "bg-emerald-50 text-emerald-700 border-l-emerald-500",
+  run_failed: "bg-red-50 text-red-700 border-l-red-500",
+  run_finished: "bg-emerald-50 text-emerald-700/80 border-l-emerald-500",
+  server_notice: "bg-slate-100 text-slate-600 border-l-slate-400",
 };
 
 type EventData = Record<string, unknown>;
@@ -61,12 +61,12 @@ const formatBubble: Record<string, Formatter> = {
 };
 
 const TYPE_ICON: Record<string, JSX.Element | undefined> = {
-  debate_message: <MessageSquare className="w-3 h-3 inline mr-1 -mt-0.5 text-amber-400/70" />,
-  risk_message: <AlertTriangle className="w-3 h-3 inline mr-1 -mt-0.5 text-red-400/70" />,
-  tool_call: <Wrench className="w-3 h-3 inline mr-1 -mt-0.5 text-slate-400" />,
-  tool_result: <Wrench className="w-3 h-3 inline mr-1 -mt-0.5 text-slate-400" />,
-  decision: <Play className="w-3 h-3 inline mr-1 -mt-0.5 text-emerald-400/70" />,
-  analyst_started: <Play className="w-3 h-3 inline mr-1 -mt-0.5 text-sky-400/70" />,
+  debate_message: <MessageSquare className="w-3 h-3 inline mr-1 -mt-0.5 text-amber-700" />,
+  risk_message: <AlertTriangle className="w-3 h-3 inline mr-1 -mt-0.5 text-red-700" />,
+  tool_call: <Wrench className="w-3 h-3 inline mr-1 -mt-0.5 text-slate-600" />,
+  tool_result: <Wrench className="w-3 h-3 inline mr-1 -mt-0.5 text-slate-600" />,
+  decision: <Play className="w-3 h-3 inline mr-1 -mt-0.5 text-emerald-700" />,
+  analyst_started: <Play className="w-3 h-3 inline mr-1 -mt-0.5 text-brand-600" />,
 };
 
 export function LiveEventStream() {
@@ -133,25 +133,25 @@ export function LiveEventStream() {
 
   return (
     <div className="glass-panel" data-testid="live-event-stream">
-      <div className="flex items-center justify-between px-3 py-2 border-b border-slate-700/50">
+      <div className="flex items-center justify-between px-3 py-2 border-b border-slate-200">
         <span className="section-header flex items-center gap-2">
-          <span className="w-1.5 h-1.5 rounded-full bg-sky-400 shadow-[0_0_4px_rgba(56,189,248,0.5)] animate-pulse" />
+          <span className="w-1.5 h-1.5 rounded-full bg-brand-500 shadow-sm animate-pulse" />
           Event Stream
         </span>
-        <span className="text-[10px] font-mono text-slate-600">{events.length} events</span>
+        <span className="text-[10px] font-mono text-slate-400">{events.length} events</span>
       </div>
       <div ref={ref} className="h-48 md:h-72 overflow-y-auto p-2 space-y-1">
       {events.length === 0 && initialLoading ? (
         <div className="space-y-2 px-3 py-6">
           {Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="flex items-center gap-2 animate-pulse">
-              <div className="w-1.5 h-1.5 rounded-full bg-slate-700" />
-              <div className="h-3 bg-slate-700/50 rounded w-full" style={{ width: `${60 + Math.random() * 30}%` }} />
+              <div className="w-1.5 h-1.5 rounded-full bg-slate-200" />
+              <div className="h-3 bg-slate-100 rounded w-full" style={{ width: `${60 + Math.random() * 30}%` }} />
             </div>
           ))}
         </div>
       ) : events.length === 0 ? (
-        <p className="text-sm text-slate-500 text-center py-8">No events yet. Click &quot;Run analysis&quot; to start.</p>
+        <p className="text-sm text-slate-400 text-center py-8">No events yet. Click &quot;Run analysis&quot; to start.</p>
       ) : null}
       {events.map((e) => {
         const key = (e.id ?? "") + ":" + (e.ts ?? 0);
@@ -170,23 +170,23 @@ export function LiveEventStream() {
       })}
       </div>
       {stats.hasRun && (
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 px-3 py-1.5 border-t border-slate-700/50 bg-slate-900/60 text-[10px] font-mono text-slate-500">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 px-3 py-1.5 border-t border-slate-200 bg-slate-50 text-[10px] font-mono text-slate-500">
           <span className="flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500/60" />
-            <span className="text-emerald-400/80 font-semibold">{stats.agentsDone}</span>
-            <span className="text-slate-600">/</span>
-            <span className="text-slate-400">{stats.agentsTotal}</span>
-            <span className="text-slate-600">agents</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+            <span className="text-emerald-700 font-semibold">{stats.agentsDone}</span>
+            <span className="text-slate-400">/</span>
+            <span className="text-slate-600">{stats.agentsTotal}</span>
+            <span className="text-slate-400">agents</span>
           </span>
-          <span className="w-px h-3 bg-slate-700/50" />
-          <span className="text-slate-600">LLM</span>
-          <span className="text-sky-400/80">{stats.llmCalls}</span>
-          <span className="w-px h-3 bg-slate-700/50" />
-          <span className="text-slate-600">tools</span>
-          <span className="text-amber-400/80">{stats.toolCalls}</span>
-          <span className="w-px h-3 bg-slate-700/50" />
-          <span className="text-slate-600">elapsed</span>
-          <span className="text-slate-300">{stats.elapsed}</span>
+          <span className="w-px h-3 bg-slate-200" />
+          <span className="text-slate-400">LLM</span>
+          <span className="text-brand-600">{stats.llmCalls}</span>
+          <span className="w-px h-3 bg-slate-200" />
+          <span className="text-slate-400">tools</span>
+          <span className="text-amber-700">{stats.toolCalls}</span>
+          <span className="w-px h-3 bg-slate-200" />
+          <span className="text-slate-400">elapsed</span>
+          <span className="text-slate-700">{stats.elapsed}</span>
         </div>
       )}
     </div>
@@ -209,31 +209,31 @@ function Bubble({ event, expanded, onToggle }: { event: WsEvent; expanded: boole
   if (expanded) {
     if (reportText) {
       expandContent = (
-        <pre className="mt-2 whitespace-pre-wrap text-xs text-slate-300 bg-slate-950/60 rounded-lg p-3 border border-slate-800/50 max-h-96 overflow-y-auto">
+        <pre className="mt-2 whitespace-pre-wrap text-xs text-slate-700 bg-slate-50 rounded-lg p-3 border border-slate-200 max-h-96 overflow-y-auto">
           {reportText}
         </pre>
       );
     } else if (fullText) {
       expandContent = (
-        <pre className="mt-2 whitespace-pre-wrap text-xs text-slate-300 bg-slate-950/60 rounded-lg p-3 border border-slate-800/50 max-h-96 overflow-y-auto">
+        <pre className="mt-2 whitespace-pre-wrap text-xs text-slate-700 bg-slate-50 rounded-lg p-3 border border-slate-200 max-h-96 overflow-y-auto">
           {fullText}
         </pre>
       );
     } else if (event.type === "tool_call" && toolArgs) {
       expandContent = (
-        <div className="mt-2 text-xs text-slate-300 bg-slate-950/60 rounded-lg p-3 border border-slate-800/50 max-h-96 overflow-y-auto font-mono whitespace-pre-wrap">
+        <div className="mt-2 text-xs text-slate-700 bg-slate-50 rounded-lg p-3 border border-slate-200 max-h-96 overflow-y-auto font-mono whitespace-pre-wrap">
           {typeof toolArgs === "string" ? toolArgs : JSON.stringify(toolArgs, null, 2)}
         </div>
       );
     } else if (fullSummary) {
       expandContent = (
-        <div className="mt-2 text-xs text-slate-400 bg-slate-950/40 rounded-lg p-2 border border-slate-800/50">
+        <div className="mt-2 text-xs text-slate-600 bg-slate-50 rounded-lg p-2 border border-slate-200">
           {fullSummary}
         </div>
       );
     } else if (fullMessage) {
       expandContent = (
-        <div className="mt-2 text-xs text-slate-400 bg-slate-950/40 rounded-lg p-2 border border-slate-800/50">
+        <div className="mt-2 text-xs text-slate-600 bg-slate-50 rounded-lg p-2 border border-slate-200">
           {fullMessage}
         </div>
       );
@@ -244,11 +244,11 @@ function Bubble({ event, expanded, onToggle }: { event: WsEvent; expanded: boole
     <div
       data-testid={`event-${event.id ?? ""}`}
       className={`text-xs px-3 py-1.5 rounded-md border-l-2 ${
-        colorForType[event.type] ?? "bg-slate-700/20 text-slate-400 border-l-slate-600"
+        colorForType[event.type] ?? "bg-slate-100 text-slate-600 border-l-slate-400"
       } ${canExpand ? "cursor-pointer select-none hover:brightness-125" : ""} transition-all`}
       onClick={canExpand ? onToggle : undefined}
     >
-      <span className="text-slate-600 mr-2 font-mono text-[10px]">{new Date(event.ts).toLocaleTimeString()}</span>
+      <span className="text-slate-400 mr-2 font-mono text-[10px]">{new Date(event.ts).toLocaleTimeString()}</span>
       {icon}
       <span className="font-medium">{text}</span>
       {expandContent}

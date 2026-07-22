@@ -24,7 +24,7 @@ export function ReportPanel() {
   return (
     <div className="mt-6">
       <h3 className="section-header mb-3 flex items-center gap-2">
-        <FileText className="w-3 h-3 text-emerald-400" />
+        <FileText className="w-3 h-3 text-emerald-700" />
         Full Reports
       </h3>
       <div className="space-y-2">
@@ -35,7 +35,7 @@ export function ReportPanel() {
               <button
                 type="button"
                 onClick={() => setOpen(isOpen ? null : stage)}
-                className="w-full text-left px-4 py-2.5 hover:bg-slate-700/30 text-sm font-medium text-slate-300 flex items-center justify-between transition-colors"
+                className="w-full text-left px-4 py-2.5 hover:bg-slate-100 text-sm font-medium text-slate-700 flex items-center justify-between transition-colors"
                 aria-expanded={isOpen}
                 aria-controls={`report-${stage}`}
               >
@@ -46,7 +46,7 @@ export function ReportPanel() {
               </button>
               {isOpen && (
                 <div id={`report-${stage}`} role="region" aria-label={stageLabels[stage] ?? stage}>
-                  <pre className="text-xs text-slate-400 p-4 whitespace-pre-wrap max-h-96 overflow-y-auto border-t border-slate-700/50 leading-relaxed">
+                  <pre className="text-xs text-slate-600 p-4 whitespace-pre-wrap max-h-96 overflow-y-auto border-t border-slate-200 leading-relaxed">
                     {text}
                   </pre>
                 </div>

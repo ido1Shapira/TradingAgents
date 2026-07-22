@@ -385,7 +385,7 @@ export function WatchlistRail() {
         className={`
           fixed md:static inset-y-0 left-0 z-40
           w-full max-w-72 md:w-64
-          border-r border-slate-800 bg-slate-900/95 md:bg-slate-900/50 backdrop-blur-sm
+          border-r border-slate-200 bg-white md:bg-white/50 backdrop-blur-sm
           flex flex-col h-screen overflow-hidden
           transition-all duration-300 ease-out
           ${mobileSidebarOpen ? "translate-x-0" : "-translate-x-full"}
@@ -393,26 +393,26 @@ export function WatchlistRail() {
           ${sidebarCollapsed ? "md:w-0 md:min-w-0 md:border-r-0 md:overflow-hidden" : "md:w-64"}
         `}
       >
-        <div className="md:hidden shrink-0 flex items-center justify-between px-4 py-2 border-b border-slate-800 safe-area-top">
-          <span className="text-xs font-semibold uppercase tracking-widest text-slate-400">
+        <div className="md:hidden shrink-0 flex items-center justify-between px-4 py-2 border-b border-slate-200 safe-area-top">
+          <span className="text-xs font-semibold uppercase tracking-widest text-slate-600">
             {railMode === "watchlist" ? "Watchlist" : "Indicators"}
           </span>
           <button
             onClick={() => setMobileSidebarOpen(false)}
-            className="p-1 hover:bg-slate-700/50 rounded-lg text-slate-500 hover:text-slate-300 transition-colors"
+            className="p-1 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-slate-700 transition-colors"
             aria-label="Close watchlist"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
-        <div className="shrink-0 grid grid-cols-2 gap-1 border-b border-slate-800 px-2 py-2">
+        <div className="shrink-0 grid grid-cols-2 gap-1 border-b border-slate-200 px-2 py-2">
           <button
             type="button"
             onClick={() => setRailMode("watchlist")}
             className={`rounded-lg px-2 py-1.5 text-xs font-semibold transition-colors ${
               railMode === "watchlist"
-                ? "bg-sky-500/15 text-sky-300 border border-sky-500/25"
-                : "text-slate-500 hover:text-slate-300 hover:bg-slate-800/60"
+                ? "bg-brand-50 text-brand-700 border border-brand-200"
+                : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
             }`}
           >
             Watchlist
@@ -422,8 +422,8 @@ export function WatchlistRail() {
             onClick={() => setRailMode("indicators")}
             className={`rounded-lg px-2 py-1.5 text-xs font-semibold transition-colors ${
               railMode === "indicators"
-                ? "bg-emerald-500/15 text-emerald-300 border border-emerald-500/25"
-                : "text-slate-500 hover:text-slate-300 hover:bg-slate-800/60"
+                ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
             }`}
           >
             Indicators
@@ -433,18 +433,18 @@ export function WatchlistRail() {
           <IndicatorRailView />
         ) : (
           <>
-        <div className="shrink-0 px-4 py-3 border-b border-slate-800">
+        <div className="shrink-0 px-4 py-3 border-b border-slate-200">
           <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.5)]" />
-            <span className="text-xs font-semibold uppercase tracking-widest text-slate-400">Watchlist</span>
-            <span className="text-[10px] text-slate-600 ml-auto">
+            <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-sm" />
+            <span className="text-xs font-semibold uppercase tracking-widest text-slate-600">Watchlist</span>
+            <span className="text-[10px] text-slate-400 ml-auto">
               {filterTicker
                 ? `${filteredWatchlist.length + filteredAgentTickers.length}/${watchlist.length}`
                 : `${userTickersBase.length}M ${agentTickersBase.length}A`}
             </span>
           </div>
           <div className="relative mt-2">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-600 pointer-events-none" />
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
             <input
               type="text"
               value={filterTickerRaw}
@@ -460,13 +460,13 @@ export function WatchlistRail() {
                 }
               }}
               placeholder="Search ticker…"
-              className="w-full bg-slate-800/60 border border-slate-700/50 rounded-md pl-7 pr-7 py-1.5 text-xs text-slate-300 placeholder-slate-500 outline-none focus:border-slate-600 focus:bg-slate-800 transition-colors"
+              className="w-full bg-white border border-slate-200 rounded-md pl-7 pr-7 py-1.5 text-xs text-slate-700 placeholder-slate-500 outline-none focus:border-slate-400 focus:bg-white transition-colors"
             />
             {filterTicker && (
               <button
                 type="button"
                 onClick={() => { setFilterTickerRaw(""); setFilterTicker(""); setAddError(null); }}
-                className="absolute right-1.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
+                className="absolute right-1.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700 transition-colors"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
@@ -476,7 +476,7 @@ export function WatchlistRail() {
         <div className="flex-1 overflow-y-auto px-2 py-2 space-y-0.5">
           {/* Create group inline input */}
           {creatingGroup && (
-            <div className="flex items-center gap-2 px-2 py-1.5 bg-slate-800/40 rounded-lg border border-slate-700/50">
+            <div className="flex items-center gap-2 px-2 py-1.5 bg-white rounded-lg border border-slate-200">
               <input
                 autoFocus
                 type="text"
@@ -487,10 +487,10 @@ export function WatchlistRail() {
                   if (e.key === "Escape") { setCreatingGroup(false); setNewGroupName(""); }
                 }}
                 placeholder="Group name"
-                className="flex-1 bg-slate-900 border border-slate-700 rounded px-1.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-sky-500/50 placeholder-slate-500"
+                className="flex-1 bg-white border border-slate-200 rounded px-1.5 py-1 text-xs text-slate-900 focus:outline-none focus:border-brand-500 placeholder-slate-500"
               />
-              <button type="button" disabled={!newGroupName.trim()} onClick={handleCreateGroup} className="text-[10px] text-sky-400 hover:text-sky-300 font-medium disabled:opacity-30">Create</button>
-              <button type="button" onClick={() => { setCreatingGroup(false); setNewGroupName(""); }} className="text-[10px] text-slate-500 hover:text-slate-300">Cancel</button>
+              <button type="button" disabled={!newGroupName.trim()} onClick={handleCreateGroup} className="text-[10px] text-brand-600 hover:text-brand-700 font-medium disabled:opacity-30">Create</button>
+              <button type="button" onClick={() => { setCreatingGroup(false); setNewGroupName(""); }} className="text-[10px] text-slate-500 hover:text-slate-700">Cancel</button>
             </div>
           )}
 
@@ -518,11 +518,11 @@ export function WatchlistRail() {
                     }
                   }}
                   className={`flex items-center gap-1 px-1 py-1.5 rounded transition-colors ${
-                    isOver ? "bg-sky-500/10 ring-1 ring-sky-500/40" : ""
+                    isOver ? "bg-brand-50 ring-1 ring-brand-200" : ""
                   } ${isEmpty ? "opacity-60" : ""}`}
                 >
                   {/* Drag grip */}
-                  <GripVertical className="w-3 h-3 text-slate-600 cursor-grab active:cursor-grabbing shrink-0" />
+                  <GripVertical className="w-3 h-3 text-slate-400 cursor-grab active:cursor-grabbing shrink-0" />
 
                   {/* Color dot */}
                   <button
@@ -537,7 +537,7 @@ export function WatchlistRail() {
                   <button
                     type="button"
                     onClick={() => setCollapsedGroup(name, !collapsed)}
-                    className="text-slate-500 hover:text-slate-300 transition-colors text-[10px]"
+                    className="text-slate-500 hover:text-slate-700 transition-colors text-[10px]"
                   >
                     <span className={`inline-block transition-transform ${collapsed ? "" : "rotate-90"}`}>▸</span>
                   </button>
@@ -554,10 +554,10 @@ export function WatchlistRail() {
                           if (e.key === "Enter") handleRename();
                           if (e.key === "Escape") setEditingGroup(null);
                         }}
-                        className="flex-1 bg-slate-900 border border-slate-700 rounded px-1.5 py-0.5 text-[10px] text-slate-200 focus:outline-none focus:border-sky-500/50"
+                        className="flex-1 bg-white border border-slate-200 rounded px-1.5 py-0.5 text-[10px] text-slate-900 focus:outline-none focus:border-brand-500"
                       />
-                      <button type="button" disabled={renameMutation.isPending} onClick={handleRename} className="text-[10px] text-sky-400 hover:text-sky-300 font-medium disabled:opacity-30">Save</button>
-                      <button type="button" onClick={() => setEditingGroup(null)} className="text-[10px] text-slate-500 hover:text-slate-300">Cancel</button>
+                      <button type="button" disabled={renameMutation.isPending} onClick={handleRename} className="text-[10px] text-brand-600 hover:text-brand-700 font-medium disabled:opacity-30">Save</button>
+                      <button type="button" onClick={() => setEditingGroup(null)} className="text-[10px] text-slate-500 hover:text-slate-700">Cancel</button>
                     </div>
                   ) : (
                     <span
@@ -570,7 +570,7 @@ export function WatchlistRail() {
                           setCollapsedGroup(name, !collapsed);
                         }
                       }}
-                      className="flex-1 text-left text-[10px] font-semibold uppercase tracking-wider text-slate-500 hover:text-slate-300 transition-colors truncate cursor-pointer"
+                      className="flex-1 text-left text-[10px] font-semibold uppercase tracking-wider text-slate-500 hover:text-slate-700 transition-colors truncate cursor-pointer"
                       title="Short click: toggle group | Long press: rename"
                     >
                       {name}
@@ -578,19 +578,19 @@ export function WatchlistRail() {
                   )}
 
                   {/* Count */}
-                  <span className="text-[10px] text-slate-600">{tickers.length}</span>
+                  <span className="text-[10px] text-slate-400">{tickers.length}</span>
 
                   {/* Delete */}
                   {confirmDeleteGroup === name ? (
                     <div className="flex items-center gap-0.5">
-                      <button type="button" disabled={deleteGroupMutation.isPending} onClick={() => deleteGroupMutation.mutate(name)} className="text-[10px] text-red-400 hover:text-red-300 font-medium disabled:opacity-30">Confirm</button>
-                      <button type="button" onClick={() => setConfirmDeleteGroup(null)} className="text-[10px] text-slate-500 hover:text-slate-300">Cancel</button>
+                      <button type="button" disabled={deleteGroupMutation.isPending} onClick={() => deleteGroupMutation.mutate(name)} className="text-[10px] text-red-600 hover:text-red-700 font-medium disabled:opacity-30">Confirm</button>
+                      <button type="button" onClick={() => setConfirmDeleteGroup(null)} className="text-[10px] text-slate-500 hover:text-slate-700">Cancel</button>
                     </div>
                   ) : (
                     <button
                       type="button"
                       onClick={() => setConfirmDeleteGroup(name)}
-                      className="text-slate-500 hover:text-red-400 transition-colors text-xs leading-none px-0.5"
+                      className="text-slate-500 hover:text-red-600 transition-colors text-xs leading-none px-0.5"
                       title="Delete group"
                     >
                       ×
@@ -599,7 +599,7 @@ export function WatchlistRail() {
                 </div>
 
                 {isEmpty && (
-                  <div className="text-[10px] text-slate-600 italic px-2 py-1 text-center">
+                  <div className="text-[10px] text-slate-400 italic px-2 py-1 text-center">
                     Drag a ticker here
                   </div>
                 )}
@@ -614,7 +614,7 @@ export function WatchlistRail() {
             <button
               type="button"
               onClick={() => setCreatingGroup(true)}
-              className="w-full flex items-center gap-1.5 px-1 py-1 text-[10px] text-slate-500 hover:text-sky-400 transition-colors"
+              className="w-full flex items-center gap-1.5 px-1 py-1 text-[10px] text-slate-500 hover:text-brand-600 transition-colors"
             >
               <Plus className="w-3 h-3" />
               Add group
@@ -629,11 +629,11 @@ export function WatchlistRail() {
               onDragLeave={() => setGroupDropTarget(null)}
               onDrop={() => handleGroupDrop(null)}
               className={`rounded transition-colors ${
-                groupDropTarget === "__ungrouped__" ? "bg-sky-500/10 ring-1 ring-sky-500/40" : ""
+                groupDropTarget === "__ungrouped__" ? "bg-brand-50 ring-1 ring-brand-200" : ""
               }`}
             >
               {groupNames.length > 0 && (
-                <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-600 px-1 py-1.5">
+                <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 px-1 py-1.5">
                   Ungrouped
                 </div>
               )}
@@ -642,21 +642,21 @@ export function WatchlistRail() {
           )}
 
           {/* Agent Tickers section */}
-          <div className="border-t border-slate-700/30 pt-2 mt-2">
+          <div className="border-t border-slate-200 pt-2 mt-2">
             <div className="flex items-center gap-1.5 px-1 py-1.5">
-              <span className="w-2 h-2 rounded-full bg-amber-400 shadow-[0_0_6px_rgba(251,191,36,0.5)]" />
+              <span className="w-2 h-2 rounded-full bg-amber-500 shadow-sm" />
               <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Agent Tickers</span>
-              <span className="text-[10px] text-slate-600 ml-auto">{filteredAgentTickers.length}</span>
+              <span className="text-[10px] text-slate-400 ml-auto">{filteredAgentTickers.length}</span>
             </div>
             {filteredAgentTickers.length > 0 ? (
               filteredAgentTickers.map(renderRow)
             ) : (
-              <p className="text-[10px] text-slate-600 italic px-2 py-1">No agent tickers yet</p>
+              <p className="text-[10px] text-slate-400 italic px-2 py-1">No agent tickers yet</p>
             )}
           </div>
 
           {/* Price Alerts Section */}
-          <div className="border-t border-slate-700/30 pt-2 mt-2">
+          <div className="border-t border-slate-200 pt-2 mt-2">
             <div className="flex items-center justify-between px-1 py-1.5">
               <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
                 Price Alerts
@@ -666,7 +666,7 @@ export function WatchlistRail() {
                   setShowAlertForm(!showAlertForm);
                   setAlertError(null);
                 }}
-                className="text-slate-500 hover:text-slate-300 transition-colors"
+                className="text-slate-500 hover:text-slate-700 transition-colors"
               >
                 <Plus className="w-3 h-3" />
               </button>
@@ -674,19 +674,19 @@ export function WatchlistRail() {
 
             {/* Alert Form */}
             {showAlertForm && (
-              <div className="px-2 mb-2 p-2 bg-slate-800/40 rounded-lg border border-slate-700/50">
+              <div className="px-2 mb-2 p-2 bg-white rounded-lg border border-slate-200">
                 <div className="flex gap-1 mb-2">
                   <input
                     type="text"
                     placeholder="Ticker"
                     value={alertTicker}
                     onChange={(e) => setAlertTicker(e.target.value.toUpperCase())}
-                    className="flex-1 bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-sky-500/50"
+                    className="flex-1 bg-white border border-slate-200 rounded px-2 py-1 text-xs text-slate-900 placeholder-slate-500 focus:outline-none focus:border-brand-500"
                   />
                   <select
                     value={alertComparator}
                     onChange={(e) => setAlertComparator(e.target.value as typeof alertComparator)}
-                    className="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-slate-200 focus:outline-none focus:border-sky-500/50"
+                    className="bg-white border border-slate-200 rounded px-2 py-1 text-xs text-slate-900 focus:outline-none focus:border-brand-500"
                   >
                     <option value="above">Above</option>
                     <option value="below">Below</option>
@@ -700,7 +700,7 @@ export function WatchlistRail() {
                     placeholder="Price"
                     value={alertThreshold}
                     onChange={(e) => setAlertThreshold(e.target.value)}
-                    className="flex-1 bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-sky-500/50"
+                    className="flex-1 bg-white border border-slate-200 rounded px-2 py-1 text-xs text-slate-900 placeholder-slate-500 focus:outline-none focus:border-brand-500"
                   />
                   <button
                     onClick={async () => {
@@ -725,13 +725,13 @@ export function WatchlistRail() {
                         setAlertError(err instanceof Error ? err.message : "Failed to add alert");
                       }
                     }}
-                    className="bg-sky-500/20 hover:bg-sky-500/30 text-sky-400 px-2 py-1 rounded text-xs transition-colors"
+                    className="bg-brand-50 hover:bg-brand-100 text-brand-600 px-2 py-1 rounded text-xs transition-colors"
                   >
                     Add
                   </button>
                 </div>
                 {alertError && (
-                  <p className="text-red-400 text-xs mt-1">{alertError}</p>
+                  <p className="text-red-600 text-xs mt-1">{alertError}</p>
                 )}
               </div>
             )}
@@ -741,7 +741,7 @@ export function WatchlistRail() {
               {tickerAlerts.map((alert: Indicator) => (
                 <div
                   key={alert.id}
-                  className="flex items-center justify-between px-2 py-1 rounded hover:bg-slate-800/60 group"
+                  className="flex items-center justify-between px-2 py-1 rounded hover:bg-slate-50 group"
                 >
                   <div className="flex items-center gap-2">
                     <div
@@ -749,7 +749,7 @@ export function WatchlistRail() {
                         alert.triggered ? "bg-slate-500" : "bg-emerald-500"
                       }`}
                     />
-                    <span className="text-xs text-slate-300">
+                    <span className="text-xs text-slate-700">
                       {alert.ticker} {alert.comparator === "above" ? ">" : alert.comparator === "below" ? "<" : alert.comparator === "at_least" ? ">=" : "~"} ${alert.threshold}
                     </span>
                   </div>
@@ -760,7 +760,7 @@ export function WatchlistRail() {
                           await resetIndicator(alert.id);
                           qc.invalidateQueries({ queryKey: ["indicators"] });
                         }}
-                        className="text-amber-400/60 hover:text-amber-400 text-xs"
+                        className="text-amber-600/60 hover:text-amber-700 text-xs"
                         title="Reset alert"
                       >
                         ↺
@@ -771,7 +771,7 @@ export function WatchlistRail() {
                         await removeIndicator(alert.id);
                         qc.invalidateQueries({ queryKey: ["indicators"] });
                       }}
-                      className="text-red-400/60 hover:text-red-400 text-xs"
+                      className="text-red-600/60 hover:text-red-700 text-xs"
                       title="Delete alert"
                     >
                       ×
@@ -780,7 +780,7 @@ export function WatchlistRail() {
                 </div>
               ))}
               {tickerAlerts.length === 0 && !showAlertForm && (
-                <p className="text-[10px] text-slate-600 italic px-2 py-1">No price alerts</p>
+                <p className="text-[10px] text-slate-400 italic px-2 py-1">No price alerts</p>
               )}
             </div>
           </div>
@@ -797,12 +797,12 @@ export function WatchlistRail() {
                 type="button"
                 disabled={addingTicker}
                 onClick={handleAddFromFilter}
-                className="flex items-center gap-1.5 text-xs font-medium text-sky-400 hover:text-sky-300 disabled:text-slate-600 transition-colors"
+                className="flex items-center gap-1.5 text-xs font-medium text-brand-600 hover:text-brand-700 disabled:text-slate-400 transition-colors"
               >
                 <Plus className="w-3.5 h-3.5" />
                 {addingTicker ? "Adding…" : `Add ${filterTicker.toUpperCase()} to watchlist`}
               </button>
-              {addError && <p className="text-xs text-red-400 mt-2 text-center" role="alert">{addError}</p>}
+              {addError && <p className="text-xs text-red-600 mt-2 text-center" role="alert">{addError}</p>}
             </div>
           )}
         </div>

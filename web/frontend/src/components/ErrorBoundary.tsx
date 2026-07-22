@@ -43,7 +43,7 @@ export class ErrorBoundary extends Component<Props, State> {
             />
             <button
               onClick={this.handleRetry}
-              className="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-sky-400 hover:text-sky-300 bg-sky-500/10 hover:bg-sky-500/20 border border-sky-500/20 rounded-lg px-3 py-1.5 transition-colors"
+              className="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-brand-600 hover:text-brand-700 bg-brand-50 hover:bg-brand-100 border border-brand-200 rounded-lg px-3 py-1.5 transition-colors"
             >
               <RefreshCw className="w-3 h-3" />
               Try again

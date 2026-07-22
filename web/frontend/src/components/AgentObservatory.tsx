@@ -28,11 +28,11 @@ export function AgentObservatory({ events, onClose }: AgentObservatoryProps & { 
 
   return (
     <div className="space-y-3" data-testid="agent-observatory">
-      <div className="flex items-center gap-1 border-b border-slate-700/50 pb-1">
+      <div className="flex items-center gap-1 border-b border-slate-200 pb-1">
         {onClose && (
           <button
             onClick={onClose}
-            className="text-slate-500 hover:text-slate-300 transition-colors rounded-md p-0.5 mr-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/50"
+            className="text-slate-400 hover:text-slate-700 transition-colors rounded-md p-0.5 mr-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-200"
             title="Close Observatory"
           >
             <X className="w-4 h-4" />
@@ -41,10 +41,10 @@ export function AgentObservatory({ events, onClose }: AgentObservatoryProps & { 
         {tabs.map(t => (
           <button key={t.key}
             onClick={() => setTab(t.key)}
-            className={`px-3 py-1.5 text-xs rounded-t-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/50 ${
+            className={`px-3 py-1.5 text-xs rounded-t-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-200 ${
               tab === t.key
-                ? "bg-sky-500/15 text-sky-300 border-b-2 border-sky-400"
-                : "text-slate-500 hover:text-slate-300"
+                ? "bg-brand-50 text-brand-700 border-b-2 border-brand-500"
+                : "text-slate-400 hover:text-slate-700"
             }`}
           >
             {t.label}
@@ -64,8 +64,8 @@ export function AgentObservatory({ events, onClose }: AgentObservatoryProps & { 
               <button key={name} onClick={() => setSelectedAgent(name)}
                 className={`px-2 py-1 text-[10px] rounded-full border transition-colors ${
                   selectedAgent === name
-                    ? "bg-sky-500/20 text-sky-300 border-sky-500/30"
-                    : "text-slate-500 border-slate-700/50 hover:text-slate-300"
+                    ? "bg-brand-50 text-brand-700 border-brand-200"
+                    : "text-slate-400 border-slate-200 hover:text-slate-700"
                 }`}
               >
                 {name}

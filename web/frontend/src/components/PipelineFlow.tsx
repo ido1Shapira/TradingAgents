@@ -242,7 +242,7 @@ function StageDetailPanel({
   return (
     <div
       data-testid={`stage-${stageKey}-details`}
-      className="mt-3 rounded-xl border border-slate-700/50 bg-slate-900/60 backdrop-blur-sm p-4 text-sm animate-fade-in"
+      className="mt-3 rounded-xl border border-slate-200 bg-white p-4 text-sm animate-fade-in"
       style={{ borderLeftColor: ac.base, borderLeftWidth: 2 }}
     >
       <div className="flex items-center justify-between mb-3">
@@ -251,21 +251,21 @@ function StageDetailPanel({
             {stageConfig.icon}
           </span>
           <div>
-            <div className="font-semibold text-slate-200">{stageConfig.label}</div>
+            <div className="font-semibold text-slate-900">{stageConfig.label}</div>
             <div className="text-[10px] text-slate-500 font-medium capitalize">{stageDerived.status}</div>
           </div>
           {stageDerived.node && (
-            <span className="ml-2 text-[10px] font-mono text-slate-500 bg-slate-800/60 px-2 py-0.5 rounded">
+            <span className="ml-2 text-[10px] font-mono text-slate-500 bg-white px-2 py-0.5 rounded border border-slate-200">
               {stageDerived.node}
             </span>
           )}
         </div>
-        <button onClick={onClose} className="text-xs text-slate-500 hover:text-slate-300 transition-colors">Close</button>
+        <button onClick={onClose} className="text-xs text-slate-500 hover:text-slate-700 transition-colors">Close</button>
       </div>
 
       {isRunning ? (
         stageDerived.thinkingLog.length > 0 ? (
-          <pre className="text-xs leading-relaxed text-slate-300 bg-slate-950/60 rounded-lg p-3 max-h-64 overflow-y-auto whitespace-pre-wrap font-mono border border-slate-800/50">
+          <pre className="text-xs leading-relaxed text-slate-300 bg-slate-50 rounded-lg p-3 max-h-64 overflow-y-auto whitespace-pre-wrap font-mono border border-slate-200">
             {stageDerived.thinkingLog.join("\n")}
             <span className="inline-block w-1.5 h-3 ml-0.5 align-middle rounded-sm animate-pulse" style={{ backgroundColor: ac.base }} />
           </pre>
@@ -277,24 +277,24 @@ function StageDetailPanel({
         )
       ) : isDone ? (
         <div className="space-y-2">
-          {stageDerived.excerpt && <div className="text-xs text-slate-400 leading-relaxed">{stageDerived.excerpt}</div>}
+          {stageDerived.excerpt && <div className="text-xs text-slate-600 leading-relaxed">{stageDerived.excerpt}</div>}
           {stageDerived.fullText && (
-            <pre className="text-xs leading-relaxed text-slate-300 bg-slate-950/60 rounded-lg p-3 max-h-64 overflow-y-auto whitespace-pre-wrap font-mono border border-slate-800/50">
+          <pre className="text-xs leading-relaxed text-slate-700 bg-slate-50 rounded-lg p-3 max-h-64 overflow-y-auto whitespace-pre-wrap font-mono border border-slate-200">
               {stageDerived.fullText}
             </pre>
           )}
           {!stageDerived.excerpt && !stageDerived.fullText && (
-            <div className="text-xs text-slate-400 italic">No report content.</div>
+            <div className="text-xs text-slate-600 italic">No report content.</div>
           )}
         </div>
       ) : stageDerived.status === "errored" ? (
-        <div className="flex items-center gap-2 text-xs text-red-400">
+        <div className="flex items-center gap-2 text-xs text-red-700">
           <AlertCircle className="w-3.5 h-3.5" />
           This stage did not run because the run failed earlier.
         </div>
       ) : (
-        <div className="flex items-center gap-2 text-xs text-slate-600 italic">
-          <span className="w-1.5 h-1.5 rounded-full bg-slate-700" />
+        <div className="flex items-center gap-2 text-xs text-slate-400 italic">
+          <span className="w-1.5 h-1.5 rounded-full bg-slate-200" />
           Waiting for {stageConfig.label} to start…
         </div>
       )}
@@ -361,7 +361,7 @@ export function PipelineFlow({ events }: { events: WsEvent[] }) {
             />
             {i < teamStatuses.length - 1 && (
               <div className="flex items-center shrink-0 px-1">
-                <div aria-hidden="true" className="w-1.5 h-1.5 rounded-full bg-slate-600" />
+                <div aria-hidden="true" className="w-1.5 h-1.5 rounded-full bg-slate-300" />
               </div>
             )}
           </div>

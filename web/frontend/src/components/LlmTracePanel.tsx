@@ -69,7 +69,7 @@ export function LlmTracePanel({ calls }: Props) {
 
   if (calls.length === 0) {
     return (
-      <div className="text-sm text-slate-600 text-center py-8">
+      <div className="text-sm text-slate-400 text-center py-8">
         No LLM calls recorded yet.
       </div>
     );
@@ -108,13 +108,13 @@ export function LlmTracePanel({ calls }: Props) {
   return (
     <div>
       {/* Toggle controls */}
-      <div className="flex items-center gap-3 px-1 mb-3 text-xs text-slate-500">
+      <div className="flex items-center gap-3 px-1 mb-3 text-xs text-slate-400">
         <label className="flex items-center gap-1.5 cursor-pointer select-none">
           <input
             type="checkbox"
             checked={showPrompts}
             onChange={() => setShowPrompts((v) => !v)}
-            className="w-3 h-3 rounded border-slate-600 bg-slate-800 text-sky-500 focus:ring-0"
+            className="w-3 h-3 rounded border-slate-300 bg-white text-brand-600 focus:ring-0"
           />
           Show prompts
         </label>
@@ -123,11 +123,11 @@ export function LlmTracePanel({ calls }: Props) {
             type="checkbox"
             checked={showResponses}
             onChange={() => setShowResponses((v) => !v)}
-            className="w-3 h-3 rounded border-slate-600 bg-slate-800 text-sky-500 focus:ring-0"
+            className="w-3 h-3 rounded border-slate-300 bg-white text-brand-600 focus:ring-0"
           />
           Show responses
         </label>
-        <span className="ml-auto text-[10px] font-mono text-slate-600">
+        <span className="ml-auto text-[10px] font-mono text-slate-400">
           {filteredCalls.length}/{calls.length} LLM calls
         </span>
       </div>
@@ -139,12 +139,12 @@ export function LlmTracePanel({ calls }: Props) {
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Search prompts, responses, agents..."
-          className="flex-1 px-3 py-1.5 text-xs font-mono bg-slate-800 border border-slate-700 rounded-lg text-slate-300 placeholder-slate-500 focus:outline-none focus:border-slate-600"
+          className="flex-1 px-3 py-1.5 text-xs font-mono bg-white border border-slate-200 rounded-lg text-slate-700 placeholder-slate-400 focus:outline-none focus:border-slate-300"
         />
         <select
           value={agentFilter}
           onChange={(e) => setAgentFilter(e.target.value)}
-          className="px-3 py-1.5 text-xs font-mono bg-slate-800 border border-slate-700 rounded-lg text-slate-300 focus:outline-none focus:border-slate-600"
+          className="px-3 py-1.5 text-xs font-mono bg-white border border-slate-200 rounded-lg text-slate-700 focus:outline-none focus:border-slate-300"
         >
           <option value="">All agents</option>
           {[...new Set(calls.map((c) => c.node_name || "unknown"))].map((name) => (
@@ -157,7 +157,7 @@ export function LlmTracePanel({ calls }: Props) {
 
       {/* Per-node sections or no-results */}
       {sortedNodes.length === 0 ? (
-        <div className="text-sm text-slate-500 text-center py-8">
+        <div className="text-sm text-slate-400 text-center py-8">
           {hasFilter ? (
             <>
               No results matching your filters.{" "}
@@ -167,7 +167,7 @@ export function LlmTracePanel({ calls }: Props) {
                   setDebouncedSearch("");
                   setAgentFilter("");
                 }}
-                className="text-sky-500 hover:text-sky-400 underline"
+                className="text-brand-600 hover:text-brand-700 underline"
               >
                 Clear filters
               </button>
@@ -184,29 +184,29 @@ export function LlmTracePanel({ calls }: Props) {
             const totalDuration = nodeCalls.reduce((s, c) => s + (c.duration_ms || 0), 0);
 
             return (
-              <div key={node} className="rounded-lg border border-slate-700/50 bg-slate-900/60 overflow-hidden">
+              <div key={node} className="rounded-lg border border-slate-200 bg-white overflow-hidden">
                 {/* Node header */}
                 <div
-                  className="flex items-center gap-3 px-3 py-2 cursor-pointer select-none hover:bg-slate-800/40 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-sky-500/50"
+                  className="flex items-center gap-3 px-3 py-2 cursor-pointer select-none hover:bg-slate-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-200"
                   style={{ borderLeft: `3px solid ${color}` }}
                   onClick={() => setExpandedId(expandedId === node ? null : node)}
                 >
-                  <ChevronRight className={`w-3 h-3 text-slate-500 transition-transform duration-200 ${
+                  <ChevronRight className={`w-3 h-3 text-slate-400 transition-transform duration-200 ${
                     expandedId === node ? "rotate-90" : ""
                   }`} />
-                  <span className="text-xs font-semibold text-slate-200 min-w-[140px]">{node}</span>
-                  <div className="flex items-center gap-3 text-[10px] font-mono text-slate-500">
+                  <span className="text-xs font-semibold text-slate-900 min-w-[140px]">{node}</span>
+                  <div className="flex items-center gap-3 text-[10px] font-mono text-slate-400">
                     <span>{nodeCalls.length} calls</span>
-                    <span className="w-px h-3 bg-slate-700/50" />
+                    <span className="w-px h-3 bg-slate-200" />
                     <span>{formatDuration(totalDuration)}</span>
-                    <span className="w-px h-3 bg-slate-700/50" />
-                    <span className="text-slate-400">{totalTokens} tokens</span>
+                    <span className="w-px h-3 bg-slate-200" />
+                    <span className="text-slate-600">{totalTokens} tokens</span>
                   </div>
                 </div>
 
                 {/* Expanded call details */}
                 {expandedId === node && (
-                  <div className="border-t border-slate-700/50">
+                  <div className="border-t border-slate-200">
                     {nodeCalls.map((call, i) => (
                       <CallCard
                         key={call.id}
@@ -243,19 +243,19 @@ function highlightJson(json: string) {
 
     if (keyStr) {
       if (colonPart != null) {
-        tokens.push(<span key={match.index} className="text-sky-300">{keyStr}</span>);
+        tokens.push(<span key={match.index} className="text-brand-600">{keyStr}</span>);
         tokens.push(<span key={`c${match.index}`}>{colonPart}</span>);
       } else {
-        tokens.push(<span key={match.index} className="text-emerald-300">{keyStr}</span>);
+        tokens.push(<span key={match.index} className="text-emerald-700">{keyStr}</span>);
       }
     } else if (num) {
-      tokens.push(<span key={match.index} className="text-amber-300">{num}</span>);
+      tokens.push(<span key={match.index} className="text-amber-700">{num}</span>);
     } else if (bool) {
-      tokens.push(<span key={match.index} className="text-purple-300">{bool}</span>);
+      tokens.push(<span key={match.index} className="text-purple-700">{bool}</span>);
     } else if (nullVal) {
-      tokens.push(<span key={match.index} className="text-slate-500">{nullVal}</span>);
+      tokens.push(<span key={match.index} className="text-slate-400">{nullVal}</span>);
     } else if (bracket) {
-      tokens.push(<span key={match.index} className="text-slate-400">{bracket}</span>);
+      tokens.push(<span key={match.index} className="text-slate-600">{bracket}</span>);
     } else {
       tokens.push(<span key={match.index}>{match[0]}</span>);
     }
@@ -293,25 +293,25 @@ function CallCard({
   const responseTruncated = responseLines > 30;
 
   return (
-    <div className="border-b border-slate-800/40 last:border-b-0">
+    <div className="border-b border-slate-100 last:border-b-0">
       {/* Call metadata bar */}
-      <div className="flex items-center gap-3 px-4 py-1.5 bg-slate-950/30 text-[10px] font-mono text-slate-600">
-        <span className="text-slate-500">#{index + 1}/{total}</span>
+      <div className="flex items-center gap-3 px-4 py-1.5 bg-slate-50 text-[10px] font-mono text-slate-400">
+        <span className="text-slate-400">#{index + 1}/{total}</span>
         <span className="w-px h-2.5 bg-slate-700/50" />
-        <span className="text-slate-400">{call.model}</span>
+        <span className="text-slate-600">{call.model}</span>
         {call.duration_ms > 0 && (
           <>
-            <span className="w-px h-2.5 bg-slate-700/50" />
+            <span className="w-px h-2.5 bg-slate-200" />
             <span>{formatDuration(call.duration_ms)}</span>
           </>
         )}
         {call.total_tokens > 0 && (
           <>
-            <span className="w-px h-2.5 bg-slate-700/50" />
+            <span className="w-px h-2.5 bg-slate-200" />
             <span>
-              <span className="text-sky-400/60">in:</span> {call.input_tokens}
+              <span className="text-brand-600/60">in:</span> {call.input_tokens}
               {" "}
-              <span className="text-emerald-400/60">out:</span> {call.output_tokens}
+              <span className="text-emerald-700/60">out:</span> {call.output_tokens}
             </span>
           </>
         )}
@@ -319,22 +319,22 @@ function CallCard({
 
       {/* Prompt */}
       {showPrompt && call.prompt_text && (
-        <div className="px-4 py-2 border-t border-slate-800/30">
+        <div className="px-4 py-2 border-t border-slate-100">
           <div className="flex items-center justify-between mb-1">
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-sky-400/60">
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-brand-600/60">
               Prompt
             </span>
             {promptTruncated && (
               <button
                 onClick={() => setPromptExpanded((v) => !v)}
-                className="text-[10px] text-sky-500 hover:text-sky-400 transition-colors"
+                className="text-[10px] text-brand-600 hover:text-brand-700 transition-colors"
               >
                 {promptExpanded ? "Collapse" : `Show all (${promptLines} lines)`}
               </button>
             )}
           </div>
           <pre
-            className={`text-[11px] leading-relaxed text-slate-300 font-mono whitespace-pre-wrap break-words ${
+            className={`text-[11px] leading-relaxed text-slate-700 font-mono whitespace-pre-wrap break-words ${
               !promptExpanded && promptTruncated
                 ? "max-h-40 overflow-y-auto"
                 : ""
@@ -348,22 +348,22 @@ function CallCard({
 
       {/* Response */}
       {showResponse && call.response_text && (
-        <div className="px-4 py-2 border-t border-slate-800/30">
+        <div className="px-4 py-2 border-t border-slate-100">
           <div className="flex items-center justify-between mb-1">
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-emerald-400/60">
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-emerald-700/60">
               Response
             </span>
             {responseTruncated && (
               <button
                 onClick={() => setResponseExpanded((v) => !v)}
-                className="text-[10px] text-emerald-500 hover:text-emerald-400 transition-colors"
+                className="text-[10px] text-emerald-700 hover:text-emerald-600 transition-colors"
               >
                 {responseExpanded ? "Collapse" : `Show all (${responseLines} lines)`}
               </button>
             )}
           </div>
           <pre
-            className={`text-[11px] leading-relaxed text-slate-300 font-mono whitespace-pre-wrap break-words ${
+            className={`text-[11px] leading-relaxed text-slate-700 font-mono whitespace-pre-wrap break-words ${
               !responseExpanded && responseTruncated
                 ? "max-h-40 overflow-y-auto"
                 : ""
@@ -377,8 +377,8 @@ function CallCard({
 
       {/* Tool calls */}
       {hasToolCalls && (
-        <div className="px-4 py-2 border-t border-slate-800/30">
-          <span className="text-[10px] font-semibold uppercase tracking-wider text-amber-400/60 block mb-1">
+        <div className="px-4 py-2 border-t border-slate-100">
+          <span className="text-[10px] font-semibold uppercase tracking-wider text-amber-700/60 block mb-1">
             Tool calls
           </span>
           <pre className="text-[11px] font-mono whitespace-pre-wrap break-words">

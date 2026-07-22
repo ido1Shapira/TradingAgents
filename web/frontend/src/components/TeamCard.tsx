@@ -120,7 +120,7 @@ function AgentRow({
     ) : status === "in_progress" ? (
       <span className="block w-2 h-2 rounded-full shrink-0 animate-pulse" style={{ backgroundColor: teamColor, boxShadow: `0 0 6px ${teamColor}60` }} />
     ) : (
-      <span className="block w-2 h-2 rounded-full shrink-0 bg-slate-700" />
+      <span className="block w-2 h-2 rounded-full shrink-0 bg-slate-300" />
     );
 
   const [showTooltip, setShowTooltip] = useState(false);
@@ -128,7 +128,7 @@ function AgentRow({
 
   return (
     <div
-      className={`relative flex items-center gap-1.5 min-w-0 ${onClick ? "cursor-pointer hover:bg-slate-700/30 rounded px-1 -mx-1 transition-colors" : ""}`}
+      className={`relative flex items-center gap-1.5 min-w-0 ${onClick ? "cursor-pointer hover:bg-slate-100 rounded px-1 -mx-1 transition-colors" : ""}`}
       onClick={onClick}
       role={onClick ? "button" : undefined}
       tabIndex={onClick ? 0 : undefined}
@@ -138,18 +138,18 @@ function AgentRow({
     >
       {dot}
       <span className={`text-[11px] truncate transition-colors duration-300 ${
-        status === "completed" ? "text-slate-300"
-        : status === "in_progress" ? "text-slate-400"
-        : "text-slate-600"
+        status === "completed" ? "text-slate-700"
+        : status === "in_progress" ? "text-slate-600"
+        : "text-slate-400"
       }`}>
         {name}
       </span>
       {hasHoverContent && showTooltip && (
         <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 z-50 pointer-events-none">
-          <div className="bg-slate-800 text-slate-200 text-[10px] leading-relaxed rounded-lg px-3 py-2 shadow-xl border border-slate-700/60 whitespace-nowrap max-w-[240px] truncate">
+          <div className="bg-white text-slate-700 text-[10px] leading-relaxed rounded-lg px-3 py-2 shadow-sm border border-slate-200 whitespace-nowrap max-w-[240px] truncate">
             {thinkingPreview}
           </div>
-          <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-slate-800" />
+          <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-white" />
         </div>
       )}
     </div>
@@ -202,13 +202,13 @@ export function TeamCard({
     <div
       className="rounded-xl border min-w-0 flex-1 transition-all duration-300"
       style={{
-        borderColor: status === "done" ? `${team.color}50` : status === "active" ? `${team.color}30` : "rgba(51,65,85,0.5)",
-        backgroundColor: status === "done" || status === "active" ? team.bgDim : "rgba(15,23,42,0.4)",
+        borderColor: status === "done" ? `${team.color}50` : status === "active" ? `${team.color}30` : "rgba(226,232,240,1)",
+        backgroundColor: status === "done" || status === "active" ? team.bgDim : "white",
       }}
     >
       <div
         className="flex items-center justify-between px-2.5 py-1.5 rounded-t-xl border-b"
-        style={{ borderBottomColor: status === "done" ? `${team.color}30` : "rgba(51,65,85,0.3)" }}
+        style={{ borderBottomColor: status === "done" ? `${team.color}30` : "rgba(226,232,240,1)" }}
       >
         <div className="flex items-center gap-1.5 min-w-0">
           <span className="text-sm leading-none" style={{ filter: status === "idle" ? "grayscale(1) opacity(0.4)" : "none", color: team.color }}>
@@ -216,14 +216,14 @@ export function TeamCard({
           </span>
           <span
             className="text-[11px] font-semibold truncate tracking-tight"
-            style={{ color: status === "done" ? team.color : status === "active" ? `${team.color}cc` : "#64748b" }}
+            style={{ color: status === "done" ? team.color : status === "active" ? `${team.color}cc` : "#94a3b8" }}
           >
             {team.label}
           </span>
         </div>
         <div className="flex items-center gap-1.5 shrink-0">
           {status === "active" && timing.startIso && (
-            <span className="text-[10px] font-mono tabular-nums text-sky-400/80">
+            <span className="text-[10px] font-mono tabular-nums text-brand-600/80">
               {fmtElapsed(elapsedSec)}
             </span>
           )}
@@ -250,7 +250,7 @@ export function TeamCard({
           />
         ))}
       </div>
-      <div className="h-0.5 rounded-b-xl overflow-hidden bg-slate-700/50">
+      <div className="h-0.5 rounded-b-xl overflow-hidden bg-slate-200">
         <div
           className="h-full rounded-b-xl transition-all duration-500 ease-out"
           style={{

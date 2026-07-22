@@ -33,10 +33,10 @@ function statusForAgent(name: string, events: WsEvent[]): DagNode["status"] {
 }
 
 const STATUS_STYLES: Record<DagNode["status"], { dot: string; bg: string; border: string }> = {
-  completed: { dot: "bg-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-500/30" },
-  running: { dot: "bg-sky-400 animate-pulse", bg: "bg-sky-500/10", border: "border-sky-400/30" },
-  pending: { dot: "bg-slate-600", bg: "bg-slate-800/30", border: "border-slate-700/30" },
-  errored: { dot: "bg-red-400", bg: "bg-red-500/10", border: "border-red-500/30" },
+  completed: { dot: "bg-emerald-500", bg: "bg-emerald-50", border: "border-emerald-200" },
+  running: { dot: "bg-brand-500 animate-pulse", bg: "bg-brand-50", border: "border-brand-200" },
+  pending: { dot: "bg-slate-400", bg: "bg-white", border: "border-slate-200" },
+  errored: { dot: "bg-red-500", bg: "bg-red-50", border: "border-red-200" },
 };
 
 export function ObservatoryDag({ events, onNodeClick }: { events: WsEvent[]; onNodeClick: (name: string) => void }) {
@@ -54,8 +54,8 @@ export function ObservatoryDag({ events, onNodeClick }: { events: WsEvent[]; onN
               className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-left text-xs transition-all hover:brightness-125 ${s.bg} ${s.border}`}>
               <span className={`w-2 h-2 rounded-full shrink-0 ${s.dot}`} />
               <div className="min-w-0">
-                <div className="text-slate-200 truncate font-medium">{n.name}</div>
-                <div className="text-slate-500 capitalize text-[10px]">{n.status}</div>
+                <div className="text-slate-700 truncate font-medium">{n.name}</div>
+                <div className="text-slate-400 capitalize text-[10px]">{n.status}</div>
               </div>
             </button>
           );

@@ -70,15 +70,15 @@ function classifyOutcome(
 
 /** Action color (tailwind classes) */
 function actionColor(action: string): string {
-  if (action === "BUY") return "text-emerald-400";
-  if (action === "SELL") return "text-red-400";
-  return "text-slate-400";
+  if (action === "BUY") return "text-emerald-700";
+  if (action === "SELL") return "text-red-700";
+  return "text-slate-600";
 }
 
 function actionBg(action: string): string {
-  if (action === "BUY") return "bg-emerald-500/10 border-emerald-500/25";
-  if (action === "SELL") return "bg-red-500/10 border-red-500/25";
-  return "bg-slate-700/30 border-slate-600/50";
+  if (action === "BUY") return "bg-emerald-50 border-emerald-200";
+  if (action === "SELL") return "bg-red-50 border-red-200";
+  return "bg-slate-100 border-slate-200";
 }
 
 /* ------------------------------------------------------------------ */
@@ -198,8 +198,8 @@ export function PortfolioDashboard() {
               className={`data-text font-semibold ${
                 avgPnl != null
                   ? avgPnl >= 0
-                    ? "text-emerald-400"
-                    : "text-red-400"
+                    ? "text-emerald-700"
+                    : "text-red-700"
                   : "text-slate-500"
               }`}
             >
@@ -207,46 +207,46 @@ export function PortfolioDashboard() {
             </span>
           </div>
 
-          <span className="w-px h-4 bg-slate-700/50" />
+          <span className="w-px h-4 bg-slate-200" />
 
           {/* Total Runs */}
           <div className="flex items-center gap-2">
             <span className="text-slate-500 font-medium">Total Runs</span>
-            <span className="data-text font-semibold text-slate-200">
+            <span className="data-text font-semibold text-slate-900">
               {totalRuns}
             </span>
           </div>
 
-          <span className="w-px h-4 bg-slate-700/50" />
+          <span className="w-px h-4 bg-slate-200" />
 
           {/* Win / Loss */}
           <div className="flex items-center gap-2">
             <span className="text-slate-500 font-medium">W/L</span>
-            <span className="data-text font-semibold text-emerald-400">
+            <span className="data-text font-semibold text-emerald-700">
               {wins}
             </span>
-            <span className="text-slate-600">/</span>
-            <span className="data-text font-semibold text-red-400">
+            <span className="text-slate-400">/</span>
+            <span className="data-text font-semibold text-red-700">
               {losses}
             </span>
           </div>
 
-          <span className="w-px h-4 bg-slate-700/50" />
+          <span className="w-px h-4 bg-slate-200" />
 
           {/* Success Rate */}
           <div className="flex items-center gap-2">
             <span className="text-slate-500 font-medium">Success</span>
-            <span className="data-text font-semibold text-slate-200">
+            <span className="data-text font-semibold text-slate-900">
               {winRate != null ? `${winRate.toFixed(0)}%` : "—"}
             </span>
           </div>
 
-          <span className="w-px h-4 bg-slate-700/50" />
+          <span className="w-px h-4 bg-slate-200" />
 
           {/* Avg Confidence */}
           <div className="flex items-center gap-2">
             <span className="text-slate-500 font-medium">Avg Confidence</span>
-            <span className="data-text font-semibold text-sky-400">
+            <span className="data-text font-semibold text-brand-600">
               {avgConfidence != null
                 ? `${(avgConfidence * 100).toFixed(0)}%`
                 : "—"}
@@ -268,8 +268,8 @@ export function PortfolioDashboard() {
           const changeColor =
             s.changePct != null
               ? s.changePct >= 0
-                ? "text-emerald-400"
-                : "text-red-400"
+                ? "text-emerald-700"
+                : "text-red-700"
               : "text-slate-500";
 
           return (
@@ -281,12 +281,12 @@ export function PortfolioDashboard() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 min-w-0">
                   <span className={`h-2 w-2 rounded-full shrink-0 ${outcomeDot}`} />
-                  <span className="text-sm font-semibold text-slate-100">
+                  <span className="text-sm font-semibold text-slate-900">
                     {s.ticker}
                   </span>
                 </div>
                 {s.stale && (
-                  <span className="text-[10px] uppercase tracking-wider font-medium text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded px-1.5 py-0.5">
+                  <span className="text-[10px] uppercase tracking-wider font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5">
                     unavailable
                   </span>
                 )}
@@ -294,7 +294,7 @@ export function PortfolioDashboard() {
 
               {/* Company name */}
               {s.companyName && (
-                <p className="text-[11px] text-slate-600 truncate">
+                <p className="text-[11px] text-slate-400 truncate">
                   {s.companyName}
                 </p>
               )}
@@ -302,7 +302,7 @@ export function PortfolioDashboard() {
               {/* Price */}
               <div className="flex items-center justify-between text-xs">
                 <span className="text-slate-500">Price</span>
-                <span className="data-text font-medium text-slate-300">
+                <span className="data-text font-medium text-slate-700">
                   {s.price != null ? fmtPrice(s.price) : "—"}
                 </span>
               </div>
@@ -329,7 +329,7 @@ export function PortfolioDashboard() {
                     </span>
                   )}
                   {s.confidence != null && (
-                    <span className="font-mono text-slate-400">
+                    <span className="font-mono text-slate-600">
                       {(s.confidence * 100).toFixed(0)}%
                     </span>
                   )}
@@ -343,18 +343,18 @@ export function PortfolioDashboard() {
       {/* ── Recent Decisions Timeline ── */}
       {recentDecisions.length > 0 && (
         <div className="glass-panel">
-          <h3 className="section-header px-4 py-2.5 border-b border-slate-700/50 flex items-center gap-2">
-            <span className="w-1 h-1 rounded-full bg-sky-400" />
+          <h3 className="section-header px-4 py-2.5 border-b border-slate-200 flex items-center gap-2">
+            <span className="w-1 h-1 rounded-full bg-brand-600" />
             Recent Decisions
           </h3>
-          <div className="divide-y divide-slate-800/60">
+          <div className="divide-y divide-slate-200">
             {recentDecisions.map((d, i) => (
               <div
                 key={`${d.ticker}-${d.ts}-${i}`}
                 className="flex items-center justify-between px-4 py-2 text-xs"
               >
                 <div className="flex items-center gap-3">
-                  <span className="font-semibold text-slate-200 w-14">
+                  <span className="font-semibold text-slate-900 w-14">
                     {d.ticker}
                   </span>
                   <span
@@ -364,10 +364,10 @@ export function PortfolioDashboard() {
                   </span>
                 </div>
                 <div className="flex items-center gap-4">
-                  <span className="font-mono text-slate-400">
+                  <span className="font-mono text-slate-600">
                     {(d.confidence * 100).toFixed(0)}%
                   </span>
-                  <span className="text-slate-600 font-mono">
+                  <span className="text-slate-400 font-mono">
                     {new Date(d.ts).toLocaleTimeString("en-US", {
                       hour: "2-digit",
                       minute: "2-digit",

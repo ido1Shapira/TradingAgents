@@ -44,10 +44,10 @@ const iconMap: Record<ToastType, typeof Info> = {
 };
 
 const colorMap: Record<ToastType, string> = {
-  success: "border-emerald-500/30 bg-emerald-500/10 text-emerald-300",
-  error: "border-red-500/30 bg-red-500/10 text-red-300",
-  info: "border-sky-500/30 bg-sky-500/10 text-sky-300",
-  warning: "border-amber-500/30 bg-amber-500/10 text-amber-300",
+  success: "border-emerald-200 bg-emerald-50 text-emerald-800",
+  error: "border-red-200 bg-red-50 text-red-800",
+  info: "border-brand-200 bg-brand-50 text-brand-800",
+  warning: "border-amber-200 bg-amber-50 text-amber-800",
 };
 
 export function ToastContainer() {

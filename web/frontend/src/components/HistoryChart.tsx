@@ -382,8 +382,8 @@ export function HistoryChart(props: HistoryChartProps) {
             onClick={() => setShowMA(v => !v)}
             className={`px-3 py-1 text-xs font-semibold rounded-l-lg border transition-all ${
               showMA
-                ? "bg-violet-500/15 text-violet-300 border-violet-500/30 z-10"
-                : "text-slate-500 border-slate-700/50 hover:text-slate-300"
+                ? "bg-violet-50 text-violet-700 border-violet-200 z-10"
+                : "text-slate-500 border-slate-200 hover:text-slate-700"
             }`}
           >
             MA
@@ -392,8 +392,8 @@ export function HistoryChart(props: HistoryChartProps) {
             onClick={() => setShowBB(v => !v)}
             className={`px-3 py-1 text-xs font-semibold border border-l-0 transition-all ${
               showBB
-                ? "bg-fuchsia-500/15 text-fuchsia-300 border-fuchsia-500/30 z-10"
-                : "text-slate-500 border-slate-700/50 hover:text-slate-300"
+                ? "bg-fuchsia-50 text-fuchsia-700 border-fuchsia-200 z-10"
+                : "text-slate-500 border-slate-200 hover:text-slate-700"
             }`}
           >
             BB
@@ -402,8 +402,8 @@ export function HistoryChart(props: HistoryChartProps) {
             onClick={() => setShowRSI(v => !v)}
             className={`px-3 py-1 text-xs font-semibold rounded-r-lg border border-l-0 transition-all ${
               showRSI
-                ? "bg-amber-500/15 text-amber-300 border-amber-500/30 z-10"
-                : "text-slate-500 border-slate-700/50 hover:text-slate-300"
+                ? "bg-amber-50 text-amber-700 border-amber-200 z-10"
+                : "text-slate-500 border-slate-200 hover:text-slate-700"
             }`}
           >
             RSI
@@ -413,7 +413,7 @@ export function HistoryChart(props: HistoryChartProps) {
         <div className="flex-1 min-h-0">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={priceChartData} margin={{ top: 8, right: 8, bottom: 0, left: 8 }}>
-              <CartesianGrid stroke="#1e293b" strokeDasharray="3 3" />
+              <CartesianGrid stroke="#e2e8f0" strokeDasharray="3 3" />
               <XAxis
                 dataKey="t"
                 type="number"
@@ -425,8 +425,8 @@ export function HistoryChart(props: HistoryChartProps) {
                 domain={yDomain}
                 tickFormatter={fmtPrice}
                 width={50}
-                tick={{ fontSize: 10, fill: "#64748b" }}
-                stroke="#334155"
+                tick={{ fontSize: 10, fill: "#94a3b8" }}
+                stroke="#e2e8f0"
               />
               <Customized component={BoundCandleRenderer} />
               {/* SMA lines */}
@@ -458,24 +458,24 @@ export function HistoryChart(props: HistoryChartProps) {
                 name="price"
               />
               <Tooltip
-                cursor={{ stroke: "#475569", strokeDasharray: "3 3" }}
+                cursor={{ stroke: "#cbd5e1", strokeDasharray: "3 3" }}
                 content={({ active, payload }) => {
                   if (!active || !payload?.length) return null;
                   const p = payload[0].payload as ChartRow;
                   return (
                     <div
-                      className="glass-panel px-3 py-2 text-xs"
+                      className="bg-white border border-slate-200 px-3 py-2 text-xs shadow-sm"
                       data-testid="history-tooltip"
                     >
                       <div className="text-slate-500 font-mono text-[10px]">{fmtTime(p.t, scale)}</div>
-                      <div className="data-text font-semibold text-slate-100 text-sm mt-0.5">${fmtPrice(p.c)}</div>
+                      <div className="data-text font-semibold text-slate-900 text-sm mt-0.5">${fmtPrice(p.c)}</div>
                       <div className="text-slate-500 mt-1 text-[10px]">
-                        O <span className="data-text text-slate-400">{fmtPrice(p.o)}</span> · H <span className="data-text text-slate-400">{fmtPrice(p.h)}</span> · L <span className="data-text text-slate-400">{fmtPrice(p.l)}</span>
+                        O <span className="data-text text-slate-600">{fmtPrice(p.o)}</span> · H <span className="data-text text-slate-600">{fmtPrice(p.h)}</span> · L <span className="data-text text-slate-600">{fmtPrice(p.l)}</span>
                       </div>
-                      <div className="text-slate-600 text-[10px]">
+                      <div className="text-slate-400 text-[10px]">
                         Avg <span className="data-text">{fmtPrice(p.avg)}</span> · σ <span className="data-text">{fmtPrice(p.std)}</span>
                       </div>
-                      <div className="text-slate-600 text-[10px]">Vol <span className="data-text">{fmtVolume(p.v)}</span></div>
+                      <div className="text-slate-400 text-[10px]">Vol <span className="data-text">{fmtVolume(p.v)}</span></div>
                     </div>
                   );
                 }}
@@ -522,49 +522,49 @@ export function HistoryChart(props: HistoryChartProps) {
                     x={startMs} y={run.startPrice}
                     r={isSelected ? 8 : 5}
                     fill={actionColor(run.decisionAction)}
-                    stroke="#1e293b" strokeWidth={1.5}
+                    stroke="#ffffff" strokeWidth={1.5}
                     ifOverflow="extendDomain"
                   />
                 );
               })}
               <ReferenceLine
                 x={nowMs}
-                stroke="#475569"
+                stroke="#94a3b8"
                 strokeDasharray="3 3"
-                label={{ value: "now", position: "insideTopRight", fill: "#64748b", fontSize: 10 }}
+                label={{ value: "now", position: "insideTopRight", fill: "#94a3b8", fontSize: 10 }}
                 ifOverflow="extendDomain"
               />
             </LineChart>
           </ResponsiveContainer>
         </div>
         {/* Volume chart */}
-        <div className="h-14 shrink-0 border-t border-slate-800">
+        <div className="h-14 shrink-0 border-t border-slate-200">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartData} margin={{ top: 4, right: 8, bottom: 8, left: 8 }}>
-              <CartesianGrid stroke="#1e293b" strokeDasharray="3 3" vertical={false} />
+              <CartesianGrid stroke="#e2e8f0" strokeDasharray="3 3" vertical={false} />
               <XAxis
                 dataKey="t"
                 type="number"
                 domain={[rangeStartMs, rangeEndMs]}
                 scale="time"
                 tickFormatter={(v) => fmtTime(v, scale)}
-                tick={{ fontSize: 10, fill: "#64748b" }}
-                stroke="#334155"
+                tick={{ fontSize: 10, fill: "#94a3b8" }}
+                stroke="#e2e8f0"
                 minTickGap={32}
               />
               <YAxis hide width={50} />
               <Tooltip
-                cursor={{ fill: "rgba(30,41,59,0.5)" }}
+                cursor={{ fill: "rgba(226,232,240,0.5)" }}
                 content={({ active, payload }) => {
                   if (!active || !payload?.length) return null;
                   const p = payload[0].payload as ChartRow;
                   return (
                     <div
-                      className="glass-panel px-3 py-2 text-xs"
+                      className="bg-white border border-slate-200 px-3 py-2 text-xs shadow-sm"
                       data-testid="volume-tooltip"
                     >
                       <div className="text-slate-500 font-mono text-[10px]">{fmtTime(p.t, scale)}</div>
-                      <div className="data-text font-semibold text-slate-100 text-sm mt-0.5">Vol {fmtVolume(p.v)}</div>
+                      <div className="data-text font-semibold text-slate-900 text-sm mt-0.5">Vol {fmtVolume(p.v)}</div>
                     </div>
                   );
                 }}
@@ -579,10 +579,10 @@ export function HistoryChart(props: HistoryChartProps) {
         </div>
         {/* RSI sub-chart */}
         {showRSI && (
-          <div className="h-[60px] shrink-0 border-t border-slate-800">
+          <div className="h-[60px] shrink-0 border-t border-slate-200">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={rsiChartData} margin={{ top: 4, right: 8, bottom: 4, left: 8 }}>
-                <CartesianGrid stroke="#1e293b" strokeDasharray="3 3" vertical={false} />
+                <CartesianGrid stroke="#e2e8f0" strokeDasharray="3 3" vertical={false} />
                 <XAxis
                   dataKey="t"
                   type="number"
@@ -595,14 +595,14 @@ export function HistoryChart(props: HistoryChartProps) {
                 <ReferenceLine y={30} stroke="#16a34a" strokeDasharray="2 2" strokeWidth={0.5} />
                 <Line dataKey="rsi" stroke="#f59e0b" strokeWidth={1} dot={false} connectNulls isAnimationActive={false} name="RSI" />
                 <Tooltip
-                  cursor={{ stroke: "#475569", strokeDasharray: "3 3" }}
+                  cursor={{ stroke: "#cbd5e1", strokeDasharray: "3 3" }}
                   content={({ active, payload }) => {
                     if (!active || !payload?.length) return null;
                     const d = payload[0].payload as { t: number; rsi: number | null };
                     return (
-                      <div className="glass-panel px-3 py-2 text-xs" data-testid="rsi-tooltip">
+                      <div className="bg-white border border-slate-200 px-3 py-2 text-xs shadow-sm" data-testid="rsi-tooltip">
                         <div className="text-slate-500 font-mono text-[10px]">{fmtTime(d.t, scale)}</div>
-                        <div className="data-text font-semibold text-amber-300 text-sm mt-0.5">RSI {d.rsi != null ? d.rsi.toFixed(1) : '\u2014'}</div>
+                        <div className="data-text font-semibold text-amber-700 text-sm mt-0.5">RSI {d.rsi != null ? d.rsi.toFixed(1) : '\u2014'}</div>
                       </div>
                     );
                   }}

@@ -349,22 +349,22 @@ export function TickerChatBar({ ticker, price, run }: Props) {
     <section className="glass-panel mb-4 overflow-hidden">
       {messages.length > 0 && (
         <>
-          <div className="flex items-center justify-between px-3 py-2 border-b border-slate-700/50">
-            <span className="text-xs text-slate-500">Chat History</span>
+          <div className="flex items-center justify-between px-3 py-2 border-b border-slate-200">
+            <span className="text-xs text-slate-400">Chat History</span>
             <button
               onClick={clearMessages}
-              className="text-xs text-slate-500 hover:text-slate-300 flex items-center gap-1"
+              className="text-xs text-slate-400 hover:text-slate-700 flex items-center gap-1"
             >
               <Plus className="h-3 w-3" /> New Chat
             </button>
           </div>
-          <div className="max-h-80 overflow-y-auto border-b border-slate-700/50 px-3 py-3">
+          <div className="max-h-80 overflow-y-auto border-b border-slate-200 px-3 py-3">
           {messages.map((msg) => (
             <div key={msg.id} className={`mb-2 flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
               <div className={`max-w-[85%] rounded-lg px-3 py-2 text-sm leading-relaxed ${
                 msg.role === "user"
-                  ? "bg-sky-600/30 text-slate-200"
-                  : "bg-slate-800/60 text-slate-300"
+                  ? "bg-brand-50 text-slate-900"
+                  : "bg-white border border-slate-200 text-slate-700"
               }`}>
                 {msg.content}
                 {msg.isStreaming && <span className="animate-pulse ml-1">|</span>}
@@ -376,7 +376,7 @@ export function TickerChatBar({ ticker, price, run }: Props) {
           ))}
           {isAsking && (
             <div className="flex justify-start">
-              <div className="flex items-center gap-2 rounded-lg bg-slate-800/60 px-3 py-2 text-sm text-slate-400">
+              <div className="flex items-center gap-2 rounded-lg bg-white border border-slate-200 px-3 py-2 text-sm text-slate-600">
                 <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
                 Thinking...
               </div>
@@ -387,12 +387,12 @@ export function TickerChatBar({ ticker, price, run }: Props) {
         </>
       )}
       <form onSubmit={ask} className="flex flex-col gap-2 p-3 sm:flex-row sm:items-center">
-        <div className="flex min-w-0 flex-1 items-center gap-2 rounded-lg border border-slate-700/50 bg-slate-950/40 px-3 py-2">
-          <MessageSquare className="h-4 w-4 shrink-0 text-sky-400" aria-hidden="true" />
+        <div className="flex min-w-0 flex-1 items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+          <MessageSquare className="h-4 w-4 shrink-0 text-brand-600" aria-hidden="true" />
           <input
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
-            className="min-w-0 flex-1 bg-transparent text-sm text-slate-100 outline-none placeholder:text-slate-600"
+            className="min-w-0 flex-1 bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400"
             placeholder={`Ask about ${ticker}`}
             aria-label={`Ask about ${ticker}`}
           />
@@ -400,7 +400,7 @@ export function TickerChatBar({ ticker, price, run }: Props) {
             <button
               type="button"
               onClick={() => setQuestion("")}
-              className="rounded-md p-1 text-slate-500 transition-colors hover:text-slate-300"
+              className="rounded-md p-1 text-slate-500 transition-colors hover:text-slate-700"
               aria-label="Clear question"
             >
               <X className="h-3.5 w-3.5" aria-hidden="true" />
@@ -418,8 +418,8 @@ export function TickerChatBar({ ticker, price, run }: Props) {
         </button>
       </form>
       {error && (
-        <div className="border-t border-slate-700/50 px-3 py-3">
-          <p className="text-sm text-red-300">{error}</p>
+        <div className="border-t border-slate-200 px-3 py-3">
+          <p className="text-sm text-red-700">{error}</p>
         </div>
       )}
     </section>

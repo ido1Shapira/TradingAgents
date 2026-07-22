@@ -9,16 +9,16 @@ type TabKey = "events" | "llm" | "observatory";
 
 const ACCENT_MAP: Record<TabKey, { activeClass: string; dotClass: string }> = {
   events: {
-    activeClass: "bg-sky-500/15 text-sky-300 border-sky-500/30 z-10",
-    dotClass: "bg-sky-400 shadow-[0_0_4px_rgba(56,189,248,0.5)]",
+    activeClass: "bg-brand-50 text-brand-700 border-brand-200 z-10",
+    dotClass: "bg-brand-500",
   },
   llm: {
-    activeClass: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30 z-10",
-    dotClass: "bg-emerald-400 shadow-[0_0_4px_rgba(52,211,153,0.5)]",
+    activeClass: "bg-emerald-50 text-emerald-700 border-emerald-200 z-10",
+    dotClass: "bg-emerald-500",
   },
   observatory: {
-    activeClass: "bg-violet-500/15 text-violet-300 border-violet-500/30 z-10",
-    dotClass: "bg-violet-400 shadow-[0_0_4px_rgba(167,139,250,0.5)]",
+    activeClass: "bg-violet-50 text-violet-700 border-violet-200 z-10",
+    dotClass: "bg-violet-500",
   },
 };
 
@@ -45,14 +45,14 @@ export function TraceTabs({ value, onChange }: TraceTabsProps) {
             } ${isLast ? "rounded-r-lg" : ""} ${
               isActive
                 ? accent.activeClass
-                : "text-slate-500 border-slate-700/50 hover:text-slate-300 hover:bg-slate-800/40"
+                : "text-slate-500 border-slate-200 hover:text-slate-700 hover:bg-slate-50"
             }`}
           >
             <span className="flex items-center gap-1.5">
               {tab.icon ? (
                 tab.icon
               ) : (
-                <span className={`w-1.5 h-1.5 rounded-full ${isActive ? accent.dotClass : "bg-slate-600"}`} />
+                <span className={`w-1.5 h-1.5 rounded-full ${isActive ? accent.dotClass : "bg-slate-400"}`} />
               )}
               <span className="hidden sm:inline">{tab.label}</span>
               <span className="sm:hidden">{tab.shortLabel}</span>

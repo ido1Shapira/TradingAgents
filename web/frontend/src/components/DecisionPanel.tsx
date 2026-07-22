@@ -13,8 +13,8 @@ interface Props {
 export function DecisionPanel({ action, target, confidence, rationale, degraded }: Props) {
   const isBuy = action === "BUY";
   const isSell = action === "SELL";
-  const actionColor = isBuy ? "text-emerald-400" : isSell ? "text-red-400" : "text-slate-400";
-  const actionBg = isBuy ? "bg-emerald-500/10 border-emerald-500/25" : isSell ? "bg-red-500/10 border-red-500/25" : "bg-slate-700/30 border-slate-600/50";
+  const actionColor = isBuy ? "text-emerald-700" : isSell ? "text-red-700" : "text-slate-600";
+  const actionBg = isBuy ? "bg-emerald-50 border-emerald-200" : isSell ? "bg-red-50 border-red-200" : "bg-slate-100 border-slate-200";
   const accentBorder = isBuy ? "border-l-emerald-500" : isSell ? "border-l-red-500" : "border-l-slate-500";
   const pct = Math.max(0, Math.min(1, confidence)) * 100;
   return (
@@ -29,18 +29,18 @@ export function DecisionPanel({ action, target, confidence, rationale, degraded 
           {isSell && <TrendingDown className="w-3.5 h-3.5 mr-1" />}
           <span className="inline-flex items-center gap-1">{action}</span>
         </span>
-        {target != null && <span className="text-lg data-text text-slate-300">@ ${target.toFixed(2)}</span>}
+        {target != null && <span className="text-lg data-text text-slate-700">@ ${target.toFixed(2)}</span>}
         <div className="flex-1" />
-        {degraded && <span className="text-[10px] font-medium text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-md">degraded</span>}
+        {degraded && <span className="text-[10px] font-medium text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-md">degraded</span>}
       </div>
       <div className="flex items-center justify-between text-xs text-slate-500 mb-1.5">
         <span id="confidence-label">Confidence</span>
-        <span className="data-text font-semibold text-slate-300" aria-labelledby="confidence-label">{pct.toFixed(0)}%</span>
+        <span className="data-text font-semibold text-slate-700" aria-labelledby="confidence-label">{pct.toFixed(0)}%</span>
       </div>
       <div className="progress-bar" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
         <div className="h-full rounded-full transition-all duration-500" style={{ width: `${pct}%`, background: isBuy ? "linear-gradient(90deg, #10b981, #34d399)" : isSell ? "linear-gradient(90deg, #ef4444, #f87171)" : "linear-gradient(90deg, #64748b, #94a3b8)" }} />
       </div>
-      <p className="text-sm text-slate-400 mt-3 whitespace-pre-wrap leading-relaxed">{rationale}</p>
+      <p className="text-sm text-slate-600 mt-3 whitespace-pre-wrap leading-relaxed">{rationale}</p>
     </div>
   );
 }

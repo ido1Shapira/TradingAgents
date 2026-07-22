@@ -24,17 +24,17 @@ export function AccuracyPlot({ data, xDomain }: AccuracyPlotProps) {
 
   if (chartData.length === 0) {
     return (
-      <div className="h-48 flex items-center justify-center text-xs text-slate-400">
+      <div className="h-48 flex items-center justify-center text-xs text-slate-600">
         No scored data for any delta.
       </div>
     );
   }
 
   return (
-    <div className="h-36 md:h-48 border-b border-slate-800" data-testid="accuracy-plot">
+    <div className="h-36 md:h-48 border-b border-slate-200" data-testid="accuracy-plot">
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={chartData} margin={{ top: 8, right: 8, bottom: 4, left: 8 }}>
-          <CartesianGrid stroke="#1e293b" strokeDasharray="3 3" />
+          <CartesianGrid stroke="#e2e8f0" strokeDasharray="3 3" />
           <XAxis
             dataKey="delta"
             type="number"
@@ -43,16 +43,16 @@ export function AccuracyPlot({ data, xDomain }: AccuracyPlotProps) {
               ? [Math.min(...data.map(p => p.delta)), Math.max(...data.map(p => p.delta))]
               : [0, 1])}
             tickFormatter={fmtDelta}
-            tick={{ fontSize: 10, fill: "#64748b" }}
-            stroke="#334155"
+            tick={{ fontSize: 10, fill: "#94a3b8" }}
+            stroke="#e2e8f0"
             minTickGap={24}
           />
           <YAxis
             domain={[0, 1]}
             tickFormatter={(v: number) => `${Math.round(v * 100)}%`}
             width={36}
-            tick={{ fontSize: 10, fill: "#64748b" }}
-            stroke="#334155"
+            tick={{ fontSize: 10, fill: "#94a3b8" }}
+            stroke="#e2e8f0"
           />
           <Tooltip
             content={({ active, payload }) => {
@@ -61,9 +61,9 @@ export function AccuracyPlot({ data, xDomain }: AccuracyPlotProps) {
               const orig = data.find(d => d.delta === p.delta);
               if (!orig) return null;
               return (
-                <div className="glass-panel px-3 py-2 text-xs">
-                  <div className="font-medium text-slate-100 mb-1">Δ {fmtDelta(orig.delta)}</div>
-                  <div className="text-emerald-400">Accuracy {fmtPct(orig.rightPct! * 100)}</div>
+                <div className="bg-white border border-slate-200 px-3 py-2 text-xs shadow-sm">
+                  <div className="font-medium text-slate-900 mb-1">Δ {fmtDelta(orig.delta)}</div>
+                  <div className="text-emerald-700">Accuracy {fmtPct(orig.rightPct! * 100)}</div>
                   <div className="text-slate-500 mt-0.5">{orig.right} right · {orig.wrong} wrong · {orig.unknown} unknown</div>
                 </div>
               );
@@ -72,9 +72,9 @@ export function AccuracyPlot({ data, xDomain }: AccuracyPlotProps) {
           <Line
             type="monotone"
             dataKey="rightPct"
-            stroke="#38bdf8"
+            stroke="#2563eb"
             strokeWidth={2}
-            dot={{ r: 3, fill: "#38bdf8", strokeWidth: 0 }}
+            dot={{ r: 3, fill: "#2563eb", strokeWidth: 0 }}
             isAnimationActive={false}
             name="Accuracy"
           />

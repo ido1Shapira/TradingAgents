@@ -154,34 +154,34 @@ export function TickerHeader({ ticker, price, changePct, stale }: Props) {
     <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4 md:mb-5">
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-2">
-          <h2 className="text-xl md:text-2xl font-display font-semibold text-slate-100 tracking-tight">{ticker}</h2>
+          <h2 className="text-xl md:text-2xl font-display font-semibold text-slate-900 tracking-tight">{ticker}</h2>
           {agentProgress && (
-            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 text-[10px] font-mono font-semibold rounded-md bg-sky-500/10 text-sky-300 border border-sky-500/20">
-              <span className="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse shadow-[0_0_4px_rgba(56,189,248,0.4)]" />
+            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 text-[10px] font-mono font-semibold rounded-md bg-brand-50 text-brand-700 border border-brand-200">
+              <span className="w-1.5 h-1.5 rounded-full bg-brand-500 animate-pulse" />
               {agentProgress.done}/{agentProgress.total} agents
             </span>
           )}
           {!stale && changePct != null && (
             <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs data-text font-medium rounded-md ${
               changePct >= 0
-                ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                : 'bg-red-500/10 text-red-400 border border-red-500/20'
+                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                : 'bg-red-50 text-red-700 border border-red-200'
             }`}>
               {changePct >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
               {changePct >= 0 ? "+" : ""}{changePct.toFixed(2)}%
             </span>
           )}
           {stale && (
-            <span data-testid="ticker-header-unavailable" className="text-xs font-medium text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-md">
+            <span data-testid="ticker-header-unavailable" className="text-xs font-medium text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-md">
               Price data unavailable
             </span>
           )}
         </div>
         <p className="text-xs md:text-sm text-slate-500 mt-0.5 md:mt-1">
           {stale ? (
-            <span className="text-amber-400/60">Unavailable on Yahoo Finance</span>
+            <span className="text-amber-700/60">Unavailable on Yahoo Finance</span>
           ) : (
-            <span className="data-text text-slate-300">
+            <span className="data-text text-slate-700">
               {price != null ? `$${price.toFixed(2)}` : "\u2014"}
               {' \u00b7 '}USD
             </span>

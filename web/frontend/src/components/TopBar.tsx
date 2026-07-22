@@ -18,7 +18,7 @@ export function TopBar({ currentModelSummary, onOpenSettings, onOpenBatchDownloa
   const setSidebarCollapsed = useUi((s) => s.setSidebarCollapsed);
 
   return (
-    <header className="sticky top-0 z-20 border-b border-slate-800/80 bg-slate-900/80 backdrop-blur-md">
+    <header className="sticky top-0 z-20 border-b border-slate-200 bg-white backdrop-blur-md">
       <div className="flex items-center justify-between px-3 md:px-5 h-12">
         <div className="flex items-center gap-2 min-w-0">
           <button
@@ -35,15 +35,15 @@ export function TopBar({ currentModelSummary, onOpenSettings, onOpenBatchDownloa
           >
             <Menu className="w-3.5 h-3.5" />
           </button>
-          <h1 className="text-sm md:text-base font-display font-semibold text-slate-100 tracking-tight flex items-center gap-2">
+          <h1 className="text-sm md:text-base font-display font-semibold text-slate-900 tracking-tight flex items-center gap-2">
             TradingAgents
-            <span className="hidden sm:inline-flex px-2 py-0.5 text-[8px] font-mono font-semibold rounded-md bg-gradient-to-r from-sky-500/20 via-slate-900/80 to-emerald-500/20 text-slate-100 border border-slate-700/70 shadow-[0_0_12px_rgba(56,189,248,0.15)]">
+            <span className="hidden sm:inline-flex px-2 py-0.5 text-[8px] font-mono font-semibold rounded-md bg-gradient-to-r from-brand-500/10 via-white to-emerald-500/10 text-slate-900 border border-slate-200 shadow-sm">
               v{VERSION}
             </span>
           </h1>
           {currentModelSummary && (
-            <span className="hidden lg:inline-flex items-center gap-1 px-2 py-0.5 text-[9px] font-mono font-semibold uppercase tracking-widest bg-sky-500/10 text-sky-400 border border-sky-500/20 rounded-md">
-              <span className="w-1.5 h-1.5 rounded-full bg-sky-400 shadow-[0_0_4px_rgba(56,189,248,0.5)]" />
+            <span className="hidden lg:inline-flex items-center gap-1 px-2 py-0.5 text-[9px] font-mono font-semibold uppercase tracking-widest bg-brand-50 text-brand-600 border border-brand-200 rounded-md">
+              <span className="w-1.5 h-1.5 rounded-full bg-brand-500 shadow-sm" />
               {currentModelSummary}
             </span>
           )}
@@ -60,7 +60,7 @@ export function TopBar({ currentModelSummary, onOpenSettings, onOpenBatchDownloa
             size="xs"
             onClick={() => useAuthStore.getState().logout()}
             icon={<LogOut className="w-3.5 h-3.5" />}
-            className="text-red-400 hover:text-red-300"
+            className="text-red-600 hover:text-red-700"
             aria-label="Sign out"
           />
         </div>
