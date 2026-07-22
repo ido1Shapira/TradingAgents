@@ -1,7 +1,3 @@
-output "artifact_registry_repo" {
-  value = google_artifact_registry_repository.main.id
-}
-
 output "cloud_run_url" {
   value = google_cloud_run_v2_service.main.uri
 }
@@ -12,8 +8,4 @@ output "workload_identity_provider" {
 
 output "deploy_service_account_email" {
   value = google_service_account.deploy.email
-}
-
-output "gcs_bucket_name" {
-  value = google_storage_bucket.data.name
 }

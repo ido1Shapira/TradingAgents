@@ -1,30 +1,37 @@
+# ── Stage 1: Build frontend (keeps Node.js out of the runtime image) ──
+FROM node:20-slim AS frontend-builder
+WORKDIR /build
+# vite.config.ts reads ../../VERSION at build time
+COPY VERSION /VERSION
+COPY web/frontend/package.json web/frontend/package-lock.json ./
+RUN npm ci
+COPY web/frontend/ ./
+RUN npm run build
+
+# ── Stage 2: Runtime ──────────────────────────────────────────────────
 FROM python:3.12-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 
-WORKDIR /build
+WORKDIR /app
+
+# Copy source + dependency manifests
 COPY pyproject.toml README.md uv.lock VERSION ./
 COPY tradingagents/ tradingagents/
 COPY cli/ cli/
-COPY web/ web/
+COPY web/server/ web/server/
 
+# Install Python deps (creates .venv in /app)
 RUN pip install uv && uv sync --no-dev
 
-RUN apt-get update -qq && apt-get install -y -qq curl \
-    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
-    && apt-get install -y -qq nodejs \
-    && cd web/frontend && npm ci && npm run build \
-    && apt-get remove -y -qq curl && apt-get autoremove -y -qq \
-    && rm -rf /var/lib/apt/lists/*
+# Copy built frontend dist from builder stage (no Node.js in runtime)
+COPY --from=frontend-builder /build/dist web/frontend/dist
 
-RUN mkdir -p /home/appuser/app && cp -r /build/. /home/appuser/app
-WORKDIR /home/appuser/app
-
+# Create non-root user + writable data dir
 RUN useradd -r -u 1000 -g root appuser \
-    && chown -R appuser:root /home/appuser /build \
     && mkdir -p /data/cache \
-    && chown -R appuser:root /data
+    && chown -R appuser:root /app /data
 
 EXPOSE 8000
 

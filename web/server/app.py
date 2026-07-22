@@ -299,9 +299,6 @@ async def lifespan(app: FastAPI):
         except OSError as exc:
             log.error("failed to remove legacy DB: %s", exc)
     storage.init_settings(data_dir=s.data_dir, cache_dir=s.cache_dir)
-    from web.server.cloud_persistence import restore_watchlist
-
-    restore_watchlist(s.data_dir)
     # Capture the main event loop so events.emit() (called from worker
     # threads inside loop.run_in_executor) can schedule broadcasts on it
     # via asyncio.run_coroutine_threadsafe. Without this, live WS
@@ -317,9 +314,11 @@ async def lifespan(app: FastAPI):
     # ticker in the watchlist.
     logging.getLogger("yfinance").setLevel(logging.CRITICAL)
     # Mark any previously-running runs as failed (process restart recovery).
+    # Uses the remote-aware iterdir so runs stored in Firebase RTDB are
+    # also reaped on cold start (local FS is empty after Cloud Run scale-to-zero).
     for td in storage.walk_data_dir():
         try:
-            subdirs = [sd for sd in td.iterdir() if sd.is_dir()]
+            subdirs = storage.iter_subdirs(td)
         except PermissionError:
             continue
         for sd in subdirs:

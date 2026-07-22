@@ -46,7 +46,6 @@ terraform output workload_identity_provider
 terraform output deploy_service_account_email
 terraform output artifact_registry_repo
 terraform output cloud_run_url
-terraform output gcs_bucket_name
 ```
 
 In the GitHub web UI (Settings → Secrets and variables → Actions → Variables
@@ -106,14 +105,15 @@ The next push that succeeds will bring traffic back to `LATEST`.
 ## 6. Cost monitoring
 
 - GCP Console → **Billing** → **Reports** — group by Service to see Cloud
-  Run, Artifact Registry, and Cloud Storage line items.
+  Run and Artifact Registry line items.
 - Expected monthly spend: $0 for personal dashboard use.
   - Cloud Run: free up to 2M requests, 360k vCPU-sec, 180k MiB-sec/month.
   - Artifact Registry: 0.5GB free; one image runs ~600MB so we are at the
     edge if many tags accumulate. Old image tags are NOT auto-deleted; see
     "Maintenance" below.
-  - GCS Standard bucket: 5GB free; currently nearly empty (no data mirroring
-    yet).
+  - Cloud Storage: not used. The app persists data to Cloud Run's
+    ephemeral filesystem, which resets on cold starts. This is a deliberate
+    free-tier trade-off (no GCS charges).
 
 If costs creep up unexpectedly, the usual culprits:
 
@@ -131,9 +131,12 @@ If costs creep up unexpectedly, the usual culprits:
 These are explicit out-of-scope follow-ups (see spec §10):
 
 - **Ephemeral filesystem:** past runs, watchlist, and indicators reset on
-  every cold start. A GCS storage backend (`web/server/gcs.py`) is now wired
-  into `storage.py` — when `GCS_BUCKET` is set (it is on Cloud Run), all IO
-  reads from and writes to GCS, surviving cold starts.
+  every cold start. No persistent backend is wired by default — the
+  `web/server/gcs.py` module still exists and can be re-enabled by setting
+  `GCS_BUCKET` on the Cloud Run service (and re-creating the terraform
+  `google_storage_bucket.data` resource), but it is intentionally left
+  unset to keep the deployment on the GCP Always-Free tier without
+  incurring Cloud Storage operation charges.
 - **No Secret Manager integration:** LLM API keys live in GitHub Actions
   secrets and are passed to Cloud Run as env vars. Rotating a key means
   updating the GitHub secret and pushing.
@@ -145,6 +148,72 @@ These are explicit out-of-scope follow-ups (see spec §10):
   for PR previews.
 - **No VPC connector / private network:** the service uses direct public
   ingress per `INGRESS_TRAFFIC_ALL`.
+
+## Firebase Realtime Database Setup (one-time)
+
+The app uses Firebase RTDB (Spark plan, free) to persist user data across
+Cloud Run cold starts.
+
+### 1. Create Firebase project
+
+1. Go to https://console.firebase.google.com
+2. Click "Add project"
+3. Enter project name (e.g., `tradingagents-data`)
+4. Disable Google Analytics (not needed)
+5. Click "Create project"
+
+### 2. Enable Realtime Database
+
+1. In the Firebase console, click "Realtime Database" in the left sidebar
+2. Click "Create Database"
+3. Select a region (us-central1 recommended)
+4. Start in **test mode** (we'll set rules next)
+5. Click "Enable"
+
+### 3. Set database rules
+
+In the Realtime Database console, click "Rules" tab and paste:
+
+```json
+{
+  "rules": {
+    ".read": "auth != null",
+    ".write": "auth != null"
+  }
+}
+```
+
+Click "Publish".
+
+### 4. Generate service account key
+
+1. Go to Project Settings (gear icon) → "Service accounts"
+2. Click "Generate new private key"
+3. Save the JSON file securely
+
+### 5. Encode the key for GitHub secrets
+
+```bash
+base64 -w 0 service-account.json
+```
+
+Copy the output.
+
+### 6. Add GitHub secrets
+
+```bash
+gh secret set FIREBASE_SERVICE_ACCOUNT -b "<base64-encoded-key>"
+gh secret set FIREBASE_DATABASE_URL -b "https://<project-id>-default-rtdb.firebaseio.com/"
+```
+
+### 7. Cloud Run env vars
+
+The CI deploy step automatically sets:
+
+- `FIREBASE_SERVICE_ACCOUNT=${{ secrets.FIREBASE_SERVICE_ACCOUNT }}`
+- `FIREBASE_DATABASE_URL=${{ secrets.FIREBASE_DATABASE_URL }}`
+
+No manual intervention needed after secrets are configured.
 
 ## 8. Troubleshooting
 

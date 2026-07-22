@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, main-with-dashboard]
+    branches: [main-with-dashboard]
   pull_request:
 
 concurrency:
@@ -99,9 +99,9 @@ jobs:
   #
   # Differences from production that are unavoidable:
   #   - No gVisor sandbox (we run on Docker, not Cloud Run's gVisor runtime)
-  #   - No real GCS access (GCS_BUCKET set to a fake bucket name; GCS ops
-  #     fail gracefully and fall back to local FS — exactly what would
-  #     happen on a real GCS outage)
+  #   - No real Firebase access (FIREBASE_SERVICE_ACCOUNT=fake;
+  #     Firebase ops fail gracefully and fall back to local FS — exactly
+  #     what would happen on a real Firebase outage)
   #   - No Cloud Run metadata server (auth token lookup fails → GCS disabled)
   #
   # Env vars mirror terraform/main.tf exactly.  If a new env var is added
@@ -123,7 +123,7 @@ jobs:
           #   - PORT=8000 (auto-set by Cloud Run from container_port=8000)
           #   - MEMORY 512MB (terraform: cloud_run_memory)
           #   - TRADINGAGENTS_DATA_DIR=/data, TRADINGAGENTS_CACHE_DIR=/data/cache
-          #   - GCS_BUCKET set to a fake name — triggers GCS init code path
+          #   - FIREBASE_SERVICE_ACCOUNT=fake — triggers Firebase init code path
           #     but operations fail gracefully and fall back to local FS
           #   - AUTH_DISABLED=true (matches terraform)
           #
@@ -139,7 +139,8 @@ jobs:
             -e TRADINGAGENTS_DASHBOARD_PORT=8000 \
             -e TRADINGAGENTS_DATA_DIR=/data \
             -e TRADINGAGENTS_CACHE_DIR=/data/cache \
-            -e GCS_BUCKET=tradingagents-smoke-test-nonexistent \
+            -e FIREBASE_SERVICE_ACCOUNT=fake \
+            -e FIREBASE_DATABASE_URL=https://fake-project.firebaseio.com \
             -e AUTH_DISABLED=true \
             -e TRADINGAGENTS_API_RATE_LIMIT=30/minute \
             -e TRADINGAGENTS_DASHBOARD_DISABLE_PRICE_FEED=1 \
@@ -190,11 +191,11 @@ jobs:
 
       - name: Test watchlist endpoint (exercises storage layer)
         run: |
-          # This endpoint reads watchlist.json.  With GCS_BUCKET set but no
-          # real GCS access, storage.read_json should fall back to local FS
+          # This endpoint reads watchlist.json.  With FIREBASE_SERVICE_ACCOUNT=fake
+          # but no real Firebase access, storage.read_json should fall back to local FS
           # (returning None / empty list) rather than crashing.
           curl -sfS http://localhost:8000/api/watchlist | jq -e 'type == "array"'
-          echo "Watchlist endpoint passed (storage OK with GCS fallback)"
+          echo "Watchlist endpoint passed (storage OK with Firebase fallback)"
 
       - name: Check container memory usage (free tier 512MB)
         if: always()
@@ -214,7 +215,7 @@ jobs:
   deploy-cloud-run:
     name: deploy to Google Cloud Run
     runs-on: ubuntu-latest
-    if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/main-with-dashboard') && github.event_name == 'push'
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/main-with-dashboard') || (github.event_name == 'pull_request' && github.base_ref == 'main-with-dashboard')
     needs: [test, lint, smoke-install, smoke-test]
     permissions:
       contents: read
@@ -228,15 +229,20 @@ jobs:
           service_account: ${{ vars.GCP_SERVICE_ACCOUNT_EMAIL }}
       - name: Set up gcloud CLI
         uses: google-github-actions/setup-gcloud@v2
-      - name: Configure Docker for Artifact Registry
-        run: gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_PAT }}
       - name: Build and push image
         run: |
           SHORT_SHA=${GITHUB_SHA::7}
-          IMAGE="${{ vars.GCP_ARTIFACT_REGISTRY_REPO }}/app:${SHORT_SHA}"
-          docker build -t "$IMAGE" -t "${{ vars.GCP_ARTIFACT_REGISTRY_REPO }}/app:latest" .
+          OWNER_LC=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          IMAGE="ghcr.io/${OWNER_LC}/tradingagents-ci:${SHORT_SHA}"
+          docker build -t "$IMAGE" -t "ghcr.io/${OWNER_LC}/tradingagents-ci:latest" .
           docker push "$IMAGE"
-          docker push "${{ vars.GCP_ARTIFACT_REGISTRY_REPO }}/app:latest"
+          docker push "ghcr.io/${OWNER_LC}/tradingagents-ci:latest"
           echo "IMAGE=$IMAGE" >> "$GITHUB_ENV"
       - name: Grant deploy SA actAs on Cloud Run SA
         run: >
@@ -260,6 +266,16 @@ jobs:
             --image="$IMAGE" \
             --region=us-central1 \
             --project="${{ vars.GCP_PROJECT_ID }}" \
+            --port=8000 \
+            --memory=512Mi \
+            --cpu=1000m \
+            --concurrency=80 \
+            --min-instances=0 \
+            --max-instances=2 \
+            --cpu-boost \
+            --service-account=tradingagents-cloud-run@trading-agent-9058.iam.gserviceaccount.com \
+            --startup-probe="httpGet.path=/api/health,httpGet.port=8000,initialDelaySeconds=10,periodSeconds=10,failureThreshold=15" \
+            --liveness-probe="httpGet.path=/api/health,httpGet.port=8000,periodSeconds=30,failureThreshold=3" \
             --quiet
       - name: Get latest revision name
         id: revision
@@ -276,16 +292,16 @@ jobs:
         run: |
           REVISION="${{ env.REVISION_NAME }}"
           echo "Waiting for revision $REVISION to become Ready..."
-          for i in $(seq 1 15); do
+          for i in $(seq 1 30); do
             STATUS=$(gcloud run revisions describe "$REVISION" \
               --region=us-central1 \
               --project="${{ vars.GCP_PROJECT_ID }}" \
-              --format="value(status.conditions[0].reason)")
-            if [ "$STATUS" == "Ready" ]; then
+              --format="value(status.conditions[0].status)")
+            if [ "$STATUS" == "True" ]; then
               echo "Revision ready"
               exit 0
             fi
-            echo "Status: $STATUS (attempt $i/15)"
+            echo "Status: $STATUS (attempt $i/30)"
             sleep 10
           done
 
@@ -313,33 +329,32 @@ jobs:
 
           echo ""
           echo "--- Container logs (textPayload, last 50) ---"
-          # Wait a few seconds for log propagation
           sleep 5
           gcloud logging read "resource.type=cloud_run_revision AND resource.labels.revision_name=\"$REVISION\"" \
             --project="${{ vars.GCP_PROJECT_ID }}" \
             --limit=50 \
-            --format="value(textPayload)" 2>&1 || echo "(no textPayload logs)"
+            --format="value(textPayload)" 2>/dev/null || echo "(could not read logs — deploy SA likely lacks roles/logging.viewer)"
 
           echo ""
           echo "--- Container logs (jsonPayload, last 20) ---"
           gcloud logging read "resource.type=cloud_run_revision AND resource.labels.revision_name=\"$REVISION\"" \
             --project="${{ vars.GCP_PROJECT_ID }}" \
             --limit=20 \
-            --format="value(jsonPayload)" 2>&1 || echo "(no jsonPayload logs)"
+            --format="value(jsonPayload)" 2>/dev/null || echo "(could not read logs)"
 
           echo ""
           echo "--- All Cloud Run logs for this service (last 10 min, any revision) ---"
           gcloud logging read "resource.type=cloud_run_revision AND resource.labels.service_name=tradingagents" \
             --project="${{ vars.GCP_PROJECT_ID }}" \
             --limit=30 \
-            --format="value(timestamp, textPayload, jsonPayload.message)" 2>&1 || echo "(no logs)"
+            --format="value(timestamp, textPayload, jsonPayload.message)" 2>/dev/null || echo "(could not read logs)"
 
           echo ""
           echo "--- Recent Cloud Run audit logs (deploy events) ---"
           gcloud logging read "protoPayload.serviceName=\"run.googleapis.com\"" \
             --project="${{ vars.GCP_PROJECT_ID }}" \
             --limit=10 \
-            --format="value(timestamp, textPayload)" 2>&1 || true
+            --format="value(timestamp, textPayload)" 2>/dev/null || true
           exit 1
       - name: Update traffic
         if: success()
@@ -385,5 +400,6 @@ jobs:
               TRADINGAGENTS_TELEGRAM_NOTIFIER_ENABLED=${{ secrets.TRADINGAGENTS_TELEGRAM_NOTIFIER_ENABLED }},\
               TRADINGAGENTS_INDICATOR_CHECK_INTERVAL_MS=${{ secrets.TRADINGAGENTS_INDICATOR_CHECK_INTERVAL_MS }},\
               TRADINGAGENTS_AGENT_SCHEDULE_INTERVAL_H=${{ secrets.TRADINGAGENTS_AGENT_SCHEDULE_INTERVAL_H }},\
-              GCS_BUCKET=${{ secrets.GCS_BUCKET }}" \
+              FIREBASE_SERVICE_ACCOUNT=${{ secrets.FIREBASE_SERVICE_ACCOUNT }},\
+              FIREBASE_DATABASE_URL=${{ secrets.FIREBASE_DATABASE_URL }}" \
             --quiet || echo "Env var update skipped (revision not updated)"

@@ -1,28 +1,36 @@
-# Task 4: Add API Endpoint for Single Reset — Report
+# Task 4: Refactor storage.py — rename _gcs to _remote
+
+## Status: DONE
 
 ## What I Implemented
 
-1. **New endpoint**: `POST /api/indicators/{indicator_id}/reset` (lines 472-481 in `web/server/app.py`)
-   - Calls `indicators.reset_indicator(indicator_id)` to reset a single indicator's triggered state
-   - Returns 404 if indicator not found, 400 on other errors
-   - Returns the updated indicator definition
+Renamed all `_gcs` references to `_remote` in `web/server/storage.py`:
 
-2. **Docstrings added** to existing indicator endpoints for better tool descriptions:
-   - `GET /api/indicators` — "List all configured indicators and price alerts."
-   - `POST /api/indicators` — "Add a new indicator or price alert. For ticker_price alerts, provide ticker, threshold, and comparator."
-   - `DELETE /api/indicators/{indicator_id}` — "Remove an indicator or price alert by ID."
-   - `PATCH /api/indicators/{indicator_id}` — "Update an indicator's threshold, comparator, enabled state, or trigger status."
+1. **Module docstring**: Updated GCS references → Firebase RTDB (FIREBASE_SERVICE_ACCOUNT/FIREBASE_DATABASE_URL)
+2. **Module-level variable**: `_gcs` → `_remote`
+3. **Init function**: `_init_gcs` → `_init_remote` (imports `firebase_rtdb` instead of `gcs`)
+4. **Helper functions**: All five renamed (`_remote_path_exists`, `_remote_path_is_dir`, `_remote_iterdir`, `_remote_rmtree`, `_remote_mkdir`)
+5. **All call sites**: Updated throughout (ticker_dir, ticker_runs_dir, create_run_dir, read_run, _find_run_dir, list_ticker_runs, find_resumable_run, delete_run, walk_data_dir, etc.)
+6. **Warning messages**: All "GCS ..." → "Remote ..."
+7. **Comment block**: Updated section header and description
+
+## Tests
+
+- **ruff check**: All checks passed
+- **pytest**: 20/20 tests passed
 
 ## Files Changed
 
-- `web/server/app.py` — +15 lines (new endpoint + 4 docstrings)
+- `web/server/storage.py` (87 insertions, 86 deletions)
 
-## Self-Review Findings
+## Self-Review
 
-- No issues found. Syntax verified via `py_compile`.
-- The new endpoint follows the exact same pattern as `patch_indicator` (try/except with 400/404 handling).
-- The `reset_indicator` function is confirmed to exist in `web/server/indicators.py:304` and returns `IndicatorDefinition | None`.
+- No remaining `_gcs` or `GCS` references in storage.py (verified via grep)
+- Only remaining LSP error is pre-existing `total_seconds` type hint issue (line 324, unrelated)
+- Followed exact patterns from the task brief for helper functions and `_init_remote`
+- Warning messages consistently use "Remote" prefix
 
-## Commits
+## Commit
 
-- `36c2ef5` — feat: add single indicator reset endpoint with docstrings
+- SHA: 1ed4383
+- Message: refactor: rename _gcs to _remote in storage.py for Firebase RTDB
