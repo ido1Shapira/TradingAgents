@@ -16,7 +16,7 @@ export function AuthGate({ children }: AuthGateProps) {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-market-DEFAULT">
+      <div className="min-h-screen flex items-center justify-center bg-market">
         <Spinner size="lg" />
       </div>
     );

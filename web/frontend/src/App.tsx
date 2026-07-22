@@ -186,7 +186,7 @@ export default function App() {
   ) : watchlistLoading ? (
     <LoadingScreen message="Loading watchlist…" />
   ) : (
-    <div className="min-h-screen flex flex-col bg-market-DEFAULT">
+    <div className="min-h-screen flex flex-col bg-market">
       {/* Ambient background gradient */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
         <div className="absolute -top-40 -left-40 w-[600px] h-[600px] rounded-full bg-brand-500/[0.04] blur-[150px] animate-breathing" />

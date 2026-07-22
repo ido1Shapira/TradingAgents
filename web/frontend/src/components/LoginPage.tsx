@@ -14,7 +14,7 @@ export function LoginPage() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-market-DEFAULT relative overflow-hidden">
+    <div className="flex items-center justify-center min-h-screen bg-market relative overflow-hidden">
       <div className="fixed inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
         <div className="absolute -top-40 -left-40 w-[600px] h-[600px] rounded-full bg-brand-50 blur-[150px] animate-breathing" />
         <div className="absolute -bottom-40 -right-40 w-[700px] h-[700px] rounded-full bg-emerald-50 blur-[180px]" />

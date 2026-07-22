@@ -5,7 +5,7 @@ interface LoadingScreenProps {
 
 export function LoadingScreen({ message = "Loading…", submessage }: LoadingScreenProps) {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-market-DEFAULT">
+    <div className="min-h-screen flex items-center justify-center bg-market">
       <div className="text-center animate-fade-in">
         <div className="relative w-12 h-12 mx-auto mb-4">
           <div className="absolute inset-0 rounded-full bg-brand-50 blur-md animate-pulse" />

@@ -4,8 +4,8 @@
   "description": "Multi-Agent LLM Financial Trading Dashboard",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0a0e17",
-  "theme_color": "#0a0e17",
+  "background_color": "#f8fafc",
+  "theme_color": "#f8fafc",
   "orientation": "any",
   "categories": ["finance", "productivity"],
   "icons": [

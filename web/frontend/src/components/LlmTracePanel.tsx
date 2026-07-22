@@ -297,7 +297,7 @@ function CallCard({
       {/* Call metadata bar */}
       <div className="flex items-center gap-3 px-4 py-1.5 bg-slate-50 text-[10px] font-mono text-slate-400">
         <span className="text-slate-400">#{index + 1}/{total}</span>
-        <span className="w-px h-2.5 bg-slate-700/50" />
+        <span className="w-px h-2.5 bg-slate-200" />
         <span className="text-slate-600">{call.model}</span>
         {call.duration_ms > 0 && (
           <>
