@@ -77,7 +77,7 @@ export default function BatchDownloadDialog({ tickers, onClose }: Props) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-400/30 backdrop-blur-sm">
       <div
         ref={modalRef}
         className="bg-white border border-slate-200 rounded-xl shadow-sm max-w-md w-full mx-4 max-h-[80vh] flex flex-col"

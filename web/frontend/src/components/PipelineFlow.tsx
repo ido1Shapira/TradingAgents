@@ -265,7 +265,7 @@ function StageDetailPanel({
 
       {isRunning ? (
         stageDerived.thinkingLog.length > 0 ? (
-          <pre className="text-xs leading-relaxed text-slate-300 bg-slate-50 rounded-lg p-3 max-h-64 overflow-y-auto whitespace-pre-wrap font-mono border border-slate-200">
+          <pre className="text-xs leading-relaxed text-slate-700 bg-slate-50 rounded-lg p-3 max-h-64 overflow-y-auto whitespace-pre-wrap font-mono border border-slate-200">
             {stageDerived.thinkingLog.join("\n")}
             <span className="inline-block w-1.5 h-3 ml-0.5 align-middle rounded-sm animate-pulse" style={{ backgroundColor: ac.base }} />
           </pre>

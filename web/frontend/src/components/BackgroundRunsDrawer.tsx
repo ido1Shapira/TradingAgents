@@ -283,7 +283,7 @@ function NewJobForm({ tickers, defaultTicker }: { tickers: string[]; defaultTick
               value={customTicker}
               onChange={(e) => setCustomTicker(e.target.value.toUpperCase())}
               placeholder="Type ticker…"
-              className="mt-1 bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5 text-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500/30"
+              className="mt-1 bg-white border border-slate-300 rounded-lg px-2 py-1.5 text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-brand-300"
               aria-label="Custom ticker input"
               autoFocus
             />

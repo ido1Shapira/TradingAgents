@@ -39,7 +39,7 @@ export function HistoryControls({
           className={`flex-1 ${inputClass}`}
         />
         <span className="w-10 text-right font-medium text-slate-700 data-text shrink-0">{fmtDelta(deltaMs)}</span>
-        <span className="text-slate-300 mx-1">|</span>
+        <span className="text-slate-400 mx-1">|</span>
         <label htmlFor="hold-slider" className="text-slate-400 shrink-0 font-medium">HOLD%</label>
         <input
           id="hold-slider"

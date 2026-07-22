@@ -32,7 +32,7 @@ export default function DownloadFormatDialog({ ticker, onClose }: Props) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-400/30 backdrop-blur-sm">
       <div className="bg-white border border-slate-200 rounded-xl shadow-sm w-full mx-4 max-w-sm">
         <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200">
           <h2 className="text-sm font-semibold text-slate-900">Download {ticker} Data</h2>
