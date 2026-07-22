@@ -1,5 +1,7 @@
 # Agent Observatory Implementation Plan
 
+> **Superseded (2026-07-22):** The Agent Observatory UI has been removed. See the corresponding design doc (`2026-06-20-agent-observatory-design.md`) for the supersession notice. The steps in this plan remain a useful record of the work that was done and later retired; do **not** execute them against current code without re-checking each referenced file/line.
+>
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Build a unified Agent Observatory panel providing full visibility into agent actions — thinking process, tool execution, agent communication, decision traceability, and ticker agent orchestration — while fixing 6+ bugs in the event emission layer.

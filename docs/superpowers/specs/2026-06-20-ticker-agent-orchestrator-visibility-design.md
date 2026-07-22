@@ -93,7 +93,7 @@ orchestrator.run_cycle()
 
 ## Frontend Panel Design
 
-The Ticker Agent panel in the Observatory shows:
+The Ticker Agent surface (was embedded in the Observatory tab — the Observatory tab itself has since been removed; the panel content is now reached through the existing ticker drawer/agent-chat surfaces) shows:
 
 1. **Cycle Overview** — current cycle number, status (idle/running/error), last/next run time, total cycles completed
 2. **Step Progress Bar** — 7-step horizontal progress indicator with current step highlighted

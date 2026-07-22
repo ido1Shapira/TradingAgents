@@ -23,7 +23,7 @@ export function PipelineStats({ agentsDone, agentsTotal, llmCalls, toolCalls, el
           {agentsDone}
         </span>
         <span className="text-slate-400">/</span>
-        <span className="text-slate-600">{stats.agentsTotal}</span>
+        <span className="text-slate-600">{agentsTotal}</span>
         <span className="text-slate-400">agents</span>
       </span>
       <span className="w-px h-3 bg-brand-100" />
