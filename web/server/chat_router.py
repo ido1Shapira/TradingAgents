@@ -499,9 +499,20 @@ async def _stream_chat(req: ChatCompletionRequest, request: Request):
                     if chunk_tool_calls:
                         for tc in chunk_tool_calls:
                             tc_id = tc.get("id", f"call_{_uuid.uuid4().hex[:12]}")
-                            tc_func = tc.get("function", tc)
-                            tc_name = tc_func.get("name", "")
-                            tc_args = tc_func.get("arguments", "")
+                            # LangChain ToolCallChunk uses key "args" (str), not OpenAI's
+                            # "function.arguments". Handle both formats for robustness.
+                            tc_func = tc.get("function") or tc
+                            tc_name = tc_func.get("name", tc.get("name", ""))
+                            tc_args = tc_func.get("arguments")
+                            if tc_args is None:
+                                # LangChain streaming format: "args" is a JSON string
+                                tc_args = tc.get("args", "")
+                                if isinstance(tc_args, dict):
+                                    tc_args = json.dumps(tc_args)
+                            else:
+                                # OpenAI format: "arguments" is already a JSON string
+                                if isinstance(tc_args, dict):
+                                    tc_args = json.dumps(tc_args)
 
                             existing = next((t for t in tool_calls_buffer if t["id"] == tc_id), None)
                             if existing:
@@ -547,7 +558,26 @@ async def _stream_chat(req: ChatCompletionRequest, request: Request):
                 response = llm.invoke(langchain_messages)
 
             text = response.content if hasattr(response, "content") else str(response)
-            tool_calls_from_llm = getattr(response, "tool_calls", None) or []
+            tool_calls_from_llm_raw = getattr(response, "tool_calls", None) or []
+
+            # Normalize LangChain ToolCall dicts (args: dict, key "name"/"args"/"id")
+            # into OpenAI format (function.arguments: JSON string, key "function")
+            tool_calls_from_llm: list[dict] = []
+            for tc in tool_calls_from_llm_raw:
+                if isinstance(tc, dict) and "function" in tc and "name" not in tc:
+                    # Already OpenAI format
+                    tool_calls_from_llm.append(tc)
+                    continue
+                # LangChain ToolCall: {name, args (dict), id, type}
+                tc_args = tc.get("args") if isinstance(tc, dict) else getattr(tc, "args", None)
+                tc_name = tc.get("name") if isinstance(tc, dict) else getattr(tc, "name", "")
+                tc_id = tc.get("id") if isinstance(tc, dict) else getattr(tc, "id", "")
+                args_str = tc_args if isinstance(tc_args, str) else json.dumps(tc_args or {})
+                tool_calls_from_llm.append({
+                    "id": tc_id or f"call_{_uuid.uuid4().hex[:12]}",
+                    "type": "function",
+                    "function": {"name": tc_name, "arguments": args_str},
+                })
 
             if text:
                 yield f"data: {json.dumps({'type': 'text', 'text': text})}\n\n"
@@ -614,8 +644,28 @@ async def _non_stream_chat(req: ChatCompletionRequest, request: Request):
     else:
         response = llm.invoke(langchain_messages)
 
+    import uuid as _uuid
     text = response.content if hasattr(response, "content") else str(response)
-    tool_calls_from_llm = getattr(response, "tool_calls", None) or []
+    tool_calls_from_llm_raw = getattr(response, "tool_calls", None) or []
+
+    # Normalize LangChain ToolCall dicts (args: dict, key "name"/"args"/"id")
+    # into OpenAI format (function.arguments: JSON string, key "function")
+    tool_calls_from_llm: list[dict] = []
+    for tc in tool_calls_from_llm_raw:
+        if isinstance(tc, dict) and "function" in tc and "name" not in tc:
+            # Already OpenAI format
+            tool_calls_from_llm.append(tc)
+            continue
+        # LangChain ToolCall: {name, args (dict), id, type}
+        tc_args = tc.get("args") if isinstance(tc, dict) else getattr(tc, "args", None)
+        tc_name = tc.get("name") if isinstance(tc, dict) else getattr(tc, "name", "")
+        tc_id = tc.get("id") if isinstance(tc, dict) else getattr(tc, "id", "")
+        args_str = tc_args if isinstance(tc_args, str) else json.dumps(tc_args or {})
+        tool_calls_from_llm.append({
+            "id": tc_id or f"call_{_uuid.uuid4().hex[:12]}",
+            "type": "function",
+            "function": {"name": tc_name, "arguments": args_str},
+        })
 
     # Fallback: parse text-based tool calls
     if not tool_calls_from_llm and text:

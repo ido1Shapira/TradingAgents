@@ -8,7 +8,7 @@ import { useFocusedRunEvents } from "./hooks/useFocusedRunEvents";
 import { useRestoredRunEvents } from "./hooks/useRestoredRunEvents";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { useRunNotifications } from "./hooks/useRunNotifications";
-import { useTheme } from "./hooks/useTheme";
+
 import { LogPanel } from "./components/LogPanel";
 import { ToastContainer } from "./ui";
 import "./lib/console-capture";
@@ -96,7 +96,7 @@ export default function App() {
   useRestoredRunEvents(focused);
   useKeyboardShortcuts();
   useRunNotifications();
-  const { theme, toggleTheme } = useTheme();
+  
   const mobileSidebarOpen = useUi((s) => s.mobileSidebarOpen);
   const setMobileSidebarOpen = useUi((s) => s.setMobileSidebarOpen);
 
@@ -269,12 +269,10 @@ export default function App() {
         />
       )}
       <BackgroundRunsDrawer focusedTicker={focused ?? "AAPL"} />
-      <SettingsPanel
-        open={settingsOpen}
-        onClose={() => setSettingsOpen(false)}
-        theme={theme}
-        toggleTheme={toggleTheme}
-      />
+<SettingsPanel
+  open={settingsOpen}
+  onClose={() => setSettingsOpen(false)}
+/>
       {batchDialogOpen && (
         <BatchDownloadDialog
           tickers={watchlist.map((w) => w.ticker)}

@@ -74,16 +74,6 @@
     color: #0369a1;
   }
 
-  [data-theme="dark"] html,
-  [data-theme="dark"] body {
-    background: #0a0e17;
-    color: #f1f5f9;
-  }
-  [data-theme="dark"] body::before { opacity: 0.03; }
-  [data-theme="dark"] ::selection { background: rgba(56, 189, 248, 0.25); color: #f1f5f9; }
-  [data-theme="dark"] ::-webkit-scrollbar-thumb { background-color: #1e293b; }
-  [data-theme="dark"] ::-webkit-scrollbar-thumb:hover { background-color: #334155; }
-  [data-theme="dark"] a { color: #38bdf8; }
 }
 
 @layer components {
@@ -93,35 +83,19 @@
   .glass-panel:hover {
     @apply border-brand-200/80 shadow-md;
   }
-  [data-theme="dark"] .glass-panel {
-    @apply bg-slate-800/60 border-slate-700/50 shadow-lg shadow-black/20;
-  }
-  [data-theme="dark"] .glass-panel:hover {
-    @apply border-slate-600/60;
-  }
+.card-gradient {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(240, 247, 255, 0.98) 100%);
+}
 
-  .card-gradient {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(240, 247, 255, 0.98) 100%);
-  }
-  [data-theme="dark"] .card-gradient {
-    background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%);
-  }
+.drawer-panel {
+  @apply fixed z-50 bg-white/95 border-brand-100
+  shadow-xl shadow-brand-100/50 transition-transform duration-300 ease-out
+  backdrop-blur-md;
+}
 
-  .drawer-panel {
-    @apply fixed z-50 bg-white/95 border-brand-100
-           shadow-xl shadow-brand-100/50 transition-transform duration-300 ease-out
-           backdrop-blur-md;
-  }
-  [data-theme="dark"] .drawer-panel {
-    @apply bg-slate-900/95 border-slate-700/50 shadow-2xl shadow-black/40;
-  }
-
-  .drawer-overlay {
-    @apply fixed inset-0 z-40 bg-slate-400/20 backdrop-blur-sm transition-opacity duration-300;
-  }
-  [data-theme="dark"] .drawer-overlay {
-    @apply bg-black/60;
-  }
+.drawer-overlay {
+  @apply fixed inset-0 z-40 bg-slate-400/20 backdrop-blur-sm transition-opacity duration-300;
+}
 
   .glass-panel-hover {
     @apply glass-panel hover:bg-brand-50 hover:border-brand-200 transition-all duration-200;
@@ -194,40 +168,7 @@
     50% { opacity: 0.5; }
   }
 
-  [data-theme="dark"] .btn-primary {
-    @apply bg-sky-500/20 text-sky-400 border border-sky-500/30
-           hover:bg-sky-500/30 hover:border-sky-500/50;
-  }
 
-  [data-theme="dark"] .btn-secondary {
-    @apply bg-slate-700/50 text-slate-300 border border-slate-600/50
-           hover:bg-slate-600/50 hover:text-slate-200;
-  }
-
-  [data-theme="dark"] .btn-danger {
-    @apply bg-red-500/20 text-red-400 border border-red-500/30
-           hover:bg-red-500/30 hover:border-red-500/50;
-  }
-
-  [data-theme="dark"] .section-header {
-    @apply text-slate-500;
-  }
-
-  [data-theme="dark"] .progress-bar {
-    @apply bg-slate-700;
-  }
-
-  [data-theme="dark"] .tag-buy {
-    @apply bg-emerald-500/15 text-emerald-400 border-emerald-500/25;
-  }
-
-  [data-theme="dark"] .tag-sell {
-    @apply bg-red-500/15 text-red-400 border-red-500/25;
-  }
-
-  [data-theme="dark"] .tag-hold {
-    @apply bg-amber-500/15 text-amber-400 border-amber-500/25;
-  }
 }
 
 @layer utilities {

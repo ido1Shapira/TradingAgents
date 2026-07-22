@@ -7,14 +7,12 @@ import {
   type AppConfig,
 } from "../lib/api";
 import {
-  Settings, Sun, Moon, Sparkles, BarChart3, Shield, Info, Loader, X, Check
+  Settings, Sparkles, BarChart3, Shield, Info, Loader, X, Check
 } from "lucide-react";
 
 interface Props {
   open: boolean;
   onClose: () => void;
-  theme: "dark" | "light";
-  toggleTheme: () => void;
 }
 
 const LABELS: Record<keyof AppConfig, string> = {
@@ -38,7 +36,7 @@ const PROVIDER_OPTIONS = [
   "ollama", "openai_compatible", "bedrock",
 ];
 
-export function SettingsPanel({ open, onClose, theme, toggleTheme }: Props) {
+export function SettingsPanel({ open, onClose }: Props) {
   const qc = useQueryClient();
   const [dirty, setDirty] = useState<Partial<AppConfig>>({});
   const [saved, setSaved] = useState(false);
@@ -142,35 +140,7 @@ export function SettingsPanel({ open, onClose, theme, toggleTheme }: Props) {
 
             {!isLoading && config && (
               <>
-                {/* ── Appearance ── */}
-                <section>
-                  <h3 className="section-header flex items-center gap-2 mb-3">
-                    {theme === "dark" ? <Moon className="w-3.5 h-3.5 text-brand-600" /> : <Sun className="w-3.5 h-3.5 text-brand-600" />}
-                    Appearance
-                  </h3>
-                  <div className="glass-panel p-3">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="text-sm font-medium text-slate-700">Dark Mode</div>
-                        <div className="text-xs text-slate-500">Toggle dark/light theme</div>
-                      </div>
-                      <button
-                        onClick={toggleTheme}
-                        className={`relative w-10 h-5 rounded-full transition-colors ${
-                          theme === "dark" ? "bg-brand-600" : "bg-brand-200"
-                        }`}
-                        role="switch"
-                        aria-checked={theme === "dark"}
-                      >
-                        <span
-                          className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${
-                            theme === "dark" ? "translate-x-5" : "translate-x-0"
-                          }`}
-                        />
-                      </button>
-                    </div>
-                  </div>
-                </section>
+
 
                 {/* ── LLM Configuration ── */}
                 <section>
